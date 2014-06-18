@@ -10,30 +10,32 @@ namespace ItExpert
 	{
 		public NewsTableViewCell (string cellId) : base (UITableViewCellStyle.Default, cellId)
 		{
-			_headerTextView = new UITextView ();
-
-			_articleTextView = new UITextView ();
-			_isReadedButton = new IsReadedButton ();
-
 			_fontSize = 14;
 
-			_padding = new UIEdgeInsets (8, 12, 8, 12);;
-
-			ContentView.Add (_isReadedButton);
+			_padding = new UIEdgeInsets (8, 12, 8, 12);
 		}
 
 		public void AddCellContent(Article article, float largestImageWidth)
-		{
+        {
 			CreateCellElements (article, largestImageWidth);
 
+            ContentView.Add (_isReadedButton);
 			ContentView.Add (_headerTextView);
 			ContentView.Add (_articleTextView);
 			ContentView.Add (_imageViewContainer);
+
+            _isReadedButton.BringSubviewToFront(ContentView);
 		}
 
 		public void UpdateCell (Article article, float largestImageWidth)
 		{
-			UpdateTextView (_headerTextView, ContentView.Bounds.Width - _padding.Right - _padding.Left,
+            _article = article;
+
+            var buttonImage = new UIImage(GetIsReadedButtonImageData(_article.IsReaded), (float)2.5);
+
+            _isReadedButtonImageView.Image = buttonImage;
+
+            UpdateTextView (_headerTextView, ContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width,
 				UIFont.BoldSystemFontOfSize (_fontSize), UIColor.Black, article.Name, new PointF (_padding.Left, _padding.Top));
 
 			if (_imageView != null && _imageView.Image != null)
@@ -77,8 +79,20 @@ namespace ItExpert
 
 		private void CreateCellElements(Article article, float largestImageWidth)
 		{
+            _article = article;
+
+            _isReadedButton = new UIButton(new RectangleF(ContentView.Frame.Width - _padding.Right - 70, 2, 70, 60));
+            _isReadedButton.TouchUpInside += OnReadedButtonTouchUpInside;
+
+            var buttonImage = new UIImage(GetIsReadedButtonImageData(_article.IsReaded), (float)2.5);
+
+            _isReadedButtonImageView = new UIImageView(new RectangleF(_isReadedButton.Frame.Width - buttonImage.Size.Width , 0, buttonImage.Size.Width, buttonImage.Size.Height));
+            _isReadedButtonImageView.Image = buttonImage;
+    
+            _isReadedButton.Add(_isReadedButtonImageView);
+
 			_headerTextView = ItManagerHelper.GetTextView (UIFont.BoldSystemFontOfSize (_fontSize), UIColor.Black, article.Name, 
-				ContentView.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, _padding.Top));
+                ContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
 
 			_headerTextView.DataDetectorTypes = UIDataDetectorType.Link;
 
@@ -118,14 +132,45 @@ namespace ItExpert
 			textViewToUpdate.Frame = new RectangleF (updatedTextViewLocation, new SizeF (containerSize.Width, containerSize.Height));
 		}
 
+        public NSData GetIsReadedButtonImageData(bool isReaded)
+        {
+            if (isReaded)
+            {
+                return NSData.FromFile("ReadedButton.png");
+            }
+            else
+            {
+                return NSData.FromFile("NotReadedButton.png");
+            }
+        }
+
+        //Вызывается при взаимодействии с кнопкой IsReaded
+        private void SetIsReadedForArticle(Article article, bool isReaded)
+        {
+
+        }
+
+        private void OnReadedButtonTouchUpInside(object sender, EventArgs e)
+        {
+            _article.IsReaded = !_article.IsReaded;
+
+            var buttonImage = new UIImage(GetIsReadedButtonImageData(_article.IsReaded), (float)2.5);
+
+            _isReadedButtonImageView.Image = buttonImage;
+
+            //SetIsReadedForArticle(_article, !_article.IsReaded);
+        }
+
 		private int _fontSize;
 		private UIEdgeInsets _padding;
+        private Article _article;
 
 		private UIView _imageViewContainer;
 		private UIImageView _imageView;
 		private UITextView _articleTextView;
 		private UITextView _headerTextView;
-		private IsReadedButton _isReadedButton;
+        private UIButton _isReadedButton;
+        private UIImageView _isReadedButtonImageView;
 	}
 }
 

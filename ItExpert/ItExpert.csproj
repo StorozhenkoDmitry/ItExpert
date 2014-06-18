@@ -99,6 +99,8 @@
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\Default-568h%402x.png" />
+    <BundleResource Include="Resources\ReadedButton.png" />
+    <BundleResource Include="Resources\NotReadedButton.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -144,7 +146,6 @@
     </Compile>
     <Compile Include="Logic\NewsTableSource.cs" />
     <Compile Include="Logic\NewsTableViewCell.cs" />
-    <Compile Include="Logic\IsReadedButton.cs" />
     <Compile Include="ViewControllers\NewsDetailViewController.cs" />
     <Compile Include="Logic\ItManagerHelper.cs" />
     <Compile Include="Logic\PushNewsDetailsEventArgs.cs" />

@@ -57,6 +57,8 @@ namespace ItExpert
 
 		public override void RowSelected (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
 		{
+            OpenArticle(_articles[indexPath.Row]);
+
 			NewsDetailsViewController newsDetailsView = new NewsDetailsViewController (_articles [indexPath.Row]);
 
 			OnPushNewsDetails (newsDetailsView);
@@ -68,12 +70,6 @@ namespace ItExpert
 			{
 				PushNewsDetails (this, new PushNewsDetailsEventArgs (newsDetailsView));
 			}
-		}
-
-		//Вызывается при взаимодействии с кнопкой IsReaded
-		private void SetIsReadedForArticle(Article article, bool isReaded)
-		{
-
 		}
 
 		//Вызывается при открытии статьи
