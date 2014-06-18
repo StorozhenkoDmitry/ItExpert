@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ItExpert.Enum;
 using SQLite;
+using MonoTouch.UIKit;
 
 namespace ItExpert.Model
 {
@@ -65,7 +66,7 @@ namespace ItExpert.Model
         [Ignore]
         public Picture AwardsPicture { get; set; }
 
-//        [Ignore]
-//        public View ExtendedObject { get; set; }
+        [Ignore]
+		public UIView ExtendedObject { get; set; }
     }
 }

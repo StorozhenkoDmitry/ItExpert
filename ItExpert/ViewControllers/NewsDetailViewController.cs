@@ -19,52 +19,66 @@ namespace ItExpert
 		{
 			base.ViewDidLoad ();
 
-            AutomaticallyAdjustsScrollViewInsets = false;
+
 
 			_padding = new UIEdgeInsets (8, 8, 8, 8);
 
 			View.BackgroundColor = UIColor.White;
-            View.UserInteractionEnabled = true;
-
-            _contentScrollView = new UIScrollView(new RectangleF(0, NavigationController.NavigationBar.Frame.Height + ItManagerHelper.StatusBarHeight, 
-                View.Frame.Width, View.Frame.Height));
-
-            _contentScrollView.ScrollEnabled = true;
-            _contentScrollView.UserInteractionEnabled = true;
-
-            View.Add(_contentScrollView);
-
 			AddArticleSection ();
 		}
 
 		private void AddArticleSection ()
-        {
-            var section = string.Join(@"/", _article.Sections.OrderBy(x => x.DepthLevel).Select(x => x.Section.Name));
+		{
+			var section = _article.Sections.LastOrDefault ();
 
-			if (!String.IsNullOrEmpty(section))
+			if (section != null && !String.IsNullOrEmpty(section.Section.Name))
 			{
-                _artcleSectionWebView = new UIWebView (new RectangleF (_padding.Left, _padding.Top, 
-                    View.Frame.Width - _padding.Left - _padding.Right, 1));
+				//				var textView = ItManagerHelper.GetTextView (UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.DetailHeaderSize), 
+				//					               ItManagerHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetForeColor ()), section.Section.Name,
+				//					               View.Frame.Width - _padding.Left - _padding.Right, new PointF (0, 0));
+				var textView = new UITextView(new RectangleF(20,20, 300, 200));
+				textView.Editable = false;
+				View.AddSubview (textView);
+				textView.AttributedText = new NSAttributedString (section.Section.Name, new UIStringAttributes {
+					ForegroundColor = UIColor.Blue,
+					Font = UIFont.FromName ("Courier", 18f),
+					UnderlineStyle = NSUnderlineStyle.Single
+				});
+				//				float textHeight = textView.Frame.Height;
+				//
+				//				textView.Dispose ();
+				//				textView = null;
 
-                _artcleSectionWebView.Delegate = new WebViewDelegate();
+				//				_articleSectionLabel = new UILabel(new RectangleF(_padding.Left, 
+				//					NavigationController.NavigationBar.Frame.Height + _padding.Top + ItManagerHelper.StatusBarHeight, 
+				//					View.Frame.Width - _padding.Left - _padding.Right, textHeight));
+				//
+				//				_articleSectionLabel.AttributedText = ItManagerHelper.GetAttributedString(section.Section.Name, 
+				//					UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true);
+				//
+				//				View.AddSubview (_articleSectionLabel);
 
-                var htmlSectionName = String.Format ("<body><p style = \"font-size: {0};\"><a href=\"URL\">{1}</a><p></body>", ApplicationWorker.Settings.DetailHeaderSize, section);
-
-                _artcleSectionWebView.LoadHtmlString (htmlSectionName, null);
-
-                _contentScrollView.Add (_artcleSectionWebView);
+				//				UIWebView sectionWebView = new UIWebView (new RectangleF (_padding.Left, 
+				//					NavigationController.NavigationBar.Frame.Height + _padding.Top + ItManagerHelper.StatusBarHeight, 
+				//					View.Frame.Width - _padding.Left - _padding.Right, 
+				//					textHeight + 20));
+				////				{
+				////					BackgroundColor = UIColor.White
+				////				};
+				//				AutomaticallyAdjustsScrollViewInsets = false;
+				//				sectionWebView.ScrollView.ScrollEnabled = false;
+				//				sectionWebView.ScrollView.Bounces = false;
+				//
+				//				var htmlSectionName = String.Format ("<body><a href=\"URL\">olololo!!!</a></body>", section.Section.Name);
+				//
+				//				sectionWebView.LoadHtmlString (htmlSectionName, null);
+				//
+				//				View.Add (sectionWebView);
 			}
 		}
 
 		private void AddArticlePicture ()
 		{
-            if (ApplicationWorker.Settings.LoadImages && _article.DetailPicture != null)
-            {
-                var screenSize = UIScreen.MainScreen.ApplicationFrame.Size;
-
-                var image = ItManagerHelper.GetImageFromBase64String(_article.DetailPicture.Data);
-
-            }
 		}
 
 		private void AddArticleHeader ()
@@ -79,8 +93,7 @@ namespace ItExpert
 		private Article _article;
 		private UIEdgeInsets _padding;
 
-        private UIScrollView _contentScrollView;
-        private UIWebView _artcleSectionWebView;
+		private UILabel _articleSectionLabel;
 		private UIImageView _articleImageView;
 		private UILabel _articleHeaderLabel;
 		private UILabel _articleAuthorLabel;

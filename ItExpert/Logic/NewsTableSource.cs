@@ -70,6 +70,18 @@ namespace ItExpert
 			}
 		}
 
+		//Вызывается при взаимодействии с кнопкой IsReaded
+		private void SetIsReadedForArticle(Article article, bool isReaded)
+		{
+
+		}
+
+		//Вызывается при открытии статьи
+		private void OpenArticle(Article article)
+		{
+
+		}
+
 		private List<Article> _articles;
 		private string _cellIdentifier;
 		private int _largestImageWidth;

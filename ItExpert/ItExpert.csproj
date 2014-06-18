@@ -99,7 +99,6 @@
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\Default-568h%402x.png" />
-    <BundleResource Include="Resources\models.dt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -150,6 +149,7 @@
     <Compile Include="Logic\ItManagerHelper.cs" />
     <Compile Include="Logic\PushNewsDetailsEventArgs.cs" />
     <Compile Include="Logic\WebViewDelegate.cs" />
+    <Compile Include="Logic\AnimatedImageView.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

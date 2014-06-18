@@ -14,16 +14,8 @@ namespace ItExpert
 	[Register ("ItExpertViewController")]
 	partial class ItExpertViewController
 	{
-		[Outlet]
-		[GeneratedCode ("iOS Designer", "1.0")]
-		UIButton btnGetNews { get; set; }
-
 		void ReleaseDesignerOutlets ()
 		{
-			if (btnGetNews != null) {
-				btnGetNews.Dispose ();
-				btnGetNews = null;
-			}
 		}
 	}
 }
