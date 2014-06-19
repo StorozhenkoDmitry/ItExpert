@@ -3,6 +3,8 @@ using System.Drawing;
 using MonoTouch.Foundation;
 using MonoTouch.UIKit;
 using ItExpert.Model;
+using ItExpert.Enum;
+using System.Threading;
 
 namespace ItExpert
 {
@@ -144,12 +146,6 @@ namespace ItExpert
             }
         }
 
-        //Вызывается при взаимодействии с кнопкой IsReaded
-        private void SetIsReadedForArticle(Article article, bool isReaded)
-        {
-
-        }
-
         private void OnReadedButtonTouchUpInside(object sender, EventArgs e)
         {
             _article.IsReaded = !_article.IsReaded;
@@ -158,8 +154,11 @@ namespace ItExpert
 
             _isReadedButtonImageView.Image = buttonImage;
 
-            //SetIsReadedForArticle(_article, !_article.IsReaded);
+			NewsTableSource.SetIsReadedForArticle(_article);
         }
+
+		//Вызывается при взаимодействии с кнопкой IsReaded
+
 
 		private int _fontSize;
 		private UIEdgeInsets _padding;

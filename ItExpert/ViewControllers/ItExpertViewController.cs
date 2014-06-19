@@ -90,6 +90,7 @@ namespace ItExpert
 				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
 			ApplicationWorker.Settings.ScreenWidth = screenWidth;
 			ApplicationWorker.Settings.SaveSettings();
+			ApplicationWorker.Settings.LoadDetails = false;
 			ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
 			ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
 			_isLoadingData = true;
@@ -147,11 +148,15 @@ namespace ItExpert
 				var error = e.Error;
 				if (!error)
 				{
+					ApplicationWorker.Db.SetPropertiesForArticles(e.Articles);
+					ApplicationWorker.NormalizePreviewText(e.Articles);
+					ThreadPool.QueueUserWorkItem(state => UpdateData(e));
+					//Обновление списка новостей для ListView
 					AddNewArticles(e.Articles);
 				}
 				else
 				{
-					new UIAlertView("Ошибка" ,"Ошибка при загрузке" , null, "OK", null).Show();
+					//Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
 				SetLoadingImageVisible(false);
 			});
@@ -170,11 +175,14 @@ namespace ItExpert
 				var error = e.Error;
 				if (!error)
 				{
+					ApplicationWorker.Db.SetPropertiesForArticles(e.Articles);
+					ApplicationWorker.NormalizePreviewText(e.Articles);
+					ThreadPool.QueueUserWorkItem(state => UpdateData(e));
 					AddPreviousArticles(e.Articles);
 				}
 				else
 				{
-					new UIAlertView("Ошибка" ,"Ошибка при загрузке" , null, "OK", null).Show();
+					//Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
 				SetLoadingImageVisible(false);
 			});
@@ -184,14 +192,44 @@ namespace ItExpert
 		private void AddPreviousArticleOnClick(object sender, EventArgs eventArgs)
 		{
 			if (_isLoadingData) return;
-			_isLoadingData = true;
-			var lastTimestam = _allArticles.Min(x => x.Timespan);
-			ApplicationWorker.RemoteWorker.NewsGetted += PreviousNewsGetted;
-			ThreadPool.QueueUserWorkItem(
-				state =>
-				ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, lastTimestam,
-					_blockId, _sectionId, _authorId, _search));
-			SetLoadingImageVisible(true);
+			if (!ApplicationWorker.Settings.OfflineMode)
+			{
+				var connectAccept = IsConnectionAccept();
+				if (!connectAccept)
+				{
+//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+//						ToastLength.Short).Show();
+					return;
+				}
+				_isLoadingData = true;
+				var lastTimestam = _allArticles.Min(x => x.Timespan);
+				ApplicationWorker.RemoteWorker.NewsGetted += PreviousNewsGetted;
+				ThreadPool.QueueUserWorkItem(
+					state =>
+					ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, lastTimestam,
+						_blockId, _sectionId, _authorId, _search));
+				SetLoadingImageVisible(true);
+			}
+			else
+			{
+				SetLoadingImageVisible(true);
+				Action getList = () =>
+				{
+					var count = _allArticles.Count();
+					var isTrends = _blockId == 30;
+					var lst = ApplicationWorker.Db.GetArticlesFromDb(count, 20, isTrends);
+					if (lst.Count() < 20)
+					{
+						_prevArticlesExists = false;
+					}
+					InvokeOnMainThread(() =>
+					{
+						AddPreviousArticles(lst);
+						SetLoadingImageVisible(false);
+					});
+				};
+				ThreadPool.QueueUserWorkItem(state => getList());
+			}
 		}
 
 
@@ -203,6 +241,38 @@ namespace ItExpert
 		#endregion
 
 		#region Activity logic
+
+		private void UpdateData(ArticleEventArgs e)
+		{
+			//Сохранение Блоков
+			var newBlocks = e.Blocks;
+			var oldBlocks = ApplicationWorker.Db.GetBlocks();
+			ApplicationWorker.Db.InsertNewBlocks(oldBlocks, newBlocks);
+			//Сохранение Секций
+			var newSection = e.Sections;
+			var oldSection = ApplicationWorker.Db.GetSections();
+			ApplicationWorker.Db.InsertNewSections(oldSection, newSection);
+			//Сохранение авторов
+			var newAuthor = e.Authors;
+			var oldAuthor = ApplicationWorker.Db.LoadAllAuthors();
+			ApplicationWorker.Db.InsertNewAuthors(oldAuthor, newAuthor);
+			//Обновление Статей
+			foreach (var article in e.Articles)
+			{
+				var dbArticle = ApplicationWorker.Db.GetArticle(article.Id);
+				if (dbArticle != null)
+				{
+					var changeBlock = dbArticle.IdBlock != article.IdBlock;
+					var changeSections = dbArticle.SectionsId != article.SectionsId;
+					if (changeBlock || changeSections)
+					{
+						ApplicationWorker.Db.DeleteItemSectionsForArticle(article.Id);
+						ApplicationWorker.Db.UpdateArticle(article);
+						ApplicationWorker.Db.InsertItemSections(article.Sections);
+					}
+				}
+			}   
+		}
 
 		//Создание кнопки Загрузить еще
 		private void InitAddPreviousArticleButton()
@@ -317,7 +387,7 @@ namespace ItExpert
 				_newsTableView.Source = null;
 			}
 
-			NewsTableSource source = new NewsTableSource(_articles);
+			NewsTableSource source = new NewsTableSource(_articles, false, MagazineAction.NoAction);
 			source.PushNewsDetails += OnPushNewsDetails;
 
 			_newsTableView.Source = source;

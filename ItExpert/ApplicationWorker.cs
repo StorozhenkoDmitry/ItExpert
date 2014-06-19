@@ -198,136 +198,137 @@ namespace ItExpert
             }
         }
 
-//        public static void NormalizePreviewText(IEnumerable<Article> lst)
-//        {
-//            foreach (var article in lst)
-//            {
-//                article.PreviewText = Html.FromHtml(article.PreviewText).ToString().Trim();
-//                article.PreviewText = article.PreviewText.Replace("<br/>", " ")
-//                    .Replace("<br />", " ")
-//                    .Replace("</br>", " ")
-//                    .Replace("</ br>", " ")
-//                    .Replace("<br>", " ");
-//                article.Name = Html.FromHtml(article.Name).ToString().Trim();
-//            }
-//        }
-//
-//        public static string NormalizeDetailText(Article article, DisplayMetrics metrics)
-//        {
-//            if (string.IsNullOrWhiteSpace(article.DetailText)) return string.Empty;
-//            var result = RemoveImgIfNecessary(article.DetailText);
-//            result = SetStyleForImage(result, metrics);
-//            result = SetStyleForTable(result, metrics);
-//            result = AddHostForLink(result);
-//            result = AddHostForImg(result);
-//            result = RemoveHeight(result);
-//            return result;
-//        }
+        public static void NormalizePreviewText(IEnumerable<Article> lst)
+        {
 
-//        private static string SetStyleForImage(string data, DisplayMetrics metrics)
-//        {
-//            var widthPixels = (int)((metrics.WidthPixels / metrics.Density) * 0.95);
-//            var style = "style='max-width: " + widthPixels + "px;' ";
-//            var replacePattern = "<img " + style;
-//            var returnData = data.Replace("<img", replacePattern);
-//            return returnData;
-//        }
-//
-//        private static string SetStyleForTable(string data, DisplayMetrics metrics)
-//        {
-//            var widthPixels = (int)((metrics.WidthPixels / metrics.Density) * 0.95);
-//            var etalonTableTag =
-//                "<table cellspacing='0' cellpadding='0' border='0' style='max-width: " + widthPixels + "px; margin-left: 2px; border-collapse: collapse;'>";
-//            var regex = new Regex(@"<table\s+[^>]*>");
-//            var returnData = regex.Replace(data, etalonTableTag);
-//            regex = new Regex(@"<td\s+[^>]*>");
-//            returnData = regex.Replace(returnData, "<td>");
-//            return returnData;
-//        }
-//
-//        public static string AddHostForLink(string data)
-//        {
-//            var returnData = data;
-//            var patterns = new[]
-//            {
-//                new {Pattern = @"href=""/\S*""", Index = 6},
-//                new {Pattern = @"href\s=""/\S*""", Index = 7},
-//                new {Pattern = @"href=\s""/\S*""", Index = 7},
-//                new {Pattern = @"href='/\S*'", Index = 6},
-//                new {Pattern = @"href\s='/\S*'", Index = 7},
-//                new {Pattern = @"href=\s'/\S*'", Index = 7}
-//            };
-//            foreach (var pattern in patterns)
-//            {
-//                var isMatch = false;
-//                var regex = new Regex(pattern.Pattern);
-//                do
-//                {
-//                    isMatch = regex.IsMatch(returnData);
-//                    if (isMatch)
-//                    {
-//                        var match = regex.Match(returnData);
-//                        var index = match.Index + pattern.Index;
-//                        returnData = returnData.Insert(index, Settings.Domen);
-//                    }
-//                } while (isMatch);
-//            }
-//            return returnData;
-//        }
-//
-//        public static string AddHostForImg(string data)
-//        {
-//            var returnData = data;
-//            var patterns = new[]
-//            {
-//                new {Pattern = @"src=""/\S*""", Index = 5},
-//                new {Pattern = @"src\s=""/\S*""", Index = 6},
-//                new {Pattern = @"src=\s""/\S*""", Index = 6},
-//                new {Pattern = @"src='/\S*'", Index = 5},
-//                new {Pattern = @"src\s='/\S*'", Index = 6},
-//                new {Pattern = @"src=\s'/\S*'", Index = 6}
-//            };
-//            foreach (var pattern in patterns)
-//            {
-//                var isMatch = false;
-//                var regex = new Regex(pattern.Pattern);
-//                do
-//                {
-//                    isMatch = regex.IsMatch(returnData);
-//                    if (isMatch)
-//                    {
-//                        var match = regex.Match(returnData);
-//                        var index = match.Index + pattern.Index;
-//                        returnData = returnData.Insert(index, Settings.Domen);
-//                    }
-//                } while (isMatch);
-//            }
-//            return returnData;
-//        }
-//
-//        public static string RemoveImgIfNecessary(string data)
-//        {
-//            var regex = new Regex(@"<img\s+[^>]*>");
-//            var matches = regex.Matches(data);
-//            if (matches.Count > 12)
-//            {
-//                var length = 0;
-//                for (var i = 12; i < matches.Count; i++)
-//                {
-//                    var match = matches[i];
-//                    data = data.Remove(match.Index - length, match.Length);
-//                    length += match.Length;
-//                }
-//            }
-//            return data;
-//        }
-//
-//        private static string RemoveHeight(string data)
-//        {
-//            var regex = new Regex(@"height\s?=\s?""((\w|\W[^""]))*""");
-//            var returnData = regex.Replace(data, string.Empty);
-//            return returnData;
-//        }
+            foreach (var article in lst)
+            {
+				article.PreviewText = System.Web.HttpUtility.HtmlDecode(article.PreviewText).ToString().Trim();
+                article.PreviewText = article.PreviewText.Replace("<br/>", " ")
+                    .Replace("<br />", " ")
+                    .Replace("</br>", " ")
+                    .Replace("</ br>", " ")
+                    .Replace("<br>", " ");
+				article.Name = System.Web.HttpUtility.HtmlDecode(article.Name).ToString().Trim();
+            }
+        }
+
+		public static string NormalizeDetailText(Article article, int width)
+        {
+            if (string.IsNullOrWhiteSpace(article.DetailText)) return string.Empty;
+            var result = RemoveImgIfNecessary(article.DetailText);
+			result = SetStyleForImage(result, width);
+			result = SetStyleForTable(result, width);
+            result = AddHostForLink(result);
+            result = AddHostForImg(result);
+            result = RemoveHeight(result);
+            return result;
+        }
+
+		private static string SetStyleForImage(string data, int width)
+        {
+			var widthPixels = (int)(width * 0.95);
+            var style = "style='max-width: " + widthPixels + "px;' ";
+            var replacePattern = "<img " + style;
+            var returnData = data.Replace("<img", replacePattern);
+            return returnData;
+        }
+
+		private static string SetStyleForTable(string data, int width)
+        {
+			var widthPixels = (int)(width * 0.95);
+            var etalonTableTag =
+                "<table cellspacing='0' cellpadding='0' border='0' style='max-width: " + widthPixels + "px; margin-left: 2px; border-collapse: collapse;'>";
+            var regex = new Regex(@"<table\s+[^>]*>");
+            var returnData = regex.Replace(data, etalonTableTag);
+            regex = new Regex(@"<td\s+[^>]*>");
+            returnData = regex.Replace(returnData, "<td>");
+            return returnData;
+        }
+
+        public static string AddHostForLink(string data)
+        {
+            var returnData = data;
+            var patterns = new[]
+            {
+                new {Pattern = @"href=""/\S*""", Index = 6},
+                new {Pattern = @"href\s=""/\S*""", Index = 7},
+                new {Pattern = @"href=\s""/\S*""", Index = 7},
+                new {Pattern = @"href='/\S*'", Index = 6},
+                new {Pattern = @"href\s='/\S*'", Index = 7},
+                new {Pattern = @"href=\s'/\S*'", Index = 7}
+            };
+            foreach (var pattern in patterns)
+            {
+                var isMatch = false;
+                var regex = new Regex(pattern.Pattern);
+                do
+                {
+                    isMatch = regex.IsMatch(returnData);
+                    if (isMatch)
+                    {
+                        var match = regex.Match(returnData);
+                        var index = match.Index + pattern.Index;
+                        returnData = returnData.Insert(index, Settings.Domen);
+                    }
+                } while (isMatch);
+            }
+            return returnData;
+        }
+
+        public static string AddHostForImg(string data)
+        {
+            var returnData = data;
+            var patterns = new[]
+            {
+                new {Pattern = @"src=""/\S*""", Index = 5},
+                new {Pattern = @"src\s=""/\S*""", Index = 6},
+                new {Pattern = @"src=\s""/\S*""", Index = 6},
+                new {Pattern = @"src='/\S*'", Index = 5},
+                new {Pattern = @"src\s='/\S*'", Index = 6},
+                new {Pattern = @"src=\s'/\S*'", Index = 6}
+            };
+            foreach (var pattern in patterns)
+            {
+                var isMatch = false;
+                var regex = new Regex(pattern.Pattern);
+                do
+                {
+                    isMatch = regex.IsMatch(returnData);
+                    if (isMatch)
+                    {
+                        var match = regex.Match(returnData);
+                        var index = match.Index + pattern.Index;
+                        returnData = returnData.Insert(index, Settings.Domen);
+                    }
+                } while (isMatch);
+            }
+            return returnData;
+        }
+
+        public static string RemoveImgIfNecessary(string data)
+        {
+            var regex = new Regex(@"<img\s+[^>]*>");
+            var matches = regex.Matches(data);
+            if (matches.Count > 12)
+            {
+                var length = 0;
+                for (var i = 12; i < matches.Count; i++)
+                {
+                    var match = matches[i];
+                    data = data.Remove(match.Index - length, match.Length);
+                    length += match.Length;
+                }
+            }
+            return data;
+        }
+
+        private static string RemoveHeight(string data)
+        {
+            var regex = new Regex(@"height\s?=\s?""((\w|\W[^""]))*""");
+            var returnData = regex.Replace(data, string.Empty);
+            return returnData;
+        }
 
         #endregion
     }
