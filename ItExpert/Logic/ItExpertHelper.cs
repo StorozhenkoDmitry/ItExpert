@@ -5,7 +5,7 @@ using MonoTouch.Foundation;
 
 namespace ItExpert
 {
-	public static class ItManagerHelper
+	public static class ItExpertHelper
 	{
 		public static int StatusBarHeight 
 		{ 
@@ -14,6 +14,12 @@ namespace ItExpert
 				return 20;
 			}
 		}
+
+        public static float LargestImageSizeInArticlesPreview
+        {
+            get;
+            set;
+        }
 
 		public static UITextView GetTextView(UIFont font, UIColor foregroundColor, string text, float textViewWidth, PointF textViewLocation, UIView imageView = null)
 		{
@@ -58,11 +64,16 @@ namespace ItExpert
 			return new RectangleF (rectangle.X - subviewCoordinates.X, rectangle.Y - subviewCoordinates.Y, rectangle.Width, rectangle.Height);
 		}
 
-		public static UIImage GetImageFromBase64String(string base64String)
+        public static UIImage GetImageFromBase64String(string base64String)
+        {                      
+            return GetImageFromBase64String(base64String, 1);
+        }
+
+        public static UIImage GetImageFromBase64String(string base64String, float scale)
 		{
-			byte[] encodedDataAsBytes = Convert.FromBase64String ( base64String );
-			NSData data = NSData.FromArray ( encodedDataAsBytes );                            
-			return UIImage.LoadFromData ( data );
+			byte[] encodedDataAsBytes = Convert.FromBase64String(base64String);
+			NSData data = NSData.FromArray(encodedDataAsBytes);                            
+            return UIImage.LoadFromData(data, scale);
 		}
 
 		public static NSMutableAttributedString GetAttributedString(string text, UIFont font, UIColor foregroundColor)

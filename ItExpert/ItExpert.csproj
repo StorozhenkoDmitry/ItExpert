@@ -145,12 +145,16 @@
       <DependentUpon>ItExpertViewController.cs</DependentUpon>
     </Compile>
     <Compile Include="Logic\NewsTableSource.cs" />
-    <Compile Include="Logic\NewsTableViewCell.cs" />
     <Compile Include="ViewControllers\NewsDetailViewController.cs" />
-    <Compile Include="Logic\ItManagerHelper.cs" />
     <Compile Include="Logic\PushNewsDetailsEventArgs.cs" />
     <Compile Include="Logic\WebViewDelegate.cs" />
     <Compile Include="Logic\AnimatedImageView.cs" />
+    <Compile Include="Logic\ItExpertHelper.cs" />
+    <Compile Include="Logic\PortalContentCreator.cs" />
+    <Compile Include="Logic\ArticleTableViewCell.cs" />
+    <Compile Include="Logic\BaseContentCreator.cs" />
+    <Compile Include="Logic\BannerContentCreator.cs" />
+    <Compile Include="Logic\LoadMoreContentCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

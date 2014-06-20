@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using ItExpert.Model;
 using ItExpert.Enum;
 using System.Threading;
+using MonoTouch.Foundation;
 
 namespace ItExpert
 {
@@ -15,15 +16,15 @@ namespace ItExpert
 			_fromFavorite = fromFavorite;
 			_magazineAction = magazineAction;
 			_articles = items;
-			_cellIdentifier = "NewsCell";
+            _cellIdentifier = "ArticleCell";
 
-			_largestImageWidth = 0;
+            ItExpertHelper.LargestImageSizeInArticlesPreview = 0;
 
 			foreach (var article in _articles)
 			{
-				if (article.PreviewPicture.Width > _largestImageWidth)
+                if (article.PreviewPicture != null && article.PreviewPicture.Width > ItExpertHelper.LargestImageSizeInArticlesPreview)
 				{
-					_largestImageWidth = article.PreviewPicture.Width;
+                    ItExpertHelper.LargestImageSizeInArticlesPreview = article.PreviewPicture.Width;
 				}
 			}
 		}
@@ -35,29 +36,25 @@ namespace ItExpert
 			return _articles.Count;
 		}
 
-		public override UITableViewCell GetCell (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
+		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 		{
-			NewsTableViewCell cell = tableView.DequeueReusableCell (_cellIdentifier) as NewsTableViewCell;
+            ArticleTableViewCell cell = tableView.DequeueReusableCell (_cellIdentifier) as ArticleTableViewCell;
 
 			if (cell == null)
 			{
-				cell = new NewsTableViewCell (_cellIdentifier);
+                cell = new ArticleTableViewCell(UITableViewCellStyle.Default, _cellIdentifier);				
+			}			
 
-				cell.AddCellContent (_articles [indexPath.Row], _largestImageWidth);
-			}
-			else
-			{
-				cell.UpdateCell(_articles [indexPath.Row], _largestImageWidth);
-			}
+            cell.UpdateContent(indexPath.Row == 0, _articles[indexPath.Row]);
 
 			return cell;
 		}
 
-		public override float GetHeightForRow (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
+		public override float GetHeightForRow (UITableView tableView, NSIndexPath indexPath)
 		{
-			var cell = new NewsTableViewCell (_cellIdentifier);
+            var cell = new ArticleTableViewCell(UITableViewCellStyle.Default, _cellIdentifier);
 
-			return cell.GetHeightDependingOnContent (_articles [indexPath.Row], _largestImageWidth);
+            return cell.GetHeightDependingOnContent(indexPath.Row == 0, _articles[indexPath.Row]);
 		}
 
 		public override void RowSelected (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
@@ -166,9 +163,10 @@ namespace ItExpert
 			ApplicationWorker.Db.DeleteArticle(article.Id);
 		}
 
+
+
 		private List<Article> _articles;
 		private string _cellIdentifier;
-		private int _largestImageWidth;
 		private readonly bool _fromFavorite;
 		private MagazineAction _magazineAction;
 		private int _selectItemId = -1;

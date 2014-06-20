@@ -96,7 +96,9 @@ namespace ItExpert
 			_isLoadingData = true;
 			View.AutosizesSubviews = true;
 
-			_newsTableView = new UITableView(new RectangleF(0, 0, View.Bounds.Width, View.Bounds.Height), UITableViewStyle.Plain);
+            var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+
+            _newsTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, View.Bounds.Height- topOffset), UITableViewStyle.Plain);
 			_newsTableView.ScrollEnabled = true; 
 			_newsTableView.UserInteractionEnabled = true;
 			_newsTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
@@ -298,30 +300,39 @@ namespace ItExpert
 			{
 				var pictHeight = picture.Height;
 				var pictWidth = picture.Width;
+
 				if (pictHeight > maxPictureHeight)
 				{
 					var koef = pictHeight / maxPictureHeight;
 					pictHeight = (int)maxPictureHeight;
 					pictWidth = (int)(pictWidth / koef);
 				}
-				//Создать UIImageView из picture с шириной=pictWidth и высотой=pictHeight
-				//bannerView = ...
+				
+                bannerView = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
 			}
 			else
 			{
 				var koefScaling = UIScreen.MainScreen.Bounds.Size.Width / picture.Width;
 				var pictHeightScaling = picture.Height * koefScaling;
+
 				if (pictHeightScaling > maxPictureHeight)
 				{
 					koefScaling = (float)maxPictureHeight / picture.Height;
 				}
-				var encodedDataAsBytes = Convert.FromBase64String (picture.Data);
-				var data = NSData.FromArray (encodedDataAsBytes); 
-				bannerView = AnimatedImageView.GetAnimatedImageView (data);
-				bannerView.Frame = new RectangleF(0, 200, koefScaling * (picture.Width), koefScaling * (picture.Height));
+
+//                var bannerImage = ItExpertHelper.GetImageFromBase64String(picture.Data);
+//
+//                bannerView = new UIImageView(new RectangleF(0,0, bannerImage.Size.Width, bannerImage.Size.Height));
+//
+//                bannerView.AnimationImages = new UIImage[] { bannerImage };
+//                bannerView.AnimationDuration = bannerImage.Duration;
+//                bannerView.AnimationRepeatCount = 0;
+
+                bannerView = AnimatedImageView.GetAnimatedImageView (NSData.FromArray(Convert.FromBase64String(picture.Data)));
+                bannerView.Frame = new RectangleF(0, 0, koefScaling * (picture.Width), koefScaling * (picture.Height));
 			}
 			//Прикрепить обработчик клика по баннеру
-			//_extendedObject = bannerView;
+			_extendedObject = bannerView;
 		}
 
 		//Добавление в начало списка статей
