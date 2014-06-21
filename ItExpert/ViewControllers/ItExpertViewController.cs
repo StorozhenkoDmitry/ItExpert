@@ -73,6 +73,10 @@ namespace ItExpert
 		public override void ViewDidAppear (bool animated)
 		{
 			base.ViewDidAppear (animated);
+			if (_articlesTableView != null)
+			{
+				_articlesTableView.ReloadData ();
+			}
 		}
 
 		public override void ViewWillDisappear (bool animated)
@@ -99,6 +103,7 @@ namespace ItExpert
 			ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
 			ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
 			_isLoadingData = true;
+
 			View.AutosizesSubviews = true;
 
             var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
@@ -110,6 +115,8 @@ namespace ItExpert
 			_articlesTableView.Bounces = true;
 
 			View.Add (_articlesTableView);
+
+
 		}
 
 		#region Event Handlers
@@ -191,14 +198,26 @@ namespace ItExpert
 				{
 					//Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
-				SetLoadingImageVisible(false);
 			});
 		}
 
 		//Загрузка предыдущих статей
 		private void AddPreviousArticleOnClick(object sender, EventArgs eventArgs)
 		{
-			if (_isLoadingData) return;
+			if (_isLoadingData)return;
+			Action addLoadingProgress = () =>
+			{
+				var button = sender as UIButton;
+				if (button != null)
+				{
+					var loading = new UIActivityIndicatorView ( new RectangleF(0, 0, View.Bounds.Width, 40));
+					loading.ActivityIndicatorViewStyle = UIActivityIndicatorViewStyle.WhiteLarge;
+					loading.Color = UIColor.Blue;
+					loading.StartAnimating ();
+					button.Superview.Add (loading);
+					button.RemoveFromSuperview ();
+				}
+			};
 			if (!ApplicationWorker.Settings.OfflineMode)
 			{
 				var connectAccept = IsConnectionAccept();
@@ -215,11 +234,11 @@ namespace ItExpert
 					state =>
 					ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, lastTimestam,
 						_blockId, _sectionId, _authorId, _search));
-				SetLoadingImageVisible(true);
+				addLoadingProgress ();
 			}
 			else
 			{
-				SetLoadingImageVisible(true);
+				addLoadingProgress ();
 				Action getList = () =>
 				{
 					var count = _allArticles.Count();
@@ -290,14 +309,16 @@ namespace ItExpert
 			//			button.SetTextSize(ComplexUnitType.Sp, ApplicationWorker.Settings.HeaderSize);
 			//			button.SetTextColor(Color.Argb(255, 140, 140, 140));
 			//			button.SetBackgroundColor(ApplicationWorker.Settings.GetBackgroundColor());
-			//			button.Click += AddPreviousArticleOnClick;
+			//			
 			//			_addPreviousArticleButton = button;
 
-            _addPreviousArticleButton = new UIButton();
-            (_addPreviousArticleButton as UIButton).TitleLabel.Text = "Загрузить еще";
-            (_addPreviousArticleButton as UIButton).TitleLabel.TextAlignment = UITextAlignment.Center;
-            (_addPreviousArticleButton as UIButton).TitleLabel.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
-            (_addPreviousArticleButton as UIButton).BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			var button = new UIButton ();
+			button.TitleLabel.Text = "Загрузить еще";
+			button.TitleLabel.TextAlignment = UITextAlignment.Center;
+			button.TitleLabel.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			button.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			button.TouchUpInside += AddPreviousArticleOnClick;
+			_addPreviousArticleButton = button;
 		}
 
 		//Инициализация баннера
@@ -305,7 +326,6 @@ namespace ItExpert
 		{
 			var maxPictureHeight = UIScreen.MainScreen.Bounds.Size.Height * 0.15;
 			var picture = banner.Picture;
-			UIImageView bannerView = null;
 			//Если баннер не анимированный Gif
 			if (picture.Extension != PictureExtension.Gif)
 			{
@@ -319,7 +339,7 @@ namespace ItExpert
 					pictWidth = (int)(pictWidth / koef);
 				}
 				
-                bannerView = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
+				_extendedObject = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
 			}
 			else
 			{
@@ -330,12 +350,9 @@ namespace ItExpert
 				{
 					koefScaling = (float)maxPictureHeight / picture.Height;
 				}
-
-                bannerView = AnimatedImageView.GetAnimatedImageView (NSData.FromArray(Convert.FromBase64String(picture.Data)));
-                bannerView.Frame = new RectangleF(0, 0, koefScaling * (picture.Width), koefScaling * (picture.Height));
+				_extendedObject = new BannerView (banner, koefScaling);
 			}
 			//Прикрепить обработчик клика по баннеру
-			_extendedObject = bannerView;
 		}
 
 		//Добавление в начало списка статей
@@ -419,8 +436,7 @@ namespace ItExpert
 				{
 					_articles.RemoveAt(_articles.Count() - 1);
 				}
-				//Перерисовать список
-
+				_articlesTableView.ReloadData ();
 				return;
 			}
 			var position = _articles.Count(x => !x.IsReaded) - 1;
@@ -473,7 +489,7 @@ namespace ItExpert
 				});
 			}
 			//Перерисовать список
-
+			_articlesTableView.ReloadData();
 			if (ApplicationWorker.Settings.HideReaded)
 			{
 				//Прокрутить список к position

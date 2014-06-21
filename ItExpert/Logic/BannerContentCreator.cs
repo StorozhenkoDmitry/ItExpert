@@ -1,6 +1,7 @@
 ﻿using System;
 using ItExpert.Model;
 using MonoTouch.UIKit;
+using System.Drawing;
 
 namespace ItExpert
 {
@@ -8,19 +9,39 @@ namespace ItExpert
     {
         public override float GetContentHeight(UIView cellContentView, Article article)
         {
-            return (article.ExtendedObject as UIImageView).Frame.Height;
+			var imageView = article.ExtendedObject as UIImageView;
+			if (imageView != null)
+			{
+				return imageView.Frame.Height;
+			}
+			var bannerView = article.ExtendedObject as BannerView;
+			if (bannerView != null)
+			{
+				return bannerView.GetHeight ();
+			}
+			return 0;
         }
 
         protected override void Create(UITableViewCell cell, Article article)
         {
             cell.SelectionStyle = UITableViewCellSelectionStyle.None;
-            cell.ContentView.Add(article.ExtendedObject);
+			var bannerView = article.ExtendedObject as BannerView;
+			if (bannerView != null)
+			{
+				var image = bannerView.GetImage ();
+				cell.ContentView.Add(image);
+			}
         }
 
         protected override void Update(UITableViewCell cell, Article article)
         {
             cell.SelectionStyle = UITableViewCellSelectionStyle.None;
-            cell.ContentView.Add(article.ExtendedObject);
+			var bannerView = article.ExtendedObject as BannerView;
+			if (bannerView != null)
+			{
+				var image = bannerView.GetImage ();
+				cell.ContentView.Add(image);
+			}
         }
     }
 }

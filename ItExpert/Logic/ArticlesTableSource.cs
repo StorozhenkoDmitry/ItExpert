@@ -18,15 +18,8 @@ namespace ItExpert
 			_articles = items;
             _cellIdentifier = "ArticleCell";
 
-            ItExpertHelper.LargestImageSizeInArticlesPreview = 0;
-
-			foreach (var article in _articles)
-			{
-                if (article.PreviewPicture != null && article.PreviewPicture.Width > ItExpertHelper.LargestImageSizeInArticlesPreview)
-				{
-                    ItExpertHelper.LargestImageSizeInArticlesPreview = article.PreviewPicture.Width;
-				}
-			}
+			ItExpertHelper.LargestImageSizeInArticlesPreview = 
+				_articles.Where (x => x.PreviewPicture != null).Max (x => x.PreviewPicture.Width);
 		}
 
 		public event EventHandler<PushNewsDetailsEventArgs> PushNewsDetails;

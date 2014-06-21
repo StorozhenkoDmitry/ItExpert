@@ -470,14 +470,28 @@ namespace ItExpert
 			{
 				css = "<style>" + ApplicationWorker.Css + "</style>";
 			}
+			//В style я передаю строку стиля HTML с цветом и размером текста и цветом фона
 			var style = string.Empty;
+			//sectionString - раздел , articleAuthors-авторы, если пустые строки то не отображать
 			var html = "<html><head>" + css + "</head><body style='" + style + "'>" + text + video + "</body></html>";
 
-			//			После полного отображения выставить флаг и убрать сплаш
+			//пример подчеркивания
+			var textView = new UITextView(new RectangleF(20,120, 300, 200));
+			textView.Editable = false;
+			View.AddSubview (textView);
+			textView.AttributedText = new NSAttributedString (sectionString, new UIStringAttributes {
+				ForegroundColor = UIColor.Blue,
+				Font = UIFont.FromName ("Courier", 18f),
+				UnderlineStyle = NSUnderlineStyle.Single
+			});
+
+			//После полного отображения выставить флаг и убрать сплаш
+			//Прокрутить представление до самого верха
 			_isLoading = false;
 			//ShowSplash (false);
 		}
 
+		//Метод скрытия-отображения экрана заставки при загрузке
 		private void ShowSplash(bool isVisible)
 		{
 
@@ -492,14 +506,7 @@ namespace ItExpert
 				//				var textView = ItManagerHelper.GetTextView (UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.DetailHeaderSize), 
 				//					               ItManagerHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetForeColor ()), section.Section.Name,
 				//					               View.Frame.Width - _padding.Left - _padding.Right, new PointF (0, 0));
-				var textView = new UITextView(new RectangleF(20,20, 300, 200));
-				textView.Editable = false;
-				View.AddSubview (textView);
-				textView.AttributedText = new NSAttributedString (section.Section.Name, new UIStringAttributes {
-					ForegroundColor = UIColor.Blue,
-					Font = UIFont.FromName ("Courier", 18f),
-					UnderlineStyle = NSUnderlineStyle.Single
-				});
+
 				//				float textHeight = textView.Frame.Height;
 				//
 				//				textView.Dispose ();

@@ -155,6 +155,7 @@
     <Compile Include="Logic\LoadMoreContentCreator.cs" />
     <Compile Include="Logic\ArticlesTableSource.cs" />
     <Compile Include="ViewControllers\ArticleDetailsViewController.cs" />
+    <Compile Include="Logic\BannerView.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
