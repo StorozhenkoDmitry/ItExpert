@@ -4,12 +4,12 @@ namespace ItExpert
 {
 	public class PushNewsDetailsEventArgs: EventArgs
 	{
-		public PushNewsDetailsEventArgs (NewsDetailsViewController newsDetailsView)
+		public PushNewsDetailsEventArgs (ArticleDetailsViewController newsDetailsView)
 		{
 			NewsDetailsView = newsDetailsView;
 		}
 
-		public NewsDetailsViewController NewsDetailsView { get; set; }
+		public ArticleDetailsViewController NewsDetailsView { get; set; }
 	}
 }
 

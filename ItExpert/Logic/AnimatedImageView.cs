@@ -13,13 +13,12 @@ namespace ItExpert
 		public static UIImageView GetAnimatedImageView(string url, UIImageView imageView = null)
 		{
 			var sourceRef = CGImageSource.FromUrl(NSUrl.FromString(url));
-			return CreateAnimatedImageView (sourceRef, imageView);
 
+			return CreateAnimatedImageView (sourceRef, imageView);
 		}
 
 		public static UIImageView GetAnimatedImageView(NSData nsData, UIImageView imageView = null)
 		{
-
 			var sourceRef = CGImageSource.FromData(nsData);
 
 			return CreateAnimatedImageView(sourceRef, imageView);
@@ -55,6 +54,7 @@ namespace ItExpert
 			var framePercentageDurationsDouble = new List<double>(frameCount);
 			NSNumber currentDurationPercentage = 0.0f;
 			double currentDurationDouble = 0.0f;
+
 			for (int i = 0; i < frameCount; i++)
 			{
 				if (i != 0)
@@ -75,7 +75,9 @@ namespace ItExpert
 			var loopCount = imageSourceGIFProperties.ValueForKey(new NSString("LoopCount"));
 			var imageSourceLoopCount = float.Parse(loopCount.ToString());
 			var frameAnimation = new CAKeyFrameAnimation();
+
 			frameAnimation.KeyPath = "contents";
+
 			if (imageSourceLoopCount <= 0.0f)
 			{
 				frameAnimation.RepeatCount = float.MaxValue;
@@ -87,13 +89,14 @@ namespace ItExpert
 
 			imageSourceGIFProperties.Dispose ();
 
-
 			frameAnimation.CalculationMode = CAAnimation.AnimationDescrete;
 			frameAnimation.Values = frameImages.ToArray();
 			frameAnimation.Duration = totalFrameDuration;
 			frameAnimation.KeyTimes = framePercentageDurations.ToArray();
 			frameAnimation.RemovedOnCompletion = false;
+
 			var firstFrame = frameCGImages[0];
+
 			if(imageView == null)
 				imageView = new UIImageView(new RectangleF(0.0f, 0.0f, firstFrame.Width, firstFrame.Height));
 			else
@@ -101,7 +104,8 @@ namespace ItExpert
 
 			imageView.Layer.AddAnimation(frameAnimation, "contents");
 
-			frameAnimation.Dispose ();
+            frameAnimation.Dispose ();
+
 			return imageView;
 		}
 	}

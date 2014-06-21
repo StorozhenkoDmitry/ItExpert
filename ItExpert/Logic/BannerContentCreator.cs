@@ -11,16 +11,16 @@ namespace ItExpert
             return (article.ExtendedObject as UIImageView).Frame.Height;
         }
 
-        protected override void Create(UIView cellContentView, Article article)
+        protected override void Create(UITableViewCell cell, Article article)
         {
-            (article.ExtendedObject as UIImageView).StartAnimating();
-            cellContentView.Add(article.ExtendedObject);
+            cell.SelectionStyle = UITableViewCellSelectionStyle.None;
+            cell.ContentView.Add(article.ExtendedObject);
         }
 
-        protected override void Update(UIView cellContentView, Article article)
+        protected override void Update(UITableViewCell cell, Article article)
         {
-            (article.ExtendedObject as UIImageView).StartAnimating();
-            cellContentView.Add(article.ExtendedObject);
+            cell.SelectionStyle = UITableViewCellSelectionStyle.None;
+            cell.ContentView.Add(article.ExtendedObject);
         }
     }
 }

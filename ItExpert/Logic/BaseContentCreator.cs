@@ -12,7 +12,8 @@ namespace ItExpert
             Magazine,
             Header,
             Banner,
-            LoadMore
+            LoadMore,
+            Placeholder
         }
 
         public BaseContentCreator()
@@ -24,27 +25,27 @@ namespace ItExpert
             _needToCreateContent = true;
         }
 
-        public void UpdateContent(UIView cellContentView, Article article)
+        public void UpdateContent(UITableViewCell cell, Article article)
         {
-            RemoveSubviews(cellContentView);
+            RemoveSubviews(cell.ContentView);
 
             if (_needToCreateContent)
             {
-                Create(cellContentView, article);
+                Create(cell, article);
 
                 _needToCreateContent = false;
             }
             else
             {
-                Update(cellContentView, article);
+                Update(cell, article);
             }
         }
 
         public abstract float GetContentHeight(UIView cellContentView, Article article);
 
-        protected abstract void Create(UIView cellContentView, Article article);
+        protected abstract void Create(UITableViewCell cell, Article article);
 
-        protected abstract void Update(UIView cellContentView, Article article);
+        protected abstract void Update(UITableViewCell cell, Article article);
 
         protected void RemoveSubviews(UIView view)
         {

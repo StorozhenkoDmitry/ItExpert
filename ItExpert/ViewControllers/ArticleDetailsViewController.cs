@@ -1,20 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 
 using MonoTouch.Foundation;
 using MonoTouch.UIKit;
-using ItExpert.Model;
 using ItExpert.Enum;
-using System.Collections.Generic;
-using System.Threading;
+using ItExpert.Model;
 using ItExpert.ServiceLayer;
 
 namespace ItExpert
 {
-	public class NewsDetailsViewController: UIViewController
+	public class ArticleDetailsViewController: UIViewController
 	{
-		public NewsDetailsViewController (Article article, List<int> articlesId, bool fromFavorite, MagazineAction magazineAction)
+		public ArticleDetailsViewController (Article article, List<int> articlesId, bool fromFavorite, MagazineAction magazineAction)
 		{
 			_article = article;
 			_fromFavorite = fromFavorite;

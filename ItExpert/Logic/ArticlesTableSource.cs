@@ -9,9 +9,9 @@ using MonoTouch.Foundation;
 
 namespace ItExpert
 {
-	public class NewsTableSource: UITableViewSource
+	public class ArticlesTableSource: UITableViewSource
 	{
-		public NewsTableSource (List<Article> items, bool fromFavorite, MagazineAction magazineAction)
+		public ArticlesTableSource (List<Article> items, bool fromFavorite, MagazineAction magazineAction)
 		{
 			_fromFavorite = fromFavorite;
 			_magazineAction = magazineAction;
@@ -59,14 +59,15 @@ namespace ItExpert
 
 		public override void RowSelected (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
 		{
-			NewsDetailsViewController newsDetailsView = OpenArticle(_articles[indexPath.Row]);
-			if (newsDetailsView != null)
+            ArticleDetailsViewController articleDetailsView = OpenArticle(_articles[indexPath.Row]);
+
+			if (articleDetailsView != null)
 			{
-				OnPushNewsDetails (newsDetailsView);
+				OnPushNewsDetails (articleDetailsView);
 			}
 		}
 
-		private void OnPushNewsDetails(NewsDetailsViewController newsDetailsView)
+		private void OnPushNewsDetails(ArticleDetailsViewController newsDetailsView)
 		{
 			if (PushNewsDetails != null)
 			{
@@ -90,9 +91,9 @@ namespace ItExpert
 		}
 
 		//Вызывается при открытии статьи
-		private NewsDetailsViewController OpenArticle(Article article)
+		private ArticleDetailsViewController OpenArticle(Article article)
 		{
-			NewsDetailsViewController controller = null;
+			ArticleDetailsViewController controller = null;
 			if (article != null)
 			{
 				if (article.ArticleType == ArticleType.Header || article.ArticleType == ArticleType.ExtendedObject ||
@@ -105,7 +106,7 @@ namespace ItExpert
 					_articles.Where(x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal));
 				var articlesId = _articles.Where(x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal)
 					.Select(x => x.Id).ToList();
-				controller = new NewsDetailsViewController (article, articlesId, _fromFavorite, _magazineAction);
+				controller = new ArticleDetailsViewController (article, articlesId, _fromFavorite, _magazineAction);
 			}
 			return controller;
 		}

@@ -59,6 +59,13 @@ namespace ItExpert
 			return textView;
 		}
 
+        public static float GetTextHeight(UIFont font, string text, float textViewWidth)
+        {
+            var textView = GetTextView(font, UIColor.Black, text, textViewWidth, new PointF(0, 0));
+
+            return textView.Frame.Height;
+        }
+
 		public static RectangleF ConvertRectangleToSubviewCoordinates(RectangleF rectangle, PointF subviewCoordinates)
 		{
 			return new RectangleF (rectangle.X - subviewCoordinates.X, rectangle.Y - subviewCoordinates.Y, rectangle.Width, rectangle.Height);

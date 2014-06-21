@@ -21,7 +21,7 @@ namespace ItExpert
         {
             var creator = CreatorFactory(isBannerRow, article);
 
-            creator.UpdateContent(ContentView, article);
+            creator.UpdateContent(this, article);
         }
 
         public float GetHeightDependingOnContent(bool isBannerRow, Article article)

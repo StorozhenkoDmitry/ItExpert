@@ -16,7 +16,7 @@ namespace ItExpert
 	{
 		#region Fields
 
-		private UITableView _newsTableView;
+		private UITableView _articlesTableView;
 		private bool _isLoadingData = false;
 		private List<Article> _articles;
 		private int _blockId = -1;
@@ -63,6 +63,11 @@ namespace ItExpert
 		public override void ViewWillAppear (bool animated)
 		{
 			base.ViewWillAppear (animated);
+
+            if (_articlesTableView != null)
+            {
+                _articlesTableView.DeselectRow(_articlesTableView.IndexPathForSelectedRow, true);
+            }
 		}
 
 		public override void ViewDidAppear (bool animated)
@@ -98,13 +103,13 @@ namespace ItExpert
 
             var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
 
-            _newsTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, View.Bounds.Height- topOffset), UITableViewStyle.Plain);
-			_newsTableView.ScrollEnabled = true; 
-			_newsTableView.UserInteractionEnabled = true;
-			_newsTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
-			_newsTableView.Bounces = true;
+            _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, View.Bounds.Height- topOffset), UITableViewStyle.Plain);
+			_articlesTableView.ScrollEnabled = true; 
+			_articlesTableView.UserInteractionEnabled = true;
+			_articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
+			_articlesTableView.Bounces = true;
 
-			View.Add (_newsTableView);
+			View.Add (_articlesTableView);
 		}
 
 		#region Event Handlers
@@ -287,6 +292,12 @@ namespace ItExpert
 			//			button.SetBackgroundColor(ApplicationWorker.Settings.GetBackgroundColor());
 			//			button.Click += AddPreviousArticleOnClick;
 			//			_addPreviousArticleButton = button;
+
+            _addPreviousArticleButton = new UIButton();
+            (_addPreviousArticleButton as UIButton).TitleLabel.Text = "Загрузить еще";
+            (_addPreviousArticleButton as UIButton).TitleLabel.TextAlignment = UITextAlignment.Center;
+            (_addPreviousArticleButton as UIButton).TitleLabel.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+            (_addPreviousArticleButton as UIButton).BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 		}
 
 		//Инициализация баннера
@@ -319,14 +330,6 @@ namespace ItExpert
 				{
 					koefScaling = (float)maxPictureHeight / picture.Height;
 				}
-
-//                var bannerImage = ItExpertHelper.GetImageFromBase64String(picture.Data);
-//
-//                bannerView = new UIImageView(new RectangleF(0,0, bannerImage.Size.Width, bannerImage.Size.Height));
-//
-//                bannerView.AnimationImages = new UIImage[] { bannerImage };
-//                bannerView.AnimationDuration = bannerImage.Duration;
-//                bannerView.AnimationRepeatCount = 0;
 
                 bannerView = AnimatedImageView.GetAnimatedImageView (NSData.FromArray(Convert.FromBase64String(picture.Data)));
                 bannerView.Frame = new RectangleF(0, 0, koefScaling * (picture.Width), koefScaling * (picture.Height));
@@ -390,19 +393,19 @@ namespace ItExpert
 					ExtendedObject = _addPreviousArticleButton
 				});
 			}
-			if (_newsTableView.Source != null) 
+			if (_articlesTableView.Source != null) 
 			{
-				(_newsTableView.Source as NewsTableSource).PushNewsDetails -= OnPushNewsDetails;
+				(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushNewsDetails;
 
-				_newsTableView.Source.Dispose();
-				_newsTableView.Source = null;
+				_articlesTableView.Source.Dispose();
+				_articlesTableView.Source = null;
 			}
 
-			NewsTableSource source = new NewsTableSource(_articles, false, MagazineAction.NoAction);
+			ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
 			source.PushNewsDetails += OnPushNewsDetails;
 
-			_newsTableView.Source = source;
-			_newsTableView.ReloadData();
+			_articlesTableView.Source = source;
+			_articlesTableView.ReloadData();
 		}
 
 		//Добавление последующих статей

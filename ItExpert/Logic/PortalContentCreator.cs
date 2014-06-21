@@ -28,22 +28,26 @@ namespace ItExpert
 			return height;
 		}
 
-        protected override void Create(UIView cellContentView, Article article)
+        protected override void Create(UITableViewCell cell, Article article)
         {
-            CreateCellElements (cellContentView, article, ItExpertHelper.LargestImageSizeInArticlesPreview);
+            cell.SelectionStyle = UITableViewCellSelectionStyle.Default;
 
-            AddCellElements(cellContentView);
+            CreateCellElements (cell.ContentView, article, ItExpertHelper.LargestImageSizeInArticlesPreview);
+
+            AddCellElements(cell.ContentView);
         }
        
-        protected override void Update(UIView cellContentView, Article article)
+        protected override void Update(UITableViewCell cell, Article article)
         {
+            cell.SelectionStyle = UITableViewCellSelectionStyle.Default;
+
             _article = article;
 
             var buttonImage = new UIImage(GetIsReadedButtonImageData(_article.IsReaded), (float)2.5);
 
             _isReadedButtonImageView.Image = buttonImage;
 
-            UpdateTextView (_headerTextView, cellContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width,
+            UpdateTextView (_headerTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width,
                 _previewHeaderFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
 
             if (_imageView != null && _imageView.Image != null)
@@ -58,15 +62,15 @@ namespace ItExpert
                 _imageView.Frame = new RectangleF (ItExpertHelper.LargestImageSizeInArticlesPreview / 2 - article.PreviewPicture.Width / 2, 
                     0, article.PreviewPicture.Width, article.PreviewPicture.Height);
 
-                _imageViewContainer.Frame = new RectangleF (cellContentView.Bounds.Width - ItExpertHelper.LargestImageSizeInArticlesPreview - _padding.Right, 
+                _imageViewContainer.Frame = new RectangleF (cell.ContentView.Bounds.Width - ItExpertHelper.LargestImageSizeInArticlesPreview - _padding.Right, 
                     _headerTextView.Frame.Bottom + _padding.Top, ItExpertHelper.LargestImageSizeInArticlesPreview, article.PreviewPicture.Height);
             }
 
-            UpdateTextView (_previewTextView, cellContentView.Bounds.Width - _padding.Right - _padding.Left, 
+            UpdateTextView (_previewTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left, 
                 _previewTextFont, _forecolor, article.PreviewText, 
                 new PointF (_padding.Left, _headerTextView.Frame.Bottom + _padding.Top), _imageViewContainer);
 
-            AddCellElements(cellContentView);
+            AddCellElements(cell.ContentView);
         }
 
         private void CreateCellElements(UIView cellContentView, Article article, float largestImageWidth)
@@ -154,7 +158,7 @@ namespace ItExpert
 
             _isReadedButtonImageView.Image = buttonImage;
 
-			NewsTableSource.SetIsReadedForArticle(_article);
+			ArticlesTableSource.SetIsReadedForArticle(_article);
         }
 
 		private UIView _imageViewContainer;
