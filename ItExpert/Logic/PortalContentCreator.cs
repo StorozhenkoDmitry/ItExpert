@@ -87,10 +87,8 @@ namespace ItExpert
     
             _isReadedButton.Add(_isReadedButtonImageView);
 
-            _headerTextView = ItExpertHelper.GetTextView (_previewHeaderFont, _forecolor, article.Name, 
+            _headerTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, _previewHeaderFont, _forecolor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
-
-			_headerTextView.DataDetectorTypes = UIDataDetectorType.Link;
 
 			_imageView = new UIImageView(new RectangleF (largestImageWidth/2 - article.PreviewPicture.Width / 2, 
 				0, article.PreviewPicture.Width, article.PreviewPicture.Height));
@@ -102,7 +100,7 @@ namespace ItExpert
 
 			_imageViewContainer.Add (_imageView);
 
-            _previewTextView = ItExpertHelper.GetTextView(_previewTextFont, _forecolor , article.PreviewText,
+            _previewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText,_previewTextFont, _forecolor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, _headerTextView.Frame.Bottom + _padding.Top), _imageViewContainer);
 		}
 

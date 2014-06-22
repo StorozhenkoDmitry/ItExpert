@@ -21,15 +21,13 @@ namespace ItExpert
             set;
         }
 
-		public static UITextView GetTextView(UIFont font, UIColor foregroundColor, string text, float textViewWidth, PointF textViewLocation, UIView imageView = null)
-		{
+        public static UITextView GetTextView(NSAttributedString attributedString, float textViewWidth, PointF textViewLocation, UIView imageView = null)
+        {
 			var size = UIScreen.MainScreen.Bounds.Size;
 
 			var storage = new NSTextStorage ();
 			var container = new NSTextContainer (new Size ((int)textViewWidth, int.MaxValue)) { LineFragmentPadding = 0 };
 			var layoutManger = new NSLayoutManager ();
-
-			var attributedString = GetAttributedString (text, font, foregroundColor);
 
 			storage.SetString (attributedString);
 			storage.AddLayoutManager (layoutManger);
@@ -61,7 +59,7 @@ namespace ItExpert
 
         public static float GetTextHeight(UIFont font, string text, float textViewWidth)
         {
-            var textView = GetTextView(font, UIColor.Black, text, textViewWidth, new PointF(0, 0));
+            var textView = GetTextView(GetAttributedString(text, font, UIColor.Black), textViewWidth, new PointF(0, 0));
 
             return textView.Frame.Height;
         }

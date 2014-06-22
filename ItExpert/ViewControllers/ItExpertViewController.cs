@@ -259,7 +259,7 @@ namespace ItExpert
 		}
 
 
-		private void OnPushNewsDetails(object sender, PushNewsDetailsEventArgs e)
+		private void OnPushArticleDetails(object sender, PushNewsDetailsEventArgs e)
 		{
 			NavigationController.PushViewController (e.NewsDetailsView, true);
 		}
@@ -412,14 +412,14 @@ namespace ItExpert
 			}
 			if (_articlesTableView.Source != null) 
 			{
-				(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushNewsDetails;
+				(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
 
 				_articlesTableView.Source.Dispose();
 				_articlesTableView.Source = null;
 			}
 
 			ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
-			source.PushNewsDetails += OnPushNewsDetails;
+			source.PushNewsDetails += OnPushArticleDetails;
 
 			_articlesTableView.Source = source;
 			_articlesTableView.ReloadData();
