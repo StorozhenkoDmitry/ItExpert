@@ -325,32 +325,35 @@ namespace ItExpert
 		private void InitBanner(Banner banner)
 		{
 			var maxPictureHeight = UIScreen.MainScreen.Bounds.Size.Height * 0.15;
+			var screenWidth = UIScreen.MainScreen.Bounds.Size.Width;
 			var picture = banner.Picture;
 			//Если баннер не анимированный Gif
 			if (picture.Extension != PictureExtension.Gif)
 			{
-				var pictHeight = picture.Height;
-				var pictWidth = picture.Width;
-
-				if (pictHeight > maxPictureHeight)
-				{
-					var koef = pictHeight / maxPictureHeight;
-					pictHeight = (int)maxPictureHeight;
-					pictWidth = (int)(pictWidth / koef);
-				}
-				
-				_extendedObject = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
-			}
-			else
-			{
-				var koefScaling = UIScreen.MainScreen.Bounds.Size.Width / picture.Width;
+				var koefScaling = screenWidth / picture.Width;
 				var pictHeightScaling = picture.Height * koefScaling;
-
 				if (pictHeightScaling > maxPictureHeight)
 				{
 					koefScaling = (float)maxPictureHeight / picture.Height;
 				}
-				_extendedObject = new BannerView (banner, koefScaling);
+				var x = 0;
+				if ((int)(koefScaling * (picture.Width)) < (int)screenWidth)
+				{
+					x = (int)(((int)screenWidth - (int)(koefScaling * (picture.Width))) / 2);
+				}
+				var image = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
+				image.Frame = new RectangleF (x, 0, picture.Width * koefScaling, picture.Height * koefScaling);
+				_extendedObject = image;
+			}
+			else
+			{
+				var koefScaling = screenWidth / picture.Width;
+				var pictHeightScaling = picture.Height * koefScaling;
+				if (pictHeightScaling > maxPictureHeight)
+				{
+					koefScaling = (float)maxPictureHeight / picture.Height;
+				}
+				_extendedObject = new BannerView (banner, koefScaling, screenWidth);
 			}
 			//Прикрепить обработчик клика по баннеру
 		}

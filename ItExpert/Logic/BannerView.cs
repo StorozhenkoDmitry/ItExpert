@@ -10,11 +10,13 @@ namespace ItExpert
 	{
 		private Banner _banner;
 		private float _koefScaling;
+		private float _screenWidth;
 
-		public BannerView (Banner banner, float koefScaling)
+		public BannerView (Banner banner, float koefScaling, float screenWidth)
 		{
 			_banner = banner;
 			_koefScaling = koefScaling;
+			_screenWidth = screenWidth;
 		}
 
 		public float GetHeight()
@@ -26,8 +28,13 @@ namespace ItExpert
 		{
 			var bannerView = 
 				AnimatedImageView.GetAnimatedImageView (NSData.FromArray(Convert.FromBase64String(_banner.Picture.Data)));
+			var x = 0;
+			if ((int)(_koefScaling * (_banner.Picture.Width)) < (int)_screenWidth)
+			{
+				x = (int)(((int)_screenWidth - (int)(_koefScaling * (_banner.Picture.Width))) / 2);
+			}
 			bannerView.Frame = 
-				new RectangleF(0, 0, _koefScaling * (_banner.Picture.Width), _koefScaling * (_banner.Picture.Height));
+				new RectangleF(x, 0, _koefScaling * (_banner.Picture.Width), _koefScaling * (_banner.Picture.Height));
 			return bannerView;
 		}
 	}

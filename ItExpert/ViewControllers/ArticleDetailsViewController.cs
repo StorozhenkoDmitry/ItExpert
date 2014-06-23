@@ -480,10 +480,9 @@ namespace ItExpert
 
 			//После полного отображения выставить флаг и убрать сплаш
 			//Прокрутить представление до самого верха
+            AddContent(sectionString, articleAuthors, html);
 			_isLoading = false;
 			//ShowSplash (false);
-            AddContent(sectionString, articleAuthors, html);
-
 		}
 
 		//Метод скрытия-отображения экрана заставки при загрузке

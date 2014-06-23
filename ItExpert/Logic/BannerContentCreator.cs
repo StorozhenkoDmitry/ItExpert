@@ -31,6 +31,11 @@ namespace ItExpert
 				var image = bannerView.GetImage ();
 				cell.ContentView.Add(image);
 			}
+			var imageView = article.ExtendedObject as UIImageView;
+			if (imageView != null)
+			{
+				cell.ContentView.Add(imageView);
+			}
         }
 
         protected override void Update(UITableViewCell cell, Article article)
@@ -41,6 +46,11 @@ namespace ItExpert
 			{
 				var image = bannerView.GetImage ();
 				cell.ContentView.Add(image);
+			}
+			var imageView = article.ExtendedObject as UIImageView;
+			if (imageView != null)
+			{
+				cell.ContentView.Add(imageView);
 			}
         }
     }
