@@ -101,6 +101,11 @@
     <BundleResource Include="Resources\Default-568h%402x.png" />
     <BundleResource Include="Resources\ReadedButton.png" />
     <BundleResource Include="Resources\NotReadedButton.png" />
+    <BundleResource Include="Resources\Archive.png" />
+    <BundleResource Include="Resources\Magazine.png" />
+    <BundleResource Include="Resources\Favorites.png" />
+    <BundleResource Include="Resources\News.png" />
+    <BundleResource Include="Resources\Trends.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />

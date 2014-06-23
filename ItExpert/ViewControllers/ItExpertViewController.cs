@@ -94,29 +94,31 @@ namespace ItExpert
 		void Initialize()
 		{
 			_startPage = true;
+
 			InitAddPreviousArticleButton ();
+
 			var screenWidth =
 				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
+
 			ApplicationWorker.Settings.ScreenWidth = screenWidth;
 			ApplicationWorker.Settings.SaveSettings();
 			ApplicationWorker.Settings.LoadDetails = false;
 			ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
 			ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
+
 			_isLoadingData = true;
 
 			View.AutosizesSubviews = true;
 
             var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
 
-            _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, View.Bounds.Height- topOffset), UITableViewStyle.Plain);
+            _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, View.Bounds.Height- topOffset - NavigationController.Toolbar.Frame.Height), UITableViewStyle.Plain);
 			_articlesTableView.ScrollEnabled = true; 
 			_articlesTableView.UserInteractionEnabled = true;
 			_articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
 			_articlesTableView.Bounces = true;
 
 			View.Add (_articlesTableView);
-
-
 		}
 
 		#region Event Handlers
