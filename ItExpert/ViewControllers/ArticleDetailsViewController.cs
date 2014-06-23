@@ -462,7 +462,7 @@ namespace ItExpert
 			{
 				articleAuthors = string.Join("/", article.Authors.Select(x => x.Name));
 			}
-			var text = ApplicationWorker.NormalizeDetailText(article, (int)UIScreen.MainScreen.Bounds.Size.Width);
+			var text = ApplicationWorker.NormalizeDetailText(article, (int)_maxWidth);
 			var video = string.Empty;
 			if (!string.IsNullOrWhiteSpace(article.Video))
 			{
@@ -537,9 +537,9 @@ namespace ItExpert
 
                 var picture = _article.DetailPicture;
                     
-                if (picture.Width > View.Frame.Width)
+				if (picture.Width > (View.Frame.Width - _padding.Left - _padding.Right))
                 {
-                    scale = View.Frame.Width / picture.Width;
+					scale = picture.Width / (View.Frame.Width - _padding.Left - _padding.Right);
                 }
 
                 if (picture.Height > View.Frame.Height * 0.35)
@@ -554,7 +554,7 @@ namespace ItExpert
 
                 var image = ItExpertHelper.GetImageFromBase64String(picture.Data, scale);
 
-                _articleImageView = new UIImageView(new RectangleF((View.Frame.Width - _padding.Left - _padding.Right)/2 - image.Size.Width / 2, 
+				_articleImageView = new UIImageView(new RectangleF((View.Frame.Width - image.Size.Width) / 2, 
                     top, image.Size.Width, image.Size.Height));
 
                 _articleImageView.Image = image;
