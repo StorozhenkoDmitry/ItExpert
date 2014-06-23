@@ -40,10 +40,6 @@ namespace ItExpert
 			get { return UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone; }
 		}
 
-		public ItExpertViewController (IntPtr handle) : base (handle)
-		{
-		}
-
 		public override void DidReceiveMemoryWarning ()
 		{
 			// Releases the view if it doesn't have a superview.
@@ -94,8 +90,17 @@ namespace ItExpert
 		void Initialize()
 		{
 			_startPage = true;
+            _isLoadingData = true;
 
-			InitAddPreviousArticleButton ();
+            float scale = 3.8f;
+
+            TabBarItem = new UITabBarItem("News", new UIImage(NSData.FromFile("News.png"), scale), 0);
+
+            View.AutosizesSubviews = true;
+
+            var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+
+            AutomaticallyAdjustsScrollViewInsets = false;
 
 			var screenWidth =
 				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
@@ -106,13 +111,12 @@ namespace ItExpert
 			ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
 			ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
 
-			_isLoadingData = true;
+            InitAddPreviousArticleButton ();
+            InitBottomToolbar();
 
-			View.AutosizesSubviews = true;
+            _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, 
+                View.Bounds.Height- topOffset - ViewControllersContainer.BottomToolbarView.Frame.Height), UITableViewStyle.Plain);
 
-            var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
-
-            _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, View.Bounds.Height- topOffset - NavigationController.Toolbar.Frame.Height), UITableViewStyle.Plain);
 			_articlesTableView.ScrollEnabled = true; 
 			_articlesTableView.UserInteractionEnabled = true;
 			_articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
@@ -321,7 +325,18 @@ namespace ItExpert
 			button.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			button.TouchUpInside += AddPreviousArticleOnClick;
 			_addPreviousArticleButton = button;
-		}
+        }
+
+        private void InitBottomToolbar()
+        {
+            float height = 66;
+
+            ViewControllersContainer.BottomToolbarView.Frame = new RectangleF(0, View.Frame.Height - height, View.Frame.Width, height);
+            ViewControllersContainer.BottomToolbarView.NavigationController = NavigationController;
+            ViewControllersContainer.BottomToolbarView.LayoutIfNeeded();
+
+            View.Add(ViewControllersContainer.BottomToolbarView);
+        }
 
 		//Инициализация баннера
 		private void InitBanner(Banner banner)

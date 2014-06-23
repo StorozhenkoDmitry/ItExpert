@@ -161,6 +161,14 @@
     <Compile Include="Logic\ArticlesTableSource.cs" />
     <Compile Include="ViewControllers\ArticleDetailsViewController.cs" />
     <Compile Include="Logic\BannerView.cs" />
+    <Compile Include="Logic\BottomToolbarView.cs" />
+    <Compile Include="Logic\BottomToolbarButton.cs" />
+    <Compile Include="ViewControllers\TrendsViewController.cs" />
+    <Compile Include="ViewControllers\MagazineViewController.cs" />
+    <Compile Include="ViewControllers\ArchiveViewController.cs" />
+    <Compile Include="ViewControllers\FavoritesViewController.cs" />
+    <Compile Include="Logic\ViewControllersContainer.cs" />
+    <Compile Include="ViewControllers\MainViewController.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
