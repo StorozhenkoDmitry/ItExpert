@@ -12,7 +12,7 @@ using ItExpert.ServiceLayer;
 
 namespace ItExpert
 {
-	public partial class ItExpertViewController : UIViewController
+	public partial class NewsViewController : UIViewController
 	{
 		#region Fields
 
@@ -31,10 +31,15 @@ namespace ItExpert
 		private bool _startPage = false;
 		private bool _headerAdded = false;
 		private string _header = null;
+		private BottomToolbarView _bottomBar = null;
+		private UIActivityIndicatorView _loadingIndicator;
 
 		#endregion
 
 		#region UIViewController members
+
+		public NewsViewController(){
+		}
 
 		static bool UserInterfaceIdiomIsPhone {
 			get { return UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone; }
@@ -87,6 +92,8 @@ namespace ItExpert
 
 		#endregion
 
+		#region Init
+
 		void Initialize()
 		{
 			_startPage = true;
@@ -102,6 +109,7 @@ namespace ItExpert
 
             AutomaticallyAdjustsScrollViewInsets = false;
 
+			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			var screenWidth =
 				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
 
@@ -113,9 +121,10 @@ namespace ItExpert
 
             InitAddPreviousArticleButton ();
             InitBottomToolbar();
+			InitLoadingProgress ();
 
             _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, 
-                View.Bounds.Height- topOffset - ViewControllersContainer.BottomToolbarView.Frame.Height), UITableViewStyle.Plain);
+				View.Bounds.Height- topOffset - _bottomBar.Frame.Height), UITableViewStyle.Plain);
 
 			_articlesTableView.ScrollEnabled = true; 
 			_articlesTableView.UserInteractionEnabled = true;
@@ -124,6 +133,87 @@ namespace ItExpert
 
 			View.Add (_articlesTableView);
 		}
+
+		//Создание кнопки Загрузить еще
+		private void InitAddPreviousArticleButton()
+		{
+			var button = new UIButton ();
+			button.TitleLabel.Text = "Загрузить еще";
+			button.TitleLabel.TextAlignment = UITextAlignment.Center;
+			button.TitleLabel.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			button.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			button.TouchUpInside += AddPreviousArticleOnClick;
+			_addPreviousArticleButton = button;
+		}
+
+		//Инициализация панели навигации
+		private void InitBottomToolbar()
+		{
+			float height = 66;
+
+			_bottomBar = new BottomToolbarView ();
+			_bottomBar.Frame = new RectangleF(0, View.Frame.Height - height, View.Frame.Width, height);
+			_bottomBar.LayoutIfNeeded();
+			_bottomBar.NewsButton.SetState (true);	
+			_bottomBar.NewsButton.ButtonClick += ButNewsOnClick;
+			_bottomBar.TrendsButton.ButtonClick += ButTrendsOnClick;
+			_bottomBar.MagazineButton.ButtonClick += ButMagazineOnClick;
+			_bottomBar.ArchiveButton.ButtonClick += ButArchiveOnClick;
+			_bottomBar.FavoritesButton.ButtonClick += ButFavoriteOnClick;
+			View.Add(_bottomBar);
+		}
+
+		//Инициализация баннера
+		private void InitBanner(Banner banner)
+		{
+			var maxPictureHeight = UIScreen.MainScreen.Bounds.Size.Height * 0.15;
+			var screenWidth = UIScreen.MainScreen.Bounds.Size.Width;
+			var picture = banner.Picture;
+			//Если баннер не анимированный Gif
+			if (picture.Extension != PictureExtension.Gif)
+			{
+				var koefScaling = screenWidth / picture.Width;
+				var pictHeightScaling = picture.Height * koefScaling;
+				if (pictHeightScaling > maxPictureHeight)
+				{
+					koefScaling = (float)maxPictureHeight / picture.Height;
+				}
+				var x = 0;
+				if ((int)(koefScaling * (picture.Width)) < (int)screenWidth)
+				{
+					x = (int)(((int)screenWidth - (int)(koefScaling * (picture.Width))) / 2);
+				}
+				var image = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
+				image.Frame = new RectangleF (x, 0, picture.Width * koefScaling, picture.Height * koefScaling);
+				_extendedObject = image;
+			}
+			else
+			{
+				var koefScaling = screenWidth / picture.Width;
+				var pictHeightScaling = picture.Height * koefScaling;
+				if (pictHeightScaling > maxPictureHeight)
+				{
+					koefScaling = (float)maxPictureHeight / picture.Height;
+				}
+				_extendedObject = new BannerView (banner, koefScaling, screenWidth);
+			}
+			//Прикрепить обработчик клика по баннеру
+		}
+
+		void InitLoadingProgress()
+		{
+			var height = 50;
+			var bottomBarHeight = _bottomBar.Frame.Height;
+			_loadingIndicator = new UIActivityIndicatorView (
+				new RectangleF (0, View.Bounds.Height - (height + bottomBarHeight), View.Bounds.Width, height));
+			_loadingIndicator.ActivityIndicatorViewStyle = UIActivityIndicatorViewStyle.WhiteLarge;
+			_loadingIndicator.Color = UIColor.Blue;
+			_loadingIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			View.Add (_loadingIndicator);
+			_loadingIndicator.Hidden = true;
+		}
+
+		#endregion
 
 		#region Event Handlers
 
@@ -264,6 +354,37 @@ namespace ItExpert
 			}
 		}
 
+		private void ButNewsOnClick(object sender, EventArgs e)
+		{
+			_headerAdded = false;
+			_header = null;
+			PageNewsActivate();
+		}
+
+		private void ButTrendsOnClick(object sender, EventArgs e)
+		{
+			_headerAdded = false;
+			_header = null;
+			PageTrendsActivate();
+		}
+
+		private void ButArchiveOnClick(object sender, EventArgs e)
+		{
+			var archiveController = new ArchiveViewController ();
+			NavigationController.PushViewController (archiveController, true);
+		}
+
+		private void ButMagazineOnClick(object sender, EventArgs e)
+		{
+			var magazineController = new MagazineViewController (-1);
+			NavigationController.PushViewController (magazineController, true);
+		}
+
+		private void ButFavoriteOnClick(object sender, EventArgs e)
+		{
+			var favoriteController = new FavoritesViewController ();
+			NavigationController.PushViewController (favoriteController, true);
+		}
 
 		private void OnPushArticleDetails(object sender, PushNewsDetailsEventArgs e)
 		{
@@ -273,6 +394,116 @@ namespace ItExpert
 		#endregion
 
 		#region Activity logic
+
+		public void ShowFromAnotherScreen(Page pageToShow)
+		{
+			var sectionChange = false;
+			var blockChange = false;
+			var sectionId = 0;
+			var blockId = 0;
+			_bottomBar.NewsButton.SetState (false);
+			_bottomBar.TrendsButton.SetState (false);
+			if (pageToShow == Page.News)
+			{
+				sectionId = -1;
+				blockId = -1;
+				_bottomBar.NewsButton.SetState (true);
+			}
+			if (pageToShow == Page.Trends)
+			{
+				sectionId = -1;
+				blockId = 30;
+				_bottomBar.TrendsButton.SetState (true);
+			}
+			if (_sectionId != sectionId)
+			{
+				_sectionId = sectionId;
+				sectionChange = true;
+			}
+			if (_blockId != blockId)
+			{
+				_blockId = blockId;
+				blockChange = true;
+			}
+			if (!ApplicationWorker.Settings.OfflineMode)
+			{
+				var connectAccept = IsConnectionAccept();
+				if (!connectAccept)
+				{
+//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+//						ToastLength.Long).Show();
+					return;
+				}
+			}
+			if (sectionChange || blockChange || _search != null)
+			{
+				_search = null;
+				if (_articles != null)
+				{
+					_articles.Clear();
+					_allArticles.Clear();
+				}
+				_articlesTableView.ReloadData ();
+				_prevArticlesExists = true;
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					_isLoadingData = true;
+					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1,
+							_blockId,
+							_sectionId, -1, _search));
+					SetLoadingImageVisible(true);
+				}
+				else
+				{
+					Action getList = () =>
+					{
+						InvokeOnMainThread(() =>
+						{
+							if (_articlesTableView.Source != null) 
+							{
+								(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
+
+								_articlesTableView.Source.Dispose();
+								_articlesTableView.Source = null;
+							}
+
+							ArticlesTableSource source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
+
+							_articlesTableView.Source = source;
+							_articlesTableView.ReloadData();
+						});
+						var isTrends = _blockId == 30;
+						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, isTrends);
+						if (lst.Count() < 20)
+						{
+							_prevArticlesExists = false;
+						}
+						InvokeOnMainThread(() => AddNewArticles(lst));
+					};
+					ThreadPool.QueueUserWorkItem(state => getList());
+				}
+				return;
+			}
+			if (_articles != null && _articles.Any())
+			{
+				if (_articlesTableView.Source != null) 
+				{
+					(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
+
+					_articlesTableView.Source.Dispose();
+					_articlesTableView.Source = null;
+				}
+
+				ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
+				source.PushNewsDetails += OnPushArticleDetails;
+
+				_articlesTableView.Source = source;
+				_articlesTableView.ReloadData();
+			}
+		}
 
 		private void UpdateData(ArticleEventArgs e)
 		{
@@ -306,73 +537,165 @@ namespace ItExpert
 			}   
 		}
 
-		//Создание кнопки Загрузить еще
-		private void InitAddPreviousArticleButton()
+		private void PageNewsActivate()
 		{
-			//			var button = new Button(this);
-			//			button.LayoutParameters = new ViewGroup.LayoutParams(Resources.DisplayMetrics.WidthPixels, ViewGroup.LayoutParams.WrapContent);
-			//			button.SetText("Загрузить еще", TextView.BufferType.Normal);
-			//			button.SetTextSize(ComplexUnitType.Sp, ApplicationWorker.Settings.HeaderSize);
-			//			button.SetTextColor(Color.Argb(255, 140, 140, 140));
-			//			button.SetBackgroundColor(ApplicationWorker.Settings.GetBackgroundColor());
-			//			
-			//			_addPreviousArticleButton = button;
+			if (_blockId != -1 || _sectionId != -1 || _authorId != -1 || !string.IsNullOrWhiteSpace(_search))
+			{
+				_prevArticlesExists = true;
+				_currentPage = Page.News;
+				_bottomBar.TrendsButton.SetState (false);
+				_bottomBar.NewsButton.SetState (true);
+				if (_isLoadingData)
+				{
+					ApplicationWorker.RemoteWorker.NewsGetted -= NewNewsGetted;
+					ApplicationWorker.RemoteWorker.NewsGetted -= PreviousNewsGetted;
+					ApplicationWorker.RemoteWorker.Abort();
+					SetLoadingImageVisible(false);
+				}
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					var connectAccept = IsConnectionAccept();
+					if (!connectAccept)
+					{
+//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+//							.Show();
+						return;
+					}
+				}
+				_blockId = -1;
+				_sectionId = -1;
+				_authorId = -1;
+				_search = null;
+				if (_articles != null)
+				{
+					_articles.Clear();
+				}
+				_articlesTableView.ReloadData ();
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					_isLoadingData = true;
+					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+							_sectionId, -1, _search));
+					SetLoadingImageVisible(true);
+				}
+				else
+				{
+					Action getList = () =>
+					{
+						InvokeOnMainThread(() =>
+						{
+							if (_articlesTableView.Source != null) 
+							{
+								(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
 
-			var button = new UIButton ();
-			button.TitleLabel.Text = "Загрузить еще";
-			button.TitleLabel.TextAlignment = UITextAlignment.Center;
-			button.TitleLabel.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
-			button.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
-			button.TouchUpInside += AddPreviousArticleOnClick;
-			_addPreviousArticleButton = button;
-        }
+								_articlesTableView.Source.Dispose();
+								_articlesTableView.Source = null;
+							}
 
-        private void InitBottomToolbar()
-        {
-            float height = 66;
+							ArticlesTableSource source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
 
-            ViewControllersContainer.BottomToolbarView.Frame = new RectangleF(0, View.Frame.Height - height, View.Frame.Width, height);
-            ViewControllersContainer.BottomToolbarView.NavigationController = NavigationController;
-            ViewControllersContainer.BottomToolbarView.LayoutIfNeeded();
+							_articlesTableView.Source = source;
+							_articlesTableView.ReloadData();
+							SetLoadingImageVisible(true);
+						});
+						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, false);
+						if (lst.Count() < 20)
+						{
+							_prevArticlesExists = false;
+						}
+						InvokeOnMainThread(() =>
+						{
+							AddNewArticles(lst);
+							SetLoadingImageVisible(false);
+						});
+					};
+					ThreadPool.QueueUserWorkItem(state => getList());
+				}
+			}
+		}
 
-            View.Add(ViewControllersContainer.BottomToolbarView);
-        }
-
-		//Инициализация баннера
-		private void InitBanner(Banner banner)
+		private void PageTrendsActivate()
 		{
-			var maxPictureHeight = UIScreen.MainScreen.Bounds.Size.Height * 0.15;
-			var screenWidth = UIScreen.MainScreen.Bounds.Size.Width;
-			var picture = banner.Picture;
-			//Если баннер не анимированный Gif
-			if (picture.Extension != PictureExtension.Gif)
+			if (_blockId != 30)
 			{
-				var koefScaling = screenWidth / picture.Width;
-				var pictHeightScaling = picture.Height * koefScaling;
-				if (pictHeightScaling > maxPictureHeight)
+				_prevArticlesExists = true;
+				_currentPage = Page.Trends;
+				_bottomBar.TrendsButton.SetState (true);
+				_bottomBar.NewsButton.SetState (false);
+				if (_isLoadingData)
 				{
-					koefScaling = (float)maxPictureHeight / picture.Height;
+					ApplicationWorker.RemoteWorker.NewsGetted -= NewNewsGetted;
+					ApplicationWorker.RemoteWorker.NewsGetted -= PreviousNewsGetted;
+					ApplicationWorker.RemoteWorker.Abort();
+					SetLoadingImageVisible(false);
 				}
-				var x = 0;
-				if ((int)(koefScaling * (picture.Width)) < (int)screenWidth)
+				if (!ApplicationWorker.Settings.OfflineMode)
 				{
-					x = (int)(((int)screenWidth - (int)(koefScaling * (picture.Width))) / 2);
+					var connectAccept = IsConnectionAccept();
+					if (!connectAccept)
+					{
+//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+//							.Show();
+						return;
+					}
 				}
-				var image = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
-				image.Frame = new RectangleF (x, 0, picture.Width * koefScaling, picture.Height * koefScaling);
-				_extendedObject = image;
+				_blockId = 30;
+				_sectionId = -1;
+				_authorId = -1;
+				_search = null;
+				if (_articles != null)
+				{
+					_articles.Clear();
+				}
+				_articlesTableView.ReloadData ();
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					_isLoadingData = true;
+					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+							_sectionId, -1, _search));
+					SetLoadingImageVisible(true);
+				}
+				else
+				{
+					_isLoadingData = false;
+					Action getList = () =>
+					{
+						InvokeOnMainThread(() =>
+						{
+							if (_articlesTableView.Source != null) 
+							{
+								(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
+
+								_articlesTableView.Source.Dispose();
+								_articlesTableView.Source = null;
+							}
+
+							ArticlesTableSource source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
+
+							_articlesTableView.Source = source;
+							_articlesTableView.ReloadData();
+							SetLoadingImageVisible(true);
+						});
+						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, true);
+						if (lst.Count() < 20)
+						{
+							_prevArticlesExists = false;
+						}
+						InvokeOnMainThread(() =>
+						{
+							AddNewArticles(lst);
+							SetLoadingImageVisible(false);
+						});
+					};
+					ThreadPool.QueueUserWorkItem(state => getList());
+				}
 			}
-			else
-			{
-				var koefScaling = screenWidth / picture.Width;
-				var pictHeightScaling = picture.Height * koefScaling;
-				if (pictHeightScaling > maxPictureHeight)
-				{
-					koefScaling = (float)maxPictureHeight / picture.Height;
-				}
-				_extendedObject = new BannerView (banner, koefScaling, screenWidth);
-			}
-			//Прикрепить обработчик клика по баннеру
 		}
 
 		//Добавление в начало списка статей
@@ -530,7 +853,17 @@ namespace ItExpert
 
 		private void SetLoadingImageVisible(bool visible)
 		{
-
+			if (visible)
+			{
+				_loadingIndicator.Hidden = false;
+				_loadingIndicator.StartAnimating ();
+				View.BringSubviewToFront (_loadingIndicator);
+			}
+			else
+			{
+				_loadingIndicator.Hidden = true;
+				_loadingIndicator.StopAnimating ();
+			}
 		}
 
 		#endregion

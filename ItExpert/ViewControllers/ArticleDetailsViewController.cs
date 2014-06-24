@@ -23,6 +23,10 @@ namespace ItExpert
 			ArticleChange += OnArticleChange;
 		}
 
+		static bool UserInterfaceIdiomIsPhone {
+			get { return UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone; }
+		}
+
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();

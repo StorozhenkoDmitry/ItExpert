@@ -19,7 +19,6 @@ namespace ItExpert
         private static DbEngine _dbEngine;
         private static Settings _applicationSettings;
         private static PdfLoader _pdfLoaderWorker;
-//        private static NavigationWorker _navigationWorker;
         private static List<Article> _workedArticles = new List<Article>(); 
         public static Magazine Magazine = null;
         public static event EventHandler<EventArgs> SettingsChanged;
@@ -33,7 +32,6 @@ namespace ItExpert
             _pdfLoaderWorker = new PdfLoader();
             _dbEngine = new DbEngine();
             _applicationSettings = Settings.GetSettings();
-//            _navigationWorker = new NavigationWorker();
         }
 
         #region Property
@@ -47,11 +45,6 @@ namespace ItExpert
         {
             get { return _pdfLoaderWorker; }
         }
-
-//        public static NavigationWorker Navigation
-//        {
-//            get { return _navigationWorker; }
-//        }
 
         public static DbEngine Db
         {
@@ -85,7 +78,6 @@ namespace ItExpert
             _pdfLoaderWorker = null;
             _dbEngine = null;
             _applicationSettings = null;
-//            _navigationWorker = null;
             _lockObj = null;
             _workedArticles = null;
             SettingsChanged = null;

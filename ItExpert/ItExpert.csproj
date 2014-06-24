@@ -145,9 +145,8 @@
     <Compile Include="ServiceLayer\ScreenWidth.cs" />
     <Compile Include="ServiceLayer\ServerParameters.cs" />
     <Compile Include="ApplicationWorker.cs" />
-    <Compile Include="ViewControllers\ItExpertViewController.cs" />
     <Compile Include="ViewControllers\ItExpertViewController.designer.cs">
-      <DependentUpon>ItExpertViewController.cs</DependentUpon>
+      <DependentUpon>NewsViewController.cs</DependentUpon>
     </Compile>
     <Compile Include="Logic\PushNewsDetailsEventArgs.cs" />
     <Compile Include="Logic\WebViewDelegate.cs" />
@@ -163,12 +162,14 @@
     <Compile Include="Logic\BannerView.cs" />
     <Compile Include="Logic\BottomToolbarView.cs" />
     <Compile Include="Logic\BottomToolbarButton.cs" />
-    <Compile Include="ViewControllers\TrendsViewController.cs" />
     <Compile Include="ViewControllers\MagazineViewController.cs" />
     <Compile Include="ViewControllers\ArchiveViewController.cs" />
     <Compile Include="ViewControllers\FavoritesViewController.cs" />
-    <Compile Include="Logic\ViewControllersContainer.cs" />
-    <Compile Include="ViewControllers\MainViewController.cs" />
+    <Compile Include="ViewControllers\NewsViewController.cs" />
+    <Compile Include="NewsViewController.cs" />
+    <Compile Include="NewsViewController.designer.cs">
+      <DependentUpon>NewsViewController.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

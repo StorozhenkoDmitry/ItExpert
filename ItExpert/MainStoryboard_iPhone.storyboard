@@ -21,9 +21,9 @@
         </scene>
         <scene sceneID="7">
             <objects>
-                <viewController id="4" sceneMemberID="viewController" customClass="ItExpertViewController">
+                <viewController id="4" sceneMemberID="viewController" customClass="NewsViewController">
                     <view key="view" contentMode="scaleToFill" id="9">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <subviews>
@@ -47,5 +47,10 @@
         <image name="Default-568h.png" width="640" height="1136"/>
         <image name="ReadedButton.png" width="52" height="52"/>
         <image name="NotReadedButton.png" width="52" height="52"/>
+        <image name="Archive.png" width="180" height="180"/>
+        <image name="Magazine.png" width="180" height="180"/>
+        <image name="Favorites.png" width="180" height="180"/>
+        <image name="News.png" width="180" height="180"/>
+        <image name="Trends.png" width="180" height="180"/>
     </resources>
 </document>

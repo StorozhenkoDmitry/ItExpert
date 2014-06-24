@@ -3,15 +3,18 @@ using MonoTouch.UIKit;
 using System.Drawing;
 using System.Collections.Generic;
 using MonoTouch.Foundation;
+using System.Threading;
 
 namespace ItExpert
 {
     public class BottomToolbarButton: UIView
     {
-        public BottomToolbarButton(RectangleF frame, UIImage image, string text, NSAction tapAction)
+		public event EventHandler<EventArgs> ButtonClick;
+
+        public BottomToolbarButton(RectangleF frame, UIImage image, string text)
         {
             UserInteractionEnabled = true;
-
+			BackgroundColor = UIColor.Black;
             Frame = frame;
 
             _imageView = new UIImageView(new RectangleF(frame.Width / 2 - image.Size.Width / 2, 0, image.Size.Width, image.Size.Height));
@@ -20,7 +23,7 @@ namespace ItExpert
 
             _label = new UILabel();
             _label.Text = text;
-            _label.TextColor = UIColor.FromRGB(140, 140, 140);
+			_label.TextColor = UIColor.FromRGB(160, 160, 160);
             _label.Font = UIFont.BoldSystemFontOfSize(10);
 
             _label.SizeToFit();
@@ -30,34 +33,33 @@ namespace ItExpert
             Add(_imageView);
             Add(_label);
 
-            _tapGestureRecognizer = new UITapGestureRecognizer(tapAction);
+			_tapGestureRecognizer = new UITapGestureRecognizer (OnButtonClick);
 
             AddGestureRecognizer(_tapGestureRecognizer);
         }
 
-        public UIColor Forecolor
-        {
-            get
-            {
-                return _label.TextColor;
-            }
-            set
-            {
-                _label.TextColor = value;
-            }
-        }
+		public void OnButtonClick()
+		{
+			var handler = Interlocked.CompareExchange(ref ButtonClick, null, null);
+			if (handler != null)
+			{
+				handler(this, new EventArgs());
+			}
+		}
 
-        public UIFont Font
-        {
-            get
-            {
-                return _label.Font;
-            }
-            set
-            {
-                _label.Font = value;
-            }
-        }
+		public void SetState(bool isActive)
+		{
+			if (isActive)
+			{
+				_label.TextColor = UIColor.Black;
+				BackgroundColor = UIColor.DarkGray;
+			}
+			else
+			{
+				_label.TextColor = UIColor.FromRGB(160, 160, 160);
+				BackgroundColor = UIColor.Black;
+			}
+		}
 
         private UIImageView _imageView;
         private UILabel _label;
