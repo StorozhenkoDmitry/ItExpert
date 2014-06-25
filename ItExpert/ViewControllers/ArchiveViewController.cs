@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Linq;
 using ItExpert.ServiceLayer;
+using System.Drawing;
 
 namespace ItExpert
 {
@@ -18,6 +19,7 @@ namespace ItExpert
 		private bool _toMenu = false;
 		private bool _toSettings = false;
 		private List<Magazine> _magazines = null; 
+        private YearsView _yearsView;
 
 		#endregion
 
@@ -44,6 +46,13 @@ namespace ItExpert
 
 		void Initialize()
 		{
+            AutomaticallyAdjustsScrollViewInsets = false;
+
+            _yearsView = new YearsView(new RectangleF(0, NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight,
+                View.Frame.Width, 40));
+
+            View.Add(_yearsView);
+
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			SetLoadingProgressVisible(false);
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted += OnMagazinesYearsGetted;
@@ -69,17 +78,31 @@ namespace ItExpert
 				if (!error)
 				{
 					var years = e.Years;
-					//UIButton firstButton = null;
+
+					UIButton firstButton = null;
+
 					if (years != null && years.Any())
 					{
+                        List<UIButton> yearButtons = new List<UIButton>();
+
 						for (var i = 0; i < years.Count(); i++)
 						{
 							var year = years[i];
-							//Создать кнопку и прикрепить обработчик клика -> ButtonYearOnClick
-							//у кнопки свойство Tag = year.Value
-							//первую кнопку присвоить переменной firstButton
-							//							if (i == 0) firstButton = button;
+
+                            UIButton button = new UIButton();
+
+                            button.TouchUpInside += ButtonYearOnClick;
+                            button.SetTitle(year.Value.ToString(), UIControlState.Normal);
+                            button.Tag = year.Value;
+
+                            yearButtons.Add(button);
+
+							if (i == 0) 
+                                firstButton = button;
 						}
+
+                        _yearsView.AddButtons(yearButtons);
+
 						ThreadPool.QueueUserWorkItem(state => UpdateMagazineYears(years));
 						_currentYear = years.First().Value;
 					}
