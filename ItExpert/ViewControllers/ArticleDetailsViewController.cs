@@ -39,20 +39,40 @@ namespace ItExpert
 				//ссылки не интерактивны
 			}
 
+            ShowSplash(true);
+
 			_padding = new UIEdgeInsets (8, 8, 8, 8);
 
             _maxWidth = View.Frame.Width - _padding.Left - _padding.Right;
             
 			View.BackgroundColor = UIColor.White;
 
-			GetArticleData ();
+            UISwipeGestureRecognizer leftSwipeRecognizer = new UISwipeGestureRecognizer(() => OnArticleChange(this, new SwipeEventArgs() { Direction = SwipeDirection.Next }));
+
+            leftSwipeRecognizer.Direction = UISwipeGestureRecognizerDirection.Left;
+
+            View.AddGestureRecognizer(leftSwipeRecognizer);
+
+            UISwipeGestureRecognizer rightSwipeRecognizer = new UISwipeGestureRecognizer(() => OnArticleChange(this, new SwipeEventArgs() { Direction = SwipeDirection.Previous }));
+
+            rightSwipeRecognizer.Direction = UISwipeGestureRecognizerDirection.Right;
+
+            View.AddGestureRecognizer(rightSwipeRecognizer);
 		}
+
+        public override void ViewDidAppear(bool animated)
+        {
+            base.ViewDidAppear(animated);
+
+            GetArticleData ();
+        }
 
 		#region Worked with server
 
 		private void GetArticleData()
 		{
 			ShowSplash (true);
+
 			var requestNeeded = false;
 			var article = ApplicationWorker.GetArticle(_article.Id);
 			if (article != null)
@@ -141,7 +161,7 @@ namespace ItExpert
 			{
 				return;
 			}
-			InvokeOnMainThread(() =>
+            BeginInvokeOnMainThread(() =>
 			{
 				var error = e.Error;
 				if (!error)
@@ -191,7 +211,7 @@ namespace ItExpert
 			{
 				return;
 			}
-			InvokeOnMainThread(() =>
+            BeginInvokeOnMainThread(() =>
 			{
 				var error = e.Error;
 				if (!error)
@@ -242,6 +262,9 @@ namespace ItExpert
 		{
 			if (_isLoading) return;
 			ShowSplash (true);
+
+            ItExpertHelper.RemoveSubviews(View);
+
 			Action actionChange = () =>
 			{
 				var currentIndex = _articlesId.FindIndex(x => x == _article.Id);
@@ -486,13 +509,37 @@ namespace ItExpert
 			//Прокрутить представление до самого верха
             AddContent(sectionString, articleAuthors, html);
 			_isLoading = false;
-			//ShowSplash (false);
+            ShowSplash (false);
 		}
 
 		//Метод скрытия-отображения экрана заставки при загрузке
 		private void ShowSplash(bool isVisible)
 		{
+            if (_splashScreen == null)
+            {
+                _splashScreen = new UIView(View.Bounds);
 
+                var titleTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString("Загрузка статьи...", 
+                                        UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize), 
+                                        ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor())), View.Frame.Width, 
+                                        new PointF(0, 0));
+
+                titleTextView.Frame = new RectangleF(View.Frame.Width / 2 - titleTextView.Frame.Width / 2, 100, titleTextView.Frame.Width, titleTextView.Frame.Height);
+
+                _splashScreen.Add(titleTextView);
+            }
+
+            if (isVisible)
+            {
+                if (!View.Subviews.Any(s => s == _splashScreen))
+                {
+                    View.Add(_splashScreen);
+                }
+            }
+            else
+            {
+                _splashScreen.RemoveFromSuperview();
+            }
 		}
 
         private void AddContent(string section, string author, string text)
@@ -524,7 +571,17 @@ namespace ItExpert
                     ItExpertHelper.GetAttributedString(section, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true),
                     _maxWidth, new PointF(_padding.Left, top));
 
+                _articleSectionView.UserInteractionEnabled = true;
+
+                UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
+                {
+                    UIApplication.SharedApplication.OpenUrl(new NSUrl("http://www.google.com"));
+                });
+
+                _articleSectionView.AddGestureRecognizer(tap);
+
                 _scrollView.Add(_articleSectionView);
+
 
                 return _articleSectionView.Frame.Bottom + _padding.Bottom;
             }
@@ -643,6 +700,7 @@ namespace ItExpert
         private UITextView _articleHeaderView;
         private UITextView _articleAuthorView;
 		private UIWebView _articleTextWebView;
+        private UIView _splashScreen;
 	}
 }
 

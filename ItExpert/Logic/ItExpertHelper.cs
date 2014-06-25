@@ -109,6 +109,14 @@ namespace ItExpert
 				color.G,
 				color.B);
 		}
+
+        public static void RemoveSubviews(UIView view)
+        {
+            foreach (var subView in view.Subviews)
+            {
+                subView.RemoveFromSuperview();
+            }
+        }
 	}
 }
 

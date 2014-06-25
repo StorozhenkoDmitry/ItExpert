@@ -130,6 +130,7 @@ namespace ItExpert
 			_articlesTableView.UserInteractionEnabled = true;
 			_articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
 			_articlesTableView.Bounces = true;
+            _articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
 
 			View.Add (_articlesTableView);
 		}
