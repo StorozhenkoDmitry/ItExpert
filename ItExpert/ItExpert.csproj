@@ -166,10 +166,6 @@
     <Compile Include="ViewControllers\ArchiveViewController.cs" />
     <Compile Include="ViewControllers\FavoritesViewController.cs" />
     <Compile Include="ViewControllers\NewsViewController.cs" />
-    <Compile Include="NewsViewController.cs" />
-    <Compile Include="NewsViewController.designer.cs">
-      <DependentUpon>NewsViewController.cs</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
