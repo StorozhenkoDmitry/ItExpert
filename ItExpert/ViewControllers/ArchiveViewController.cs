@@ -47,62 +47,60 @@ namespace ItExpert
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			SetLoadingProgressVisible(false);
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted += OnMagazinesYearsGetted;
-			ApplicationWorker.PdfLoader.PdfGetted += OnPdfGetted;
-			ApplicationWorker.SettingsChanged += ApplicationOnSettingsChanged;
-			var connectAccept = IsConnectionAccept();
-			if (!ApplicationWorker.Settings.OfflineMode)
-			{
-				if (!connectAccept)
-				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-//						.Show();
-					return;
-				}
-				ThreadPool.QueueUserWorkItem(
-					state => ApplicationWorker.RemoteWorker.BeginGetMagazinesPreview(ApplicationWorker.Settings, -1));
-			}
-			else
-			{
-				var years = ApplicationWorker.Db.LoadMagazineYears();
-				if (years != null && years.Any())
-				{
-					List<Magazine> previewList = null; 
-					years = years.OrderByDescending(x => x.Value).ToList();
-					for (var i = 0; i < years.Count(); i++)
-					{
-						var year = years[i];
-						//Создать кнопку и прикрепить обработчик клика -> ButtonYearOnClick
-						//у кнопки свойство Tag = year.Value
-					}
-					_currentYear = years.First().Value;
-					foreach (var year in years)
-					{
-						previewList = ApplicationWorker.Db.GetMagazinesByYear(year.Value, true);
-						if (previewList != null && previewList.Any() && !previewList.Any(x => x.PreviewPicture == null))
-						{
-							//Выделить кнопку у которой Tag = year.Value
-							//первый раз выделить и прекратить цикл
-						}
-					}
-					if (previewList != null && previewList.Any() && !previewList.Any(x => x.PreviewPicture == null))
-					{
-						UpdateMagazinesPdfExists(previewList, _currentYear);
-						var maxWidth = previewList.Where(x => x.PreviewPicture != null).Max(x => x.PreviewPicture.Width);
-						previewList = previewList.OrderByDescending(x => x.ActiveFrom).ToList();
-						_magazines = previewList;
-						//Создать представление архива
-					}
-				}
-			}
+			ThreadPool.QueueUserWorkItem(
+				state => ApplicationWorker.RemoteWorker.BeginGetMagazinesPreview(ApplicationWorker.Settings, -1));	
+			
 		}
 
 		#endregion
 
 		#region Event handlers
 
-		private void ApplicationOnSettingsChanged(object sender, EventArgs eventArgs)
+		private void OnMagazinesYearsGetted(object sender, MagazinesPreviewEventArgs e)
 		{
-			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
+			if (e.Abort)
+			{
+				return;
+			}
+			var error = e.Error;
+			InvokeOnMainThread(() =>
+			{
+				if (!error)
+				{
+					var years = e.Years;
+					//UIButton firstButton = null;
+					if (years != null && years.Any())
+					{
+						for (var i = 0; i < years.Count(); i++)
+						{
+							var year = years[i];
+							//Создать кнопку и прикрепить обработчик клика -> ButtonYearOnClick
+							//у кнопки свойство Tag = year.Value
+							//первую кнопку присвоить переменной firstButton
+							//							if (i == 0) firstButton = button;
+						}
+						ThreadPool.QueueUserWorkItem(state => UpdateMagazineYears(years));
+						_currentYear = years.First().Value;
+					}
+					var magazines = e.Magazines;
+					if (magazines != null && magazines.Any())
+					{
+						UpdateMagazinesPdfExists(magazines, _currentYear);
+						//						if (firstButton != null)
+						//						{
+						//							firstButton.SetBackgroundColor(Color.DarkGray);
+						//						}
+						var maxWidth = magazines.Where(x => x.PreviewPicture != null).Max(x => x.PreviewPicture.Width);
+						_magazines = magazines;
+						//Создать представление архива
+					}
+				}
+				else
+				{
+					//					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
+				}
+			});
 		}
 
 		private void ButtonYearOnClick(object sender, EventArgs eventArgs)
@@ -130,74 +128,15 @@ namespace ItExpert
 				}
 				else
 				{
-					if (!ApplicationWorker.Settings.OfflineMode)
-					{
-						var connectAccept = IsConnectionAccept();
-						if (!connectAccept)
-						{
-//							Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-//								ToastLength.Long).Show();
-							return;
-						}
-						ApplicationWorker.RemoteWorker.MagazinesPriviewGetted += OnMagazinesPriviewGetted;
-						ThreadPool.QueueUserWorkItem(
-							state =>
-							ApplicationWorker.RemoteWorker.BeginGetMagazinesPreview(ApplicationWorker.Settings, year));
-					}
-					else
-					{
-						//Создать пустое представление архива
-					}
+					ApplicationWorker.RemoteWorker.MagazinesPriviewGetted += OnMagazinesPriviewGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetMagazinesPreview(ApplicationWorker.Settings, year));
 				}
 			}
 		}
 
-		private void OnMagazinesYearsGetted(object sender, MagazinesPreviewEventArgs e)
-		{
-			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
-			if (e.Abort)
-			{
-				return;
-			}
-			var error = e.Error;
-			InvokeOnMainThread(() =>
-			{
-				if (!error)
-				{
-					var years = e.Years;
-					//UIButton firstButton = null;
-					if (years != null && years.Any())
-					{
-						for (var i = 0; i < years.Count(); i++)
-						{
-							var year = years[i];
-							//Создать кнопку и прикрепить обработчик клика -> ButtonYearOnClick
-							//у кнопки свойство Tag = year.Value
-							//первую кнопку присвоить переменной firstButton
-//							if (i == 0) firstButton = button;
-						}
-						ThreadPool.QueueUserWorkItem(state => UpdateMagazineYears(years));
-						_currentYear = years.First().Value;
-					}
-					var magazines = e.Magazines;
-					if (magazines != null && magazines.Any())
-					{
-						UpdateMagazinesPdfExists(magazines, _currentYear);
-//						if (firstButton != null)
-//						{
-//							firstButton.SetBackgroundColor(Color.DarkGray);
-//						}
-						var maxWidth = magazines.Where(x => x.PreviewPicture != null).Max(x => x.PreviewPicture.Width);
-						_magazines = magazines;
-						//Создать представление архива
-					}
-				}
-				else
-				{
-//					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
-				}
-			});
-		}
+
 
 		private void OnMagazinesPriviewGetted(object sender, MagazinesPreviewEventArgs e)
 		{
@@ -232,10 +171,6 @@ namespace ItExpert
 					_currentYear = -1;
 				}
 			});
-		}
-
-		private void OnPdfGetted(object sender, PdfEventArgs e)
-		{
 		}
 
 		#endregion
@@ -361,7 +296,7 @@ namespace ItExpert
 
 		public void DestroyPdfLoader()
 		{
-			ApplicationWorker.PdfLoader.PdfGetted -= OnPdfGetted;
+//			ApplicationWorker.PdfLoader.PdfGetted -= OnPdfGetted;
 			ApplicationWorker.PdfLoader.AbortOperation();
 		}
 
