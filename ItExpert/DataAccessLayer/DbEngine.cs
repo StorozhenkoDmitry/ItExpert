@@ -267,20 +267,28 @@ namespace ItExpert.DataAccessLayer
                         {
                             article.DetailText = dbArticle.DetailText;
                         }
+						var pictures = _db.Query<Picture>("SELECT * FROM Picture WHERE IdParent = ?", article.Id);
                         if (article.DetailPicture == null)
                         {
-                            var pictures = _db.Query<Picture>("SELECT * FROM Picture WHERE IdParent = ?", article.Id);
                             var detailPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Detail);
                             if (detailPicture != null)
                             {
                                 article.DetailPicture = detailPicture;
                             }
-                            var awardsPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Awards);
-                            if (article.AwardsPicture == null && awardsPicture != null)
-                            {
-                                article.AwardsPicture = awardsPicture;
-                            }
                         }
+						if (article.AwardsPicture == null)
+						{
+							var awardsPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Awards);
+							if (article.AwardsPicture == null && awardsPicture != null)
+							{
+								article.AwardsPicture = awardsPicture;
+							}
+						}
+						if (!string.IsNullOrEmpty(dbArticle.AuthorsId))
+						{
+							article.AuthorsId = dbArticle.AuthorsId;
+							article.Authors = _db.Query<Author>("SELECT * FROM Author WHERE Id IN (" + article.AuthorsId+ ")");
+						}
                     }
                 }
             }

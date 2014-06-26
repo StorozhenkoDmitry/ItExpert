@@ -261,10 +261,8 @@ namespace ItExpert
 		private void OnArticleChange(object sender, SwipeEventArgs e)
 		{
 			if (_isLoading) return;
-			ShowSplash (true);
-
             ItExpertHelper.RemoveSubviews(View);
-
+			ShowSplash (true);
 			Action actionChange = () =>
 			{
 				var currentIndex = _articlesId.FindIndex(x => x == _article.Id);
@@ -441,6 +439,71 @@ namespace ItExpert
 
 		#endregion
 
+		#region Filter articles
+
+		private void FilterSection()
+		{
+			if (_article.ArticleType == ArticleType.Portal)
+			{
+				var sectionId = _article.Sections.OrderBy (x => x.DepthLevel).Select(x => x.Section.Id).Last();
+				var blockId = _article.IdBlock;
+				NewsViewController showController = null;
+				var controllers = NavigationController.ViewControllers;
+				foreach (var controller in controllers)
+				{
+					showController = controller as NewsViewController;
+					if (showController != null)
+					{
+						break;
+					}
+				}
+				if (showController != null)
+				{
+					NavigationController.PopToViewController (showController, true);
+					showController.FilterSection (sectionId, blockId);
+				}
+			}
+			if (_article.ArticleType == ArticleType.Magazine)
+			{
+				var sectionId = _article.Rubrics.Last().Id;
+			}
+		}
+
+		private void FilterAuthor(int authorId)
+		{
+			if (_article.ArticleType == ArticleType.Magazine && MagazineViewController.Current != null)
+			{
+				MagazineViewController.Current.DestroyPdfLoader ();
+			}
+			var sectionId = -1;
+			if (_article.ArticleType == ArticleType.Magazine)
+			{
+				sectionId = _article.IdSection;
+			}
+			if (_article.ArticleType == ArticleType.Portal)
+			{
+				sectionId = _article.Sections.OrderBy (x => x.DepthLevel).Select(x => x.Section.Id).Last();
+			}
+			var blockId = _article.IdBlock;
+			NewsViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as NewsViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, true);
+				showController.FilterAuthor (sectionId, blockId, authorId);
+			}
+		}
+
+		#endregion
+
 		private void UpdateScreen()
 		{
 			var article = _article;
@@ -575,7 +638,7 @@ namespace ItExpert
 
                 UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
                 {
-                    UIApplication.SharedApplication.OpenUrl(new NSUrl("http://www.google.com"));
+					FilterSection();
                 });
 
                 _articleSectionView.AddGestureRecognizer(tap);
@@ -650,6 +713,7 @@ namespace ItExpert
                 _articleAuthorView = ItExpertHelper.GetTextView(
                     ItExpertHelper.GetAttributedString(author, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true),
                     _maxWidth, new PointF(_padding.Left, top));
+				_articleAuthorView.UserInteractionEnabled = true;
 
                 _scrollView.Add(_articleAuthorView);
 

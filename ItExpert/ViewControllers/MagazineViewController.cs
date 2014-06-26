@@ -54,6 +54,7 @@ namespace ItExpert
 
 		public void Initialize()
 		{
+			Current = this;
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 
 			InitBottomToolbar ();

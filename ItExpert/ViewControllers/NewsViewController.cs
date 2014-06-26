@@ -83,6 +83,14 @@ namespace ItExpert
 		public override void ViewWillDisappear (bool animated)
 		{
 			base.ViewWillDisappear (animated);
+			ApplicationWorker.RemoteWorker.NewsGetted -= NewNewsGetted;
+			ApplicationWorker.RemoteWorker.NewsGetted -= PreviousNewsGetted;
+			SetLoadingImageVisible(false);
+			_isLoadingData = false;
+			if (_articlesTableView != null)
+			{
+				_articlesTableView.ReloadData ();
+			}
 		}
 
 		public override void ViewDidDisappear (bool animated)
@@ -503,6 +511,97 @@ namespace ItExpert
 
 				_articlesTableView.Source = source;
 				_articlesTableView.ReloadData();
+			}
+		}
+
+		public void FilterAuthor(int sectionId, int blockId, int authorId)
+		{
+			_sectionId = sectionId;
+			_blockId = blockId;
+			_authorId = authorId;
+			_bottomBar.TrendsButton.SetState (false);
+			_bottomBar.NewsButton.SetState (true);
+			if (!ApplicationWorker.Settings.OfflineMode)
+			{
+				var connectAccept = IsConnectionAccept();
+				if (!connectAccept)
+				{
+//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+//						ToastLength.Long).Show();
+					return;
+				}
+				var author = ApplicationWorker.Db.GetAuthor(_authorId);
+				if (author != null)
+				{
+//					_headerAdded = true;
+//					_header = author.Name;
+				}
+				_prevArticlesExists = true;
+				_isLoadingData = true;
+				if (_articles != null)
+				{
+					_articles.Clear();
+				}
+				_articlesTableView.ReloadData ();
+				_search = null;
+				ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+				ThreadPool.QueueUserWorkItem(
+					state =>
+					ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+						_sectionId, _authorId, _search));
+				SetLoadingImageVisible(true);
+				return;
+			}
+			else
+			{
+//				Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
+//					ToastLength.Long).Show();
+				return;
+			}
+		}
+
+		public void FilterSection(int sectionId, int blockId)
+		{
+			_sectionId = sectionId;
+			_blockId = blockId;
+			_bottomBar.TrendsButton.SetState (false);
+			_bottomBar.NewsButton.SetState (true);
+			if (!ApplicationWorker.Settings.OfflineMode)
+			{
+				var connectAccept = IsConnectionAccept();
+				if (!connectAccept)
+				{
+//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+//						ToastLength.Long).Show();
+					return;
+				}
+				var section = ApplicationWorker.Db.GetSection(_sectionId);
+				if (section != null)
+				{
+//					_headerAdded = true;
+//					_header = section.Name;
+				}
+				_prevArticlesExists = true;
+				_isLoadingData = true;
+				if (_articles != null)
+				{
+					_articles.Clear();
+				}
+				_articlesTableView.ReloadData ();
+				_search = null;
+				ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+				ThreadPool.QueueUserWorkItem(
+					state =>
+					ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+						_sectionId, -1, _search));
+				SetLoadingImageVisible(true);
+				return;
+			}
+			else
+			{
+//				Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
+//					ToastLength.Long).Show();
+				return;
 			}
 		}
 
