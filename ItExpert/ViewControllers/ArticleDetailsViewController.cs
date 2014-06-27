@@ -638,7 +638,17 @@ namespace ItExpert
 
                 UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
                 {
-					FilterSection();
+                    AlertViewWithRadioButtons alertView = new AlertViewWithRadioButtons(String.Format("Раздел: {0}", section), String.Format("Посмотреть все статьи из раздела: {0}?", section), "Нет", "Да");
+
+                    alertView.ButtonPushed += (sender, e) => 
+                    {
+                        if (e.ButtonIndex == 1)
+                        {
+                            FilterSection();
+                        }
+                    };
+
+                    alertView.Show();
                 });
 
                 _articleSectionView.AddGestureRecognizer(tap);

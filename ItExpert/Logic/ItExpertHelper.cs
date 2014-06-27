@@ -69,24 +69,14 @@ namespace ItExpert
 			return new RectangleF (rectangle.X - subviewCoordinates.X, rectangle.Y - subviewCoordinates.Y, rectangle.Width, rectangle.Height);
 		}
 
-        public static UIImage GetImageFromBase64String(string base64String)
-        {                      
-            return GetImageFromBase64String(base64String, 1);
-        }
-
-        public static UIImage GetImageFromBase64String(string base64String, float scale)
+        public static UIImage GetImageFromBase64String(string base64String, float scale = 1)
 		{
 			byte[] encodedDataAsBytes = Convert.FromBase64String(base64String);
 			NSData data = NSData.FromArray(encodedDataAsBytes);                            
             return UIImage.LoadFromData(data, scale);
 		}
 
-		public static NSMutableAttributedString GetAttributedString(string text, UIFont font, UIColor foregroundColor)
-		{
-			return GetAttributedString (text, font, foregroundColor, false);
-		}
-
-		public static NSMutableAttributedString GetAttributedString(string text, UIFont font, UIColor foregroundColor, bool isUnderlined)
+        public static NSMutableAttributedString GetAttributedString(string text, UIFont font, UIColor foregroundColor, bool isUnderlined = false)
 		{
 			var stringAttributes = new UIStringAttributes ();
 
