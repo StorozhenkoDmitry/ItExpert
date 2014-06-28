@@ -21,14 +21,7 @@
         </scene>
         <scene sceneID="7">
             <objects>
-                <viewController id="4" sceneMemberID="viewController" customClass="NewsViewController">
-                    <view key="view" contentMode="scaleToFill" id="9">
-                        <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
-                        <subviews>
-                        </subviews>
-                    </view>
+                <viewController id="4" sceneMemberID="viewController">
                     <navigationItem key="navigationItem" title="Root View Controller" id="8"/>
                     <connections>
                     </connections>
@@ -52,5 +45,7 @@
         <image name="Favorites.png" width="180" height="180"/>
         <image name="News.png" width="180" height="180"/>
         <image name="Trends.png" width="180" height="180"/>
+        <image name="RadiobuttonChecked.png" width="100" height="100"/>
+        <image name="RadiobuttonUnchecked.png" width="100" height="100"/>
     </resources>
 </document>

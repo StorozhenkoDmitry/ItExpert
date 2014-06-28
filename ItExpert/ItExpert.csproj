@@ -106,6 +106,8 @@
     <BundleResource Include="Resources\Favorites.png" />
     <BundleResource Include="Resources\News.png" />
     <BundleResource Include="Resources\Trends.png" />
+    <BundleResource Include="Resources\RadioButtonChecked.png" />
+    <BundleResource Include="Resources\RadioButtonUnchecked.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -169,7 +171,10 @@
     <Compile Include="Logic\MagazineView.cs" />
     <Compile Include="Logic\YearsView.cs" />
     <Compile Include="Logic\AlertView.cs" />
-    <Compile Include="Logic\AlertViewWithRadioButtons.cs" />
+    <Compile Include="Logic\RadioButton.cs" />
+    <Compile Include="Logic\RadioButtonGroup.cs" />
+    <Compile Include="Logic\BlackAlertView.cs" />
+    <Compile Include="Logic\BlackAlertViewButtonEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

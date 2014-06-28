@@ -638,17 +638,29 @@ namespace ItExpert
 
                 UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
                 {
-                    AlertViewWithRadioButtons alertView = new AlertViewWithRadioButtons(String.Format("Раздел: {0}", section), String.Format("Посмотреть все статьи из раздела: {0}?", section), "Нет", "Да");
+                    BlackAlertView alertView = new BlackAlertView("Выберете автора", "Отмена", new string[]{ "Author 1", "Author 2", "Author 3", "Author 4" }, "Поиск");
 
                     alertView.ButtonPushed += (sender, e) => 
                     {
                         if (e.ButtonIndex == 1)
                         {
-                            FilterSection();
+                            FilterAuthor(e.SelectedRadioButton);
                         }
                     };
 
                     alertView.Show();
+
+//                    BlackAlertView alertView = new BlackAlertView(String.Format("Раздел: {0}", section), String.Format("Посмотреть все статьи из раздела: {0}?", section), "Нет", "Да");
+//
+//                    alertView.ButtonPushed += (sender, e) => 
+//                    {
+//                        if (e.ButtonIndex == 1)
+//                        {
+//                            FilterSection();
+//                        }
+//                    };
+//
+//                    alertView.Show();
                 });
 
                 _articleSectionView.AddGestureRecognizer(tap);
@@ -724,6 +736,23 @@ namespace ItExpert
                     ItExpertHelper.GetAttributedString(author, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true),
                     _maxWidth, new PointF(_padding.Left, top));
 				_articleAuthorView.UserInteractionEnabled = true;
+
+                UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
+                {
+                    BlackAlertView alertView = new BlackAlertView("Выберете автора", "Отмена", new string[]{ "Author 1", "Author 2", "Author 3", "Author 4" }, "Поиск");
+
+                    alertView.ButtonPushed += (sender, e) => 
+                    {
+                        if (e.ButtonIndex == 1)
+                        {
+                            FilterAuthor(e.SelectedRadioButton);
+                        }
+                    };
+
+                    alertView.Show();
+                });
+
+                _articleSectionView.AddGestureRecognizer(tap);
 
                 _scrollView.Add(_articleAuthorView);
 
