@@ -533,8 +533,8 @@ namespace ItExpert
 				var author = ApplicationWorker.Db.GetAuthor(_authorId);
 				if (author != null)
 				{
-//					_headerAdded = true;
-//					_header = author.Name;
+					_headerAdded = true;
+					_header = author.Name;
 				}
 				_prevArticlesExists = true;
 				_isLoadingData = true;
@@ -578,8 +578,8 @@ namespace ItExpert
 				var section = ApplicationWorker.Db.GetSection(_sectionId);
 				if (section != null)
 				{
-//					_headerAdded = true;
-//					_header = section.Name;
+					_headerAdded = true;
+					_header = section.Name;
 				}
 				_prevArticlesExists = true;
 				_isLoadingData = true;

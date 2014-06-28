@@ -175,6 +175,7 @@
     <Compile Include="Logic\RadioButtonGroup.cs" />
     <Compile Include="Logic\BlackAlertView.cs" />
     <Compile Include="Logic\BlackAlertViewButtonEventArgs.cs" />
+    <Compile Include="Logic\HeaderContentCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

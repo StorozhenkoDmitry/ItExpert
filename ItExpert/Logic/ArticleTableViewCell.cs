@@ -61,6 +61,14 @@ namespace ItExpert
 
                     return _creatorsPull[BaseContentCreator.CreatorType.Portal];
 
+                case BaseContentCreator.CreatorType.Header:
+                    if (!_creatorsPull.ContainsKey(BaseContentCreator.CreatorType.Header))
+                    {
+                        _creatorsPull.Add(BaseContentCreator.CreatorType.Header, new HeaderContentCreator());
+                    }
+
+                    return _creatorsPull[BaseContentCreator.CreatorType.Header];
+
                 default:
                     throw new NotImplementedException("Content creator type isn't implemented.");
             }

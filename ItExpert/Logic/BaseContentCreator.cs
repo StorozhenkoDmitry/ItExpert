@@ -29,6 +29,8 @@ namespace ItExpert
         {
             RemoveSubviews(cell.ContentView);
 
+            cell.UserInteractionEnabled = true;
+
             if (_needToCreateContent)
             {
                 Create(cell, article);
