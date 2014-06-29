@@ -20,6 +20,7 @@ namespace ItExpert
 		private bool _toSettings = false;
 		private List<Magazine> _magazines = null; 
         private YearsView _yearsView;
+        private ArchiveView _archiveView;
 
 		#endregion
 
@@ -51,7 +52,10 @@ namespace ItExpert
             _yearsView = new YearsView(new RectangleF(0, NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight,
                 View.Frame.Width, 40));
 
+            _archiveView = new ArchiveView(new RectangleF(0, _yearsView.Frame.Bottom, View.Frame.Width, View.Frame.Height - _yearsView.Frame.Bottom));
+
             View.Add(_yearsView);
+            View.Add(_archiveView);
 
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			SetLoadingProgressVisible(false);
@@ -117,6 +121,8 @@ namespace ItExpert
 						var maxWidth = magazines.Where(x => x.PreviewPicture != null).Max(x => x.PreviewPicture.Width);
 						_magazines = magazines;
 						//Создать представление архива
+
+                        _archiveView.AddMagazineViews(_magazines);
 					}
 				}
 				else

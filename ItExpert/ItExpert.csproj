@@ -168,7 +168,6 @@
     <Compile Include="ViewControllers\ArchiveViewController.cs" />
     <Compile Include="ViewControllers\FavoritesViewController.cs" />
     <Compile Include="ViewControllers\NewsViewController.cs" />
-    <Compile Include="Logic\MagazineView.cs" />
     <Compile Include="Logic\YearsView.cs" />
     <Compile Include="Logic\AlertView.cs" />
     <Compile Include="Logic\RadioButton.cs" />
@@ -176,6 +175,8 @@
     <Compile Include="Logic\BlackAlertView.cs" />
     <Compile Include="Logic\BlackAlertViewButtonEventArgs.cs" />
     <Compile Include="Logic\HeaderContentCreator.cs" />
+    <Compile Include="Logic\ArchiveView.cs" />
+    <Compile Include="Logic\MagazineView.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

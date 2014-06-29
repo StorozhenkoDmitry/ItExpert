@@ -67,8 +67,6 @@ namespace ItExpert
                     button.BackgroundColor = UIColor.FromRGB(160, 160, 160);
                 }
 
-                string title = button.Title(UIControlState.Normal);
-
                 button.TouchUpInside += (sender, e) =>
                 {
                     removeButtonsHighliting();
