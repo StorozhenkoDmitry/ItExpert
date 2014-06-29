@@ -89,7 +89,7 @@ namespace ItExpert
 						{
 							var year = years[i];
 
-                            UIButton button = new UIButton();
+                            UIButton button = new UIButton(UIButtonType.Custom);
 
                             button.TouchUpInside += ButtonYearOnClick;
                             button.SetTitle(year.Value.ToString(), UIControlState.Normal);

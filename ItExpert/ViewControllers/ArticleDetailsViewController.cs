@@ -655,7 +655,6 @@ namespace ItExpert
 
                 _scrollView.Add(_articleSectionView);
 
-
                 return _articleSectionView.Frame.Bottom + _padding.Bottom;
             }
 

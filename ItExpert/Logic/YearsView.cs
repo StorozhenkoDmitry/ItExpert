@@ -19,6 +19,7 @@ namespace ItExpert
             _scrollView.UserInteractionEnabled = true;
             _scrollView.ScrollEnabled = true;
             _scrollView.UserInteractionEnabled = true;
+            _scrollView.Bounces = false;
 
             Add(_scrollView);
         }
@@ -41,15 +42,39 @@ namespace ItExpert
             _buttons.AddRange(buttons);
 
             float buttonWidth = 60;
-
             float totalWidth = 0;
+
+            Action removeButtonsHighliting = () =>
+            {
+                foreach (var button in _buttons)
+                {
+                    button.BackgroundColor = UIColor.Black;
+                }
+            };
 
             for (int i = 0; i < _buttons.Count; i++)
             {
-                _buttons[i].Frame = new RectangleF(buttonWidth * i, 0, buttonWidth, Frame.Height);
+                var button = _buttons[i];
 
-                _buttons[i].SetTitle(_buttons[i].Title(UIControlState.Normal), UIControlState.Normal);
-                _buttons[i].SetTitleColor(UIColor.Black, UIControlState.Normal);
+                button.Frame = new RectangleF(buttonWidth * i, 0, buttonWidth, Frame.Height);
+
+                button.SetTitle(button.Title(UIControlState.Normal), UIControlState.Normal);
+                button.SetTitleColor(UIColor.White, UIControlState.Normal);
+                button.BackgroundColor = UIColor.Black;
+
+                if (i == 0)
+                {
+                    button.BackgroundColor = UIColor.FromRGB(160, 160, 160);
+                }
+
+                string title = button.Title(UIControlState.Normal);
+
+                button.TouchUpInside += (sender, e) =>
+                {
+                    removeButtonsHighliting();
+
+                    (sender as UIButton).BackgroundColor = UIColor.FromRGB(160, 160, 160);
+                };
 
                 _scrollView.Add(buttons[i]);
 
