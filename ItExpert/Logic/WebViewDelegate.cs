@@ -1,12 +1,25 @@
 ﻿using System;
 using MonoTouch.UIKit;
 using System.Drawing;
+using MonoTouch.Foundation;
 
 namespace ItExpert
 {
     public class WebViewDelegate : UIWebViewDelegate
     {
         public event EventHandler WebViewLoaded;
+
+        public override bool ShouldStartLoad(UIWebView webView, NSUrlRequest request, UIWebViewNavigationType navigationType)
+        {
+            if (navigationType == UIWebViewNavigationType.LinkClicked)
+            {
+                UIApplication.SharedApplication.OpenUrl(request.Url);
+
+                return false;
+            }
+
+            return true;
+        }
 
         public override void LoadingFinished(UIWebView webView)
         {
