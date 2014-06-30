@@ -521,6 +521,7 @@ namespace ItExpert
 			_authorId = authorId;
 			_bottomBar.TrendsButton.SetState (false);
 			_bottomBar.NewsButton.SetState (true);
+			_currentPage = Page.News;
 			if (!ApplicationWorker.Settings.OfflineMode)
 			{
 				var connectAccept = IsConnectionAccept();
@@ -566,6 +567,7 @@ namespace ItExpert
 			_blockId = blockId;
 			_bottomBar.TrendsButton.SetState (false);
 			_bottomBar.NewsButton.SetState (true);
+			_currentPage = Page.News;
 			if (!ApplicationWorker.Settings.OfflineMode)
 			{
 				var connectAccept = IsConnectionAccept();
@@ -639,7 +641,7 @@ namespace ItExpert
 
 		private void PageNewsActivate()
 		{
-			if (_blockId != -1 || _sectionId != -1 || _authorId != -1 || !string.IsNullOrWhiteSpace(_search))
+			if (_blockId != -1 || _sectionId != -1 || _authorId != -1 || !string.IsNullOrWhiteSpace(_search) || _currentPage == Page.Trends)
 			{
 				_prevArticlesExists = true;
 				_currentPage = Page.News;
@@ -719,7 +721,7 @@ namespace ItExpert
 
 		private void PageTrendsActivate()
 		{
-			if (_blockId != 30)
+			if (_blockId != 30 || _currentPage == Page.News)
 			{
 				_prevArticlesExists = true;
 				_currentPage = Page.Trends;

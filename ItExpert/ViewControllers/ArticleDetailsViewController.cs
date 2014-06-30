@@ -482,7 +482,10 @@ namespace ItExpert
 			}
 			if (_article.ArticleType == ArticleType.Portal)
 			{
-				sectionId = _article.Sections.OrderBy (x => x.DepthLevel).Select(x => x.Section.Id).Last();
+				if (_article.Sections != null && _article.Sections.Any ())
+				{
+					sectionId = _article.Sections.OrderBy (x => x.DepthLevel).Select (x => x.Section.Id).Last ();
+				}
 			}
 			var blockId = _article.IdBlock;
 			NewsViewController showController = null;
@@ -638,7 +641,7 @@ namespace ItExpert
 
                 UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
                 {
-                    BlackAlertView alertView = new BlackAlertView(String.Format("Раздел: {0}", section), String.Format("Посмотреть все статьи из раздела: {0}?", section), "Нет", "Да");
+					BlackAlertView alertView = new BlackAlertView(String.Format("Раздел: {0}", section.Trim()), String.Format("Посмотреть все статьи из раздела: {0}?", section.Trim()), "Нет", "Да");
 
                     alertView.ButtonPushed += (sender, e) => 
                     {
@@ -723,23 +726,26 @@ namespace ItExpert
                     ItExpertHelper.GetAttributedString(author, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true),
                     _maxWidth, new PointF(_padding.Left, top));
 				_articleAuthorView.UserInteractionEnabled = true;
-
                 UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
                 {
-                    BlackAlertView alertView = new BlackAlertView("Выберете автора", "Отмена", new string[]{ "Author 1", "Author 2", "Author 3", "Author 4" }, "Поиск");
+					var authors = _article.Authors;
+					var shortAuthors = authors.
+						Select(x=>x.Name.Split(new [] { ","}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()).ToArray();
+					BlackAlertView alertView = new BlackAlertView("Выберете автора", "Отмена", shortAuthors, "Поиск");
 
                     alertView.ButtonPushed += (sender, e) => 
                     {
                         if (e.ButtonIndex == 1)
                         {
-                            FilterAuthor(e.SelectedRadioButton);
+							var authorId = authors[e.SelectedRadioButton].Id;
+							FilterAuthor(authorId);
                         }
                     };
 
                     alertView.Show();
                 });
 
-                _articleSectionView.AddGestureRecognizer(tap);
+				_articleAuthorView.AddGestureRecognizer(tap);
 
                 _scrollView.Add(_articleAuthorView);
 

@@ -83,8 +83,6 @@ namespace ItExpert
 				{
 					var years = e.Years;
 
-					UIButton firstButton = null;
-
 					if (years != null && years.Any())
 					{
                         List<UIButton> yearButtons = new List<UIButton>();
@@ -100,9 +98,6 @@ namespace ItExpert
                             button.Tag = year.Value;
 
                             yearButtons.Add(button);
-
-							if (i == 0) 
-                                firstButton = button;
 						}
 
                         _yearsView.AddButtons(yearButtons);
@@ -114,14 +109,7 @@ namespace ItExpert
 					if (magazines != null && magazines.Any())
 					{
 						UpdateMagazinesPdfExists(magazines, _currentYear);
-						//						if (firstButton != null)
-						//						{
-						//							firstButton.SetBackgroundColor(Color.DarkGray);
-						//						}
-						var maxWidth = magazines.Where(x => x.PreviewPicture != null).Max(x => x.PreviewPicture.Width);
 						_magazines = magazines;
-						//Создать представление архива
-
                         _archiveView.AddMagazineViews(_magazines);
 					}
 				}
@@ -135,7 +123,7 @@ namespace ItExpert
 		private void ButtonYearOnClick(object sender, EventArgs eventArgs)
 		{
 			//Выделить активную кнопку и выташить год из кнопка.Tag
-			var year = -1;
+			var year = ((UIButton)sender).Tag;
 			if (year != _currentYear)
 			{
 				_currentYear = year;
@@ -144,10 +132,9 @@ namespace ItExpert
 				{
 					magazines = magazines.OrderByDescending(x => x.ActiveFrom).ToList();
 					UpdateMagazinesPdfExists(magazines, year);
-					var maxWidth = magazines.Where(x => x.PreviewPicture != null).Max(x => x.PreviewPicture.Width);
 					_magazines = magazines;
 					//Создать представление архива
-
+					_archiveView.AddMagazineViews(_magazines);
 
 //					if (_currentDownloadId != -1)
 //					{
@@ -183,10 +170,9 @@ namespace ItExpert
 					if (magazines != null && magazines.Any())
 					{
 						UpdateMagazinesPdfExists(magazines, _currentYear);
-						var maxWidth = magazines.Where(x => x.PreviewPicture != null).Max(x => x.PreviewPicture.Width);
 						_magazines = magazines;
 						//Создать представление архива
-
+						_archiveView.AddMagazineViews(_magazines);
 //						if (_currentDownloadId != -1)
 //						{
 //							adapter.SetDownloadItem(_currentDownloadId);
