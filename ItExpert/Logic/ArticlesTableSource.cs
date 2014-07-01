@@ -22,7 +22,7 @@ namespace ItExpert
 				_articles.Where (x => x.PreviewPicture != null).Max (x => x.PreviewPicture.Width);
 		}
 
-		public event EventHandler<PushNewsDetailsEventArgs> PushNewsDetails;
+		public event EventHandler<PushDetailsEventArgs> PushDetailsView;
 
 		public override int RowsInSection (UITableView tableview, int section)
 		{
@@ -38,7 +38,7 @@ namespace ItExpert
                 cell = new ArticleTableViewCell(UITableViewCellStyle.Default, _cellIdentifier);				
 			}			
 
-            cell.UpdateContent(indexPath.Row == 0, _articles[indexPath.Row]);
+            cell.UpdateContent(_articles[indexPath.Row]);
 
 			return cell;
 		}
@@ -47,7 +47,7 @@ namespace ItExpert
 		{
             var cell = new ArticleTableViewCell(UITableViewCellStyle.Default, _cellIdentifier);
 
-            return cell.GetHeightDependingOnContent(indexPath.Row == 0, _articles[indexPath.Row]);
+            return cell.GetHeightDependingOnContent(_articles[indexPath.Row]);
 		}
 
 		public override void RowSelected (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
@@ -56,15 +56,15 @@ namespace ItExpert
 
 			if (articleDetailsView != null)
 			{
-				OnPushNewsDetails (articleDetailsView);
+				OnCellPushed (articleDetailsView);
 			}
 		}
 
-		private void OnPushNewsDetails(ArticleDetailsViewController newsDetailsView)
+		private void OnCellPushed(ArticleDetailsViewController newsDetailsView)
 		{
-			if (PushNewsDetails != null)
+			if (PushDetailsView != null)
 			{
-				PushNewsDetails (this, new PushNewsDetailsEventArgs (newsDetailsView));
+				PushDetailsView (this, new PushDetailsEventArgs (newsDetailsView));
 			}
 		}
 
@@ -90,7 +90,8 @@ namespace ItExpert
 			if (article != null)
 			{
 				if (article.ArticleType == ArticleType.Header || article.ArticleType == ArticleType.ExtendedObject ||
-					article.ArticleType == ArticleType.Placeholder) return null;
+                    article.ArticleType == ArticleType.Placeholder || article.ArticleType == ArticleType.Banner || 
+                    article.ArticleType == ArticleType.PreviousArticlesButton || article.ArticleType == ArticleType.MagazinePreview) return null;
 				_selectItemId = article.Id;
 				article.IsReaded = true;
 				ThreadPool.QueueUserWorkItem(state => SaveArticle(article));

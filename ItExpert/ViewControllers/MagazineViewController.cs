@@ -22,7 +22,7 @@ namespace ItExpert
 		private Rubric _searchRubric = null;
 		private bool _toMenu = false;
 		public static MagazineViewController Current;
-		private UIView _extendedObject = null;
+		private UIView _banner = null;
 		private bool _lastMagazine = false;
 		private UIView _addPreviousArticleButton = null;
 		private bool _prevArticlesExists = true;
@@ -30,6 +30,7 @@ namespace ItExpert
 		private string _header = null;
 		private BottomToolbarView _bottomBar = null;
 		private int _magazineId = -1;
+        private UITableView _articlesTableView;
 
 		#endregion
 
@@ -75,6 +76,19 @@ namespace ItExpert
 			ThreadPool.QueueUserWorkItem(
 				state => ApplicationWorker.RemoteWorker.BeginGetBanner(settings));
 			_isLoadingData = true;
+
+            var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+
+            _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, 
+                View.Bounds.Height- topOffset - _bottomBar.Frame.Height), UITableViewStyle.Plain);
+
+            _articlesTableView.ScrollEnabled = true; 
+            _articlesTableView.UserInteractionEnabled = true;
+            _articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
+            _articlesTableView.Bounces = true;
+            _articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
+
+            View.Add(_articlesTableView);
 		}
 
 		private void InitBottomToolbar()
@@ -93,42 +107,41 @@ namespace ItExpert
 			View.Add(_bottomBar);
 		}
 
-		//Инициализация баннера
-		private void InitBanner(Banner banner)
-		{
-			var maxPictureHeight = UIScreen.MainScreen.Bounds.Size.Height * 0.15;
-			var screenWidth = UIScreen.MainScreen.Bounds.Size.Width;
-			var picture = banner.Picture;
-			//Если баннер не анимированный Gif
-			if (picture.Extension != PictureExtension.Gif)
-			{
-				var koefScaling = screenWidth / picture.Width;
-				var pictHeightScaling = picture.Height * koefScaling;
-				if (pictHeightScaling > maxPictureHeight)
-				{
-					koefScaling = (float)maxPictureHeight / picture.Height;
-				}
-				var x = 0;
-				if ((int)(koefScaling * (picture.Width)) < (int)screenWidth)
-				{
-					x = (int)(((int)screenWidth - (int)(koefScaling * (picture.Width))) / 2);
-				}
-				var image = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
-				image.Frame = new RectangleF (x, 0, picture.Width * koefScaling, picture.Height * koefScaling);
-				var bannerImage = image;
-			}
-			else
-			{
-				var koefScaling = screenWidth / picture.Width;
-				var pictHeightScaling = picture.Height * koefScaling;
-				if (pictHeightScaling > maxPictureHeight)
-				{
-					koefScaling = (float)maxPictureHeight / picture.Height;
-				}
-				var bannerGif = new BannerView (banner, koefScaling, screenWidth);
-			}
-			//Прикрепить обработчик клика по баннеру
-		}
+        private void InitBanner(Banner banner)
+        {
+            var maxPictureHeight = UIScreen.MainScreen.Bounds.Size.Height * 0.15;
+            var screenWidth = UIScreen.MainScreen.Bounds.Size.Width;
+            var picture = banner.Picture;
+            //Если баннер не анимированный Gif
+            if (picture.Extension != PictureExtension.Gif)
+            {
+                var koefScaling = screenWidth / picture.Width;
+                var pictHeightScaling = picture.Height * koefScaling;
+                if (pictHeightScaling > maxPictureHeight)
+                {
+                    koefScaling = (float)maxPictureHeight / picture.Height;
+                }
+                var x = 0;
+                if ((int)(koefScaling * (picture.Width)) < (int)screenWidth)
+                {
+                    x = (int)(((int)screenWidth - (int)(koefScaling * (picture.Width))) / 2);
+                }
+                var image = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
+                image.Frame = new RectangleF (x, 0, picture.Width * koefScaling, picture.Height * koefScaling);
+                _banner = image;
+            }
+            else
+            {
+                var koefScaling = screenWidth / picture.Width;
+                var pictHeightScaling = picture.Height * koefScaling;
+                if (pictHeightScaling > maxPictureHeight)
+                {
+                    koefScaling = (float)maxPictureHeight / picture.Height;
+                }
+                _banner = new BannerView (banner, koefScaling, screenWidth);
+            }
+            //Прикрепить обработчик клика по баннеру
+        }
 
 		private void CreateExtendedObject()
 		{
@@ -305,14 +318,14 @@ namespace ItExpert
 					if (lst != null && lst.Any())
 					{
 						_articles = lst.ToList();
-						if (_extendedObject != null)
+						if (_banner != null)
 						{
 //							if (_extendedObject.Parent != null)
 //							{
 //								((LinearLayout)_extendedObject.Parent).RemoveAllViews();
 //							}
 							_articles.Insert(0,
-								new Article() { ArticleType = ArticleType.ExtendedObject, ExtendedObject = _extendedObject });
+                                new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 						}
 						var action = MagazineAction.NoAction;
 						if (!_isRubricSearch)
@@ -320,6 +333,23 @@ namespace ItExpert
 							action = _magazine.Exists ? MagazineAction.Open : MagazineAction.Download;
 						}
 						//Загрузить _articles в список
+
+                        if (_articles != null && _articles.Any())
+                        {
+                            if (_articlesTableView.Source != null) 
+                            {
+                                //(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+
+                                _articlesTableView.Source.Dispose();
+                                _articlesTableView.Source = null;
+                            }
+
+                            ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
+                            //source.PushDetailsView += OnPushArticleDetails;
+
+                            _articlesTableView.Source = source;
+                            _articlesTableView.ReloadData();
+                        }
 					}
 				}
 				else
@@ -477,14 +507,14 @@ namespace ItExpert
 						if (lst != null && lst.Any())
 						{
 							_articles = lst.ToList();
-							if (_extendedObject != null)
+                            if (_banner != null)
 							{
 //								if (_extendedObject.Parent != null)
 //								{
 //									((LinearLayout)_extendedObject.Parent).RemoveAllViews();
 //								}
 								_articles.Insert(0,
-									new Article() { ArticleType = ArticleType.ExtendedObject, ExtendedObject = _extendedObject });
+                                    new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 							}
 							var action = MagazineAction.NoAction;
 							if (!_isRubricSearch)
@@ -569,7 +599,7 @@ namespace ItExpert
 
 		public void DestroyPdfLoader()
 		{
-			var view = _extendedObject;
+			var view = _banner;
 			ApplicationWorker.PdfLoader.PdfGetted -= OnPdfGetted;
 			ApplicationWorker.PdfLoader.AbortOperation();
 			SetLoadingProgressVisible(false);

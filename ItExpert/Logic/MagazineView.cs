@@ -12,6 +12,7 @@ namespace ItExpert
         public MagazineView(Magazine magazine)
         {
             _spaceBetweenButtons = 5;
+            _magazine = magazine;
 
             UIImage image = ItExpertHelper.GetImageFromBase64String(magazine.PreviewPicture.Data);
 
@@ -23,6 +24,8 @@ namespace ItExpert
 
             Frame = new RectangleF(0, 0, _imageView.Frame.Width, totalHeight);
         }
+
+        public event EventHandler MagazineImagePushed;
 
         public PointF Location
         {
@@ -57,6 +60,16 @@ namespace ItExpert
             _imageView.Layer.BorderColor = UIColor.Black.CGColor;
             _imageView.Layer.BorderWidth = 1;
             _imageView.Image = image;
+            _imageView.UserInteractionEnabled = true;
+
+            UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
+            {
+                ApplicationWorker.Magazine = _magazine;
+
+                OnMagazineImagePushed();
+            });
+
+            _imageView.AddGestureRecognizer(tap);
 
             Add(_imageView);
         }
@@ -98,7 +111,17 @@ namespace ItExpert
             return button;
         }
 
+        private void OnMagazineImagePushed()
+        {
+            if (MagazineImagePushed != null)
+            {
+                MagazineImagePushed(this, EventArgs.Empty);
+            }
+        }
+
         private float _spaceBetweenButtons;
+
+        private Magazine _magazine;
 
         private UITextView _headerTextView;
         private UIImageView _imageView;

@@ -25,6 +25,8 @@ namespace ItExpert
             _padding = new UIEdgeInsets(5, 10, 5, 5);
         }
 
+        public event EventHandler MagazinePushed;
+
         public void AddMagazineViews(List<Magazine> magazines)
         {
             ItExpertHelper.RemoveSubviews(_scrollView);
@@ -37,6 +39,8 @@ namespace ItExpert
             foreach (var magazine in magazines)
             {
                 MagazineView magazineView = new MagazineView(magazine);
+
+                magazineView.MagazineImagePushed += OnMagazineImagePushed;
 
                 SetMagazineViewLocation(magazineView);
 
@@ -63,6 +67,14 @@ namespace ItExpert
             else if (!_isNewLineAppeared)
             {
                 _isNewLineAppeared = true;
+            }
+        }
+
+        private void OnMagazineImagePushed(object sender, EventArgs e)
+        {
+            if (MagazinePushed != null)
+            {
+                MagazinePushed(sender, e);
             }
         }
 

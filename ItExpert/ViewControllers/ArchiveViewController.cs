@@ -54,6 +54,8 @@ namespace ItExpert
 
             _archiveView = new ArchiveView(new RectangleF(0, _yearsView.Frame.Bottom, View.Frame.Width, View.Frame.Height - _yearsView.Frame.Bottom));
 
+            _archiveView.MagazinePushed += OnMagazinePushed;
+
             View.Add(_yearsView);
             View.Add(_archiveView);
 
@@ -187,6 +189,13 @@ namespace ItExpert
 				}
 			});
 		}
+
+        private void OnMagazinePushed(object sender, EventArgs e)
+        {
+            MagazineViewController magazineView = new MagazineViewController(ApplicationWorker.Magazine.Id);
+
+            NavigationController.PushViewController(magazineView, true);
+        }
 
 		#endregion
 

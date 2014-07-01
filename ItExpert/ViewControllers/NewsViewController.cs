@@ -25,7 +25,7 @@ namespace ItExpert
 		private List<Article> _allArticles = new List<Article>();
 		private Page _currentPage;
 		private string _search = null;
-		private UIView _extendedObject = null;
+        private UIView _banner = null;
 		private UIView _addPreviousArticleButton = null;
 		private bool _prevArticlesExists = true;
 		private bool _startPage = false;
@@ -194,7 +194,7 @@ namespace ItExpert
 				}
 				var image = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
 				image.Frame = new RectangleF (x, 0, picture.Width * koefScaling, picture.Height * koefScaling);
-				_extendedObject = image;
+                _banner = image;
 			}
 			else
 			{
@@ -204,7 +204,7 @@ namespace ItExpert
 				{
 					koefScaling = (float)maxPictureHeight / picture.Height;
 				}
-				_extendedObject = new BannerView (banner, koefScaling, screenWidth);
+                _banner = new BannerView (banner, koefScaling, screenWidth);
 			}
 			//Прикрепить обработчик клика по баннеру
 		}
@@ -395,7 +395,7 @@ namespace ItExpert
 			NavigationController.PushViewController (favoriteController, true);
 		}
 
-		private void OnPushArticleDetails(object sender, PushNewsDetailsEventArgs e)
+		private void OnPushArticleDetails(object sender, PushDetailsEventArgs e)
 		{
 			NavigationController.PushViewController (e.NewsDetailsView, true);
 		}
@@ -473,7 +473,7 @@ namespace ItExpert
 						{
 							if (_articlesTableView.Source != null) 
 							{
-								(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
+								(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
 								_articlesTableView.Source.Dispose();
 								_articlesTableView.Source = null;
@@ -500,14 +500,14 @@ namespace ItExpert
 			{
 				if (_articlesTableView.Source != null) 
 				{
-					(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
+					(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
 					_articlesTableView.Source.Dispose();
 					_articlesTableView.Source = null;
 				}
 
 				ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
-				source.PushNewsDetails += OnPushArticleDetails;
+				source.PushDetailsView += OnPushArticleDetails;
 
 				_articlesTableView.Source = source;
 				_articlesTableView.ReloadData();
@@ -691,7 +691,7 @@ namespace ItExpert
 						{
 							if (_articlesTableView.Source != null) 
 							{
-								(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
+								(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
 								_articlesTableView.Source.Dispose();
 								_articlesTableView.Source = null;
@@ -772,7 +772,7 @@ namespace ItExpert
 						{
 							if (_articlesTableView.Source != null) 
 							{
-								(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
+								(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
 								_articlesTableView.Source.Dispose();
 								_articlesTableView.Source = null;
@@ -833,14 +833,14 @@ namespace ItExpert
 					new Article() {ArticleType = ArticleType.Header, Name = _header});
 			}
 			//Добавление расширенного объекта: баннера
-			if (_extendedObject != null)
+			if (_banner != null)
 			{
 				//				if (_extendedObject.Parent != null)
 				//				{
 				//					((LinearLayout)_extendedObject.Parent).RemoveAllViews();
 				//				}
 				_articles.Insert(0,
-					new Article() {ArticleType = ArticleType.ExtendedObject, ExtendedObject = _extendedObject});
+                    new Article() {ArticleType = ArticleType.Banner, ExtendedObject = _banner});
 			}
 			//Добавление кнопки Загрузить еще
 			if (_addPreviousArticleButton != null && _prevArticlesExists)
@@ -851,20 +851,20 @@ namespace ItExpert
 				//				}
 				_articles.Add(new Article()
 				{
-					ArticleType = ArticleType.ExtendedObject,
+                    ArticleType = ArticleType.PreviousArticlesButton,
 					ExtendedObject = _addPreviousArticleButton
 				});
 			}
 			if (_articlesTableView.Source != null) 
 			{
-				(_articlesTableView.Source as ArticlesTableSource).PushNewsDetails -= OnPushArticleDetails;
+				(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
 				_articlesTableView.Source.Dispose();
 				_articlesTableView.Source = null;
 			}
 
 			ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
-			source.PushNewsDetails += OnPushArticleDetails;
+			source.PushDetailsView += OnPushArticleDetails;
 
 			_articlesTableView.Source = source;
 			_articlesTableView.ReloadData();
@@ -911,14 +911,14 @@ namespace ItExpert
 					new Article() { ArticleType = ArticleType.Header, Name = _header });
 			}
 			//Добавление расширенного объекта: баннера
-			if (_extendedObject != null)
+			if (_banner != null)
 			{
 				//				if (_extendedObject.Parent != null)
 				//				{
 				//					((LinearLayout)_extendedObject.Parent).RemoveAllViews();
 				//				}
 				_articles.Insert(0,
-					new Article() { ArticleType = ArticleType.ExtendedObject, ExtendedObject = _extendedObject });
+                    new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 			}
 			//Добавление кнопки Загрузить еще
 			if (_addPreviousArticleButton != null && _prevArticlesExists)
@@ -929,7 +929,7 @@ namespace ItExpert
 				//				}
 				_articles.Add(new Article()
 				{
-					ArticleType = ArticleType.ExtendedObject,
+                    ArticleType = ArticleType.PreviousArticlesButton,
 					ExtendedObject = _addPreviousArticleButton
 				});
 			}

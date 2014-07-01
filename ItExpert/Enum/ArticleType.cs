@@ -6,6 +6,9 @@
         Portal = 2,
         Header = 3,
         Placeholder = 4,
-        ExtendedObject = 5
+        ExtendedObject = 5,
+        Banner = 6,
+        PreviousArticlesButton = 7,
+        MagazinePreview = 8
     }
 }

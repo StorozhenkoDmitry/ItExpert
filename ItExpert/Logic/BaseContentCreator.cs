@@ -13,7 +13,8 @@ namespace ItExpert
             Header,
             Banner,
             LoadMore,
-            Placeholder
+            Placeholder,
+            MagazinePreview
         }
 
         public BaseContentCreator()

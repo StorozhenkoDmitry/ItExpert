@@ -17,23 +17,23 @@ namespace ItExpert
             _creatorsPull = new Dictionary<BaseContentCreator.CreatorType, BaseContentCreator>();
         }
 
-        public void UpdateContent(bool isBannerRow, Article article)
+        public void UpdateContent(Article article)
         {
-            var creator = CreatorFactory(isBannerRow, article);
+            var creator = CreatorFactory(article);
 
             creator.UpdateContent(this, article);
         }
 
-        public float GetHeightDependingOnContent(bool isBannerRow, Article article)
+        public float GetHeightDependingOnContent(Article article)
         {
-            var creator = CreatorFactory(isBannerRow, article);
+            var creator = CreatorFactory(article);
 
             return creator.GetContentHeight(ContentView, article);
         }
 
-        private BaseContentCreator CreatorFactory(bool isBannerRow, Article article)
+        private BaseContentCreator CreatorFactory(Article article)
         {
-            var creatorType = GetCreatorType(isBannerRow, article);
+            var creatorType = GetCreatorType(article);
 
             switch (creatorType)
             {
@@ -74,26 +74,20 @@ namespace ItExpert
             }
         }
 
-        private BaseContentCreator.CreatorType GetCreatorType(bool isBannerRow, Article article)
+        private BaseContentCreator.CreatorType GetCreatorType(Article article)
         {
             switch (article.ArticleType)
             {
-                case ArticleType.ExtendedObject:
-                    if (isBannerRow)
-                    {
-                        return BaseContentCreator.CreatorType.Banner;
-                    }
-                    else
-                    {
-                        return BaseContentCreator.CreatorType.LoadMore;
-                    }
+                case ArticleType.Banner:
+                    return BaseContentCreator.CreatorType.Banner;
+
+                case ArticleType.PreviousArticlesButton:
+                    return BaseContentCreator.CreatorType.LoadMore;               
 
                 case ArticleType.Header:
                     return BaseContentCreator.CreatorType.Header;
 
                 case ArticleType.Magazine:
-                    return BaseContentCreator.CreatorType.Magazine;
-
                 case ArticleType.Portal:
                     return BaseContentCreator.CreatorType.Portal;
 
