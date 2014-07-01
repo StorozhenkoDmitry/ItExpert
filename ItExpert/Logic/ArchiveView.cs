@@ -60,7 +60,7 @@ namespace ItExpert
 
                 _nextViewPosition = new PointF(_padding.Left, _nextViewPosition.Y + magazineView.Frame.Height + _verticalSpaceBetweenViews + _padding.Top);
             }
-            if (!_isNewLineAppeared)
+            else if (!_isNewLineAppeared)
             {
                 _isNewLineAppeared = true;
             }
