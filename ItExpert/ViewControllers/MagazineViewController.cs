@@ -360,6 +360,12 @@ namespace ItExpert
 							_articles.Insert(0,
                                 new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 						}
+
+                        if (ApplicationWorker.Magazine != null)
+                        {
+                            _articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
+                        }
+
 						var action = MagazineAction.NoAction;
 						if (!_isRubricSearch)
 						{
@@ -501,6 +507,7 @@ namespace ItExpert
 		{
 			if (magazine == null) return;
 
+            ApplicationWorker.Magazine = magazine;
 		}
 
 		private void LoadMagazineArticles()
@@ -550,6 +557,7 @@ namespace ItExpert
 								_articles.Insert(0,
                                     new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 							}
+
 							var action = MagazineAction.NoAction;
 							if (!_isRubricSearch)
 							{
