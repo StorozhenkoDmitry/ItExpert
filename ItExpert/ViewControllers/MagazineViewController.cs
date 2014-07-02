@@ -31,6 +31,7 @@ namespace ItExpert
 		private BottomToolbarView _bottomBar = null;
 		private int _magazineId = -1;
         private UITableView _articlesTableView;
+		private UIActivityIndicatorView _loadingIndicator;
 
 		#endregion
 
@@ -57,6 +58,22 @@ namespace ItExpert
 
 		#region Init
 
+		public void SetMagazineId(int magazineId)
+		{
+			_magazineId = magazineId;
+			_isRubricSearch = false;
+			_searchRubric = null;
+			_headerAdded = false;
+			_header = null;
+			_prevArticlesExists = true;
+			if (_articles != null)
+			{
+				_articles.Clear();
+			}
+			_articlesTableView.ReloadData ();
+			InitData ();
+		}
+
 		public void Initialize()
 		{
 			Current = this;
@@ -64,6 +81,7 @@ namespace ItExpert
 
 			InitBottomToolbar ();
 			CreateExtendedObject();
+			InitLoadingProgress ();
 
 			var screenWidth =
 				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
@@ -143,6 +161,19 @@ namespace ItExpert
             //Прикрепить обработчик клика по баннеру
         }
 
+		void InitLoadingProgress()
+		{
+			var height = 50;
+			var bottomBarHeight = _bottomBar.Frame.Height;
+			_loadingIndicator = new UIActivityIndicatorView (
+				new RectangleF (0, View.Bounds.Height - (height + bottomBarHeight), View.Bounds.Width, height));
+			_loadingIndicator.ActivityIndicatorViewStyle = UIActivityIndicatorViewStyle.WhiteLarge;
+			_loadingIndicator.Color = UIColor.Blue;
+			_loadingIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			View.Add (_loadingIndicator);
+			_loadingIndicator.Hidden = true;
+		}
+
 		private void CreateExtendedObject()
 		{
 
@@ -150,9 +181,15 @@ namespace ItExpert
 
 		private void InitData()
 		{
+			SetLoadingImageVisible (true);
+			var lastMagazineId = -1;
+			if (ApplicationWorker.LastMagazine != null)
+			{
+				lastMagazineId = ApplicationWorker.LastMagazine.Id;
+			}
 			var itemId = _magazineId;
 			var loadData = true;
-			if (itemId != -1)
+			if (itemId != -1 && (lastMagazineId == -1 || itemId != lastMagazineId))
 			{
 				_lastMagazine = false;
 				var magazine = ApplicationWorker.Magazine;
@@ -320,10 +357,6 @@ namespace ItExpert
 						_articles = lst.ToList();
 						if (_banner != null)
 						{
-//							if (_extendedObject.Parent != null)
-//							{
-//								((LinearLayout)_extendedObject.Parent).RemoveAllViews();
-//							}
 							_articles.Insert(0,
                                 new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 						}
@@ -356,6 +389,7 @@ namespace ItExpert
 				{
 //					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
+				SetLoadingImageVisible (false);
 			});
 		}
 
@@ -522,6 +556,23 @@ namespace ItExpert
 								action = _magazine.Exists ? MagazineAction.Open : MagazineAction.Download;
 							}
 							//Загрузить _articles в список
+							if (_articles != null && _articles.Any())
+							{
+								if (_articlesTableView.Source != null) 
+								{
+									//(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+
+									_articlesTableView.Source.Dispose();
+									_articlesTableView.Source = null;
+								}
+
+								ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
+								//source.PushDetailsView += OnPushArticleDetails;
+
+								_articlesTableView.Source = source;
+								_articlesTableView.ReloadData();
+							}
+							SetLoadingImageVisible (false);
 						}
 						return;
 					}
@@ -588,9 +639,7 @@ namespace ItExpert
 			return returnLst;
 		}
 
-		private void SetLoadingProgressVisible(bool visible)
-		{
-		}
+
 
 		public void ShowLastMagazine()
 		{
@@ -607,10 +656,34 @@ namespace ItExpert
 //			button.Enabled = true;
 		}
 
+		#endregion
+
+		#region Helpers method
+
 		private bool IsConnectionAccept()
 		{
 			var result = true;
 			return result;
+		}
+
+		private void SetLoadingImageVisible(bool visible)
+		{
+			if (visible)
+			{
+				_loadingIndicator.Hidden = false;
+				_loadingIndicator.StartAnimating ();
+				View.BringSubviewToFront (_loadingIndicator);
+			}
+			else
+			{
+				_loadingIndicator.Hidden = true;
+				_loadingIndicator.StopAnimating ();
+			}
+		}
+
+		private void SetLoadingProgressVisible(bool visible)
+		{
+
 		}
 
 		#endregion

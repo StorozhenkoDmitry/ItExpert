@@ -105,27 +105,14 @@ namespace ItExpert
 		void Initialize()
 		{
 			_startPage = true;
-            _isLoadingData = true;
+			ClearCache ();
 
             float scale = 3.8f;
-
             TabBarItem = new UITabBarItem("News", new UIImage(NSData.FromFile("News.png"), scale), 0);
-
             View.AutosizesSubviews = true;
-
             var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
-
             AutomaticallyAdjustsScrollViewInsets = false;
-
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
-			var screenWidth =
-				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
-
-			ApplicationWorker.Settings.ScreenWidth = screenWidth;
-			ApplicationWorker.Settings.SaveSettings();
-			ApplicationWorker.Settings.LoadDetails = false;
-			ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
-			ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
 
             InitAddPreviousArticleButton ();
             InitBottomToolbar();
@@ -133,14 +120,20 @@ namespace ItExpert
 
             _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, 
 				View.Bounds.Height- topOffset - _bottomBar.Frame.Height), UITableViewStyle.Plain);
-
 			_articlesTableView.ScrollEnabled = true; 
 			_articlesTableView.UserInteractionEnabled = true;
 			_articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
 			_articlesTableView.Bounces = true;
             _articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
-
 			View.Add (_articlesTableView);
+
+			var screenWidth =
+				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
+			ApplicationWorker.Settings.ScreenWidth = screenWidth;
+			ApplicationWorker.Settings.SaveSettings();
+			_isLoadingData = true;
+			ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
+			ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
 		}
 
 		//Создание кнопки Загрузить еще
@@ -158,8 +151,7 @@ namespace ItExpert
 		//Инициализация панели навигации
 		private void InitBottomToolbar()
 		{
-			float height = 66;
-
+			var height = 66f;
 			_bottomBar = new BottomToolbarView ();
 			_bottomBar.Frame = new RectangleF(0, View.Frame.Height - height, View.Frame.Width, height);
 			_bottomBar.LayoutIfNeeded();
@@ -220,6 +212,27 @@ namespace ItExpert
 			_loadingIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			View.Add (_loadingIndicator);
 			_loadingIndicator.Hidden = true;
+		}
+
+		private void ClearCache()
+		{
+			if (!ApplicationWorker.Settings.OfflineMode)
+			{
+				Action action = () =>
+				{
+					var dbSize = ApplicationWorker.Db.GetDbSize();
+					var dbSizeLimit = ApplicationWorker.Settings.GetDbLimitSizeInMb()*(1024*1024);
+					if (dbSize > dbSizeLimit)
+					{
+//						InvokeOnMainThread(
+//							() => Toast.MakeText(this, "Очищается кэш, пожалуйста подождите", ToastLength.Short).Show());
+						ApplicationWorker.Db.ClearCache();
+//						InvokeOnMainThread(
+//							() => Toast.MakeText(this, "Кэш очищен", ToastLength.Short).Show());
+					}
+				};
+				ThreadPool.QueueUserWorkItem(state => action());
+			}
 		}
 
 		#endregion
@@ -379,20 +392,72 @@ namespace ItExpert
 
 		private void ButArchiveOnClick(object sender, EventArgs e)
 		{
-			var archiveController = new ArchiveViewController ();
-			NavigationController.PushViewController (archiveController, true);
+			ArchiveViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as ArchiveViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, true);
+			}
+			else
+			{
+				showController = new ArchiveViewController ();
+				NavigationController.PushViewController (showController, true);
+			}
 		}
 
 		private void ButMagazineOnClick(object sender, EventArgs e)
 		{
-			var magazineController = new MagazineViewController (-1);
-			NavigationController.PushViewController (magazineController, true);
+			MagazineViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as MagazineViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, true);
+				showController.SetMagazineId (-1);
+			}
+			else
+			{
+				showController = new MagazineViewController(-1);
+				NavigationController.PushViewController(showController, true);
+			}
 		}
 
 		private void ButFavoriteOnClick(object sender, EventArgs e)
 		{
-			var favoriteController = new FavoritesViewController ();
-			NavigationController.PushViewController (favoriteController, true);
+			FavoritesViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as FavoritesViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, true);
+			}
+			else
+			{
+				showController = new FavoritesViewController ();
+				NavigationController.PushViewController (showController, true);
+			}
 		}
 
 		private void OnPushArticleDetails(object sender, PushDetailsEventArgs e)
@@ -478,9 +543,7 @@ namespace ItExpert
 								_articlesTableView.Source.Dispose();
 								_articlesTableView.Source = null;
 							}
-
-							ArticlesTableSource source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-
+							var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
 							_articlesTableView.Source = source;
 							_articlesTableView.ReloadData();
 						});
@@ -696,9 +759,7 @@ namespace ItExpert
 								_articlesTableView.Source.Dispose();
 								_articlesTableView.Source = null;
 							}
-
-							ArticlesTableSource source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-
+							var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
 							_articlesTableView.Source = source;
 							_articlesTableView.ReloadData();
 							SetLoadingImageVisible(true);
@@ -777,9 +838,7 @@ namespace ItExpert
 								_articlesTableView.Source.Dispose();
 								_articlesTableView.Source = null;
 							}
-
-							ArticlesTableSource source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-
+							var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
 							_articlesTableView.Source = source;
 							_articlesTableView.ReloadData();
 							SetLoadingImageVisible(true);
@@ -815,8 +874,6 @@ namespace ItExpert
 				_articles = _allArticles.Where(x => !x.IsReaded).ToList();
 				if (_articles.Count() < 6)
 				{
-					//					Toast.MakeText(this, "Непрочитанных статей меньше 6, будут выведены некоторые прочитанные статьи",
-					//						ToastLength.Short).Show();
 					var count = 6 - _articles.Count();
 					_articles.AddRange(_allArticles.Where(x => x.IsReaded).Take(count));
 					_articles = _articles.OrderByDescending(x => x.ActiveFrom).ToList();
@@ -835,20 +892,12 @@ namespace ItExpert
 			//Добавление расширенного объекта: баннера
 			if (_banner != null)
 			{
-				//				if (_extendedObject.Parent != null)
-				//				{
-				//					((LinearLayout)_extendedObject.Parent).RemoveAllViews();
-				//				}
 				_articles.Insert(0,
                     new Article() {ArticleType = ArticleType.Banner, ExtendedObject = _banner});
 			}
 			//Добавление кнопки Загрузить еще
 			if (_addPreviousArticleButton != null && _prevArticlesExists)
 			{
-				//				if (_addPreviousArticleButton.Parent != null)
-				//				{
-				//					((LinearLayout)_addPreviousArticleButton.Parent).RemoveAllViews();
-				//				}
 				_articles.Add(new Article()
 				{
                     ArticleType = ArticleType.PreviousArticlesButton,
@@ -862,10 +911,8 @@ namespace ItExpert
 				_articlesTableView.Source.Dispose();
 				_articlesTableView.Source = null;
 			}
-
-			ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
+			var source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
 			source.PushDetailsView += OnPushArticleDetails;
-
 			_articlesTableView.Source = source;
 			_articlesTableView.ReloadData();
 		}
@@ -892,7 +939,6 @@ namespace ItExpert
 				var buffer = _allArticles.Where(x => !x.IsReaded).ToList();
 				if (buffer.Count() < 6)
 				{
-					//					Toast.MakeText(this, "Непрочитанных статей меньше 6, будут выведены некоторые прочитанные статьи", ToastLength.Short).Show();
 					var count = 6 - buffer.Count();
 					buffer.AddRange(_allArticles.Where(x => x.IsReaded).Take(count));
 					buffer = buffer.OrderByDescending(x => x.ActiveFrom).ToList();
@@ -913,20 +959,12 @@ namespace ItExpert
 			//Добавление расширенного объекта: баннера
 			if (_banner != null)
 			{
-				//				if (_extendedObject.Parent != null)
-				//				{
-				//					((LinearLayout)_extendedObject.Parent).RemoveAllViews();
-				//				}
 				_articles.Insert(0,
                     new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 			}
 			//Добавление кнопки Загрузить еще
 			if (_addPreviousArticleButton != null && _prevArticlesExists)
 			{
-				//				if (_addPreviousArticleButton.Parent != null)
-				//				{
-				//					((LinearLayout)_addPreviousArticleButton.Parent).RemoveAllViews();
-				//				}
 				_articles.Add(new Article()
 				{
                     ArticleType = ArticleType.PreviousArticlesButton,

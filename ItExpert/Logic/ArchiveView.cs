@@ -9,6 +9,18 @@ namespace ItExpert
 {
     public class ArchiveView : UIView
     {
+		public event EventHandler MagazinePushed;
+		public event EventHandler MagazineOpen;
+		public event EventHandler MagazineDelete;
+		public event EventHandler MagazineDownload;
+		private bool _isNewLineAppeared;
+		private UIEdgeInsets _padding;
+		private float _verticalSpaceBetweenViews;
+		private float _horizontalSpaceBetweenViews;
+		private PointF _nextViewPosition;
+		private UIScrollView _scrollView;
+		private List<Magazine> _items;
+
         public ArchiveView(RectangleF frame)
             : base(frame)
         {
@@ -25,12 +37,10 @@ namespace ItExpert
             _padding = new UIEdgeInsets(5, 10, 5, 5);
         }
 
-        public event EventHandler MagazinePushed;
-
         public void AddMagazineViews(List<Magazine> magazines)
         {
             ItExpertHelper.RemoveSubviews(_scrollView);
-
+			_items = magazines;
             _nextViewPosition = new PointF(_padding.Left, _padding.Top);
 
             float magazineViewHeight = 0;
@@ -41,7 +51,9 @@ namespace ItExpert
                 MagazineView magazineView = new MagazineView(magazine);
 
                 magazineView.MagazineImagePushed += OnMagazineImagePushed;
-
+				magazineView.MagazineDownload += OnMagazineDownload;
+				magazineView.MagazineOpen += OnMagazineOpen;
+				magazineView.MagazineDelete += OnMagazineDelete;
                 SetMagazineViewLocation(magazineView);
 
                 _scrollView.Add(magazineView);
@@ -50,6 +62,30 @@ namespace ItExpert
             }
 
             _scrollView.ContentSize = new SizeF(_nextViewPosition.X, _nextViewPosition.Y + _padding.Bottom + (_isNewLineAppeared ? magazineViewHeight : 0));
+        }
+
+        void OnMagazineDownload (object sender, EventArgs e)
+        {
+			if (MagazineDownload != null)
+			{
+				MagazineDownload (sender, e);
+			}
+        }
+
+        void OnMagazineDelete (object sender, EventArgs e)
+        {
+			if (MagazineDelete != null)
+			{
+				MagazineDelete (sender, e);
+			}
+        }
+
+        void OnMagazineOpen (object sender, EventArgs e)
+        {
+			if (MagazineOpen != null)
+			{
+				MagazineOpen (sender, e);
+			}
         }
 
         private void SetMagazineViewLocation(MagazineView magazineView)
@@ -77,17 +113,6 @@ namespace ItExpert
                 MagazinePushed(sender, e);
             }
         }
-
-        private bool _isNewLineAppeared;
-
-        private UIEdgeInsets _padding;
-
-        private float _verticalSpaceBetweenViews;
-        private float _horizontalSpaceBetweenViews;
-
-        private PointF _nextViewPosition;
-
-        private UIScrollView _scrollView;
     }
 }
 
