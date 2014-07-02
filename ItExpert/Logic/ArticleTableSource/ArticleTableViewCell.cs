@@ -14,7 +14,7 @@ namespace ItExpert
         {
             BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 
-            _creatorsPull = new Dictionary<BaseContentCreator.CreatorType, BaseContentCreator>();
+            _creatorsPool = new Dictionary<BaseContentCreator.CreatorType, BaseContentCreator>();
         }
 
         public void UpdateContent(Article article)
@@ -38,36 +38,44 @@ namespace ItExpert
             switch (creatorType)
             {
                 case BaseContentCreator.CreatorType.Banner:
-                    if (!_creatorsPull.ContainsKey(BaseContentCreator.CreatorType.Banner))
+                    if (!_creatorsPool.ContainsKey(BaseContentCreator.CreatorType.Banner))
                     {
-                        _creatorsPull.Add(BaseContentCreator.CreatorType.Banner, new BannerContentCreator());
+                        _creatorsPool.Add(BaseContentCreator.CreatorType.Banner, new BannerContentCreator());
                     }
 
-                    return _creatorsPull[BaseContentCreator.CreatorType.Banner];
+                    return _creatorsPool[BaseContentCreator.CreatorType.Banner];
 
                 case BaseContentCreator.CreatorType.LoadMore:
-                    if (!_creatorsPull.ContainsKey(BaseContentCreator.CreatorType.LoadMore))
+                    if (!_creatorsPool.ContainsKey(BaseContentCreator.CreatorType.LoadMore))
                     {
-                        _creatorsPull.Add(BaseContentCreator.CreatorType.LoadMore, new LoadMoreContentCreator());
+                        _creatorsPool.Add(BaseContentCreator.CreatorType.LoadMore, new LoadMoreContentCreator());
                     }
 
-                    return _creatorsPull[BaseContentCreator.CreatorType.LoadMore];
+                    return _creatorsPool[BaseContentCreator.CreatorType.LoadMore];
 
                 case BaseContentCreator.CreatorType.Portal:
-                    if (!_creatorsPull.ContainsKey(BaseContentCreator.CreatorType.Portal))
+                    if (!_creatorsPool.ContainsKey(BaseContentCreator.CreatorType.Portal))
                     {
-                        _creatorsPull.Add(BaseContentCreator.CreatorType.Portal, new PortalContentCreator());
+                        _creatorsPool.Add(BaseContentCreator.CreatorType.Portal, new PortalContentCreator());
                     }
 
-                    return _creatorsPull[BaseContentCreator.CreatorType.Portal];
+                    return _creatorsPool[BaseContentCreator.CreatorType.Portal];
 
                 case BaseContentCreator.CreatorType.Header:
-                    if (!_creatorsPull.ContainsKey(BaseContentCreator.CreatorType.Header))
+                    if (!_creatorsPool.ContainsKey(BaseContentCreator.CreatorType.Header))
                     {
-                        _creatorsPull.Add(BaseContentCreator.CreatorType.Header, new HeaderContentCreator());
+                        _creatorsPool.Add(BaseContentCreator.CreatorType.Header, new HeaderContentCreator());
                     }
 
-                    return _creatorsPull[BaseContentCreator.CreatorType.Header];
+                    return _creatorsPool[BaseContentCreator.CreatorType.Header];
+
+                case BaseContentCreator.CreatorType.MagazinePreview:
+                    if (!_creatorsPool.ContainsKey(BaseContentCreator.CreatorType.MagazinePreview))
+                    {
+                        _creatorsPool.Add(BaseContentCreator.CreatorType.MagazinePreview, new MagazinePreviewContentCreator());
+                    }
+
+                    return _creatorsPool[BaseContentCreator.CreatorType.MagazinePreview];
 
                 default:
                     throw new NotImplementedException("Content creator type isn't implemented.");
@@ -91,12 +99,15 @@ namespace ItExpert
                 case ArticleType.Portal:
                     return BaseContentCreator.CreatorType.Portal;
 
+                case ArticleType.MagazinePreview:
+                    return BaseContentCreator.CreatorType.MagazinePreview;
+
                 default:
                     throw new NotImplementedException("Article type isn't implemented.");
             }
         }
 
-        private Dictionary<BaseContentCreator.CreatorType, BaseContentCreator> _creatorsPull;
+        private Dictionary<BaseContentCreator.CreatorType, BaseContentCreator> _creatorsPool;
     }
 }
 

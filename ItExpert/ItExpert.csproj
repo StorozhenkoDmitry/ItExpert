@@ -154,12 +154,6 @@
     <Compile Include="Logic\WebViewDelegate.cs" />
     <Compile Include="Logic\AnimatedImageView.cs" />
     <Compile Include="Logic\ItExpertHelper.cs" />
-    <Compile Include="Logic\PortalContentCreator.cs" />
-    <Compile Include="Logic\ArticleTableViewCell.cs" />
-    <Compile Include="Logic\BaseContentCreator.cs" />
-    <Compile Include="Logic\BannerContentCreator.cs" />
-    <Compile Include="Logic\LoadMoreContentCreator.cs" />
-    <Compile Include="Logic\ArticlesTableSource.cs" />
     <Compile Include="ViewControllers\ArticleDetailsViewController.cs" />
     <Compile Include="Logic\BannerView.cs" />
     <Compile Include="Logic\BottomToolbarView.cs" />
@@ -169,14 +163,21 @@
     <Compile Include="ViewControllers\FavoritesViewController.cs" />
     <Compile Include="ViewControllers\NewsViewController.cs" />
     <Compile Include="Logic\YearsView.cs" />
-    <Compile Include="Logic\AlertView.cs" />
-    <Compile Include="Logic\RadioButton.cs" />
-    <Compile Include="Logic\RadioButtonGroup.cs" />
-    <Compile Include="Logic\BlackAlertView.cs" />
-    <Compile Include="Logic\BlackAlertViewButtonEventArgs.cs" />
-    <Compile Include="Logic\HeaderContentCreator.cs" />
     <Compile Include="Logic\ArchiveView.cs" />
     <Compile Include="Logic\MagazineView.cs" />
+    <Compile Include="Logic\ArticleTableSource\ArticlesTableSource.cs" />
+    <Compile Include="Logic\ArticleTableSource\ArticleTableViewCell.cs" />
+    <Compile Include="Logic\ArticleTableSource\BannerContentCreator.cs" />
+    <Compile Include="Logic\ArticleTableSource\BaseContentCreator.cs" />
+    <Compile Include="Logic\ArticleTableSource\HeaderContentCreator.cs" />
+    <Compile Include="Logic\ArticleTableSource\LoadMoreContentCreator.cs" />
+    <Compile Include="Logic\ArticleTableSource\MagazinePreviewContentCreator.cs" />
+    <Compile Include="Logic\BlackAlertView\AlertView.cs" />
+    <Compile Include="Logic\BlackAlertView\BlackAlertView.cs" />
+    <Compile Include="Logic\BlackAlertView\BlackAlertViewButtonEventArgs.cs" />
+    <Compile Include="Logic\BlackAlertView\RadioButton.cs" />
+    <Compile Include="Logic\BlackAlertView\RadioButtonGroup.cs" />
+    <Compile Include="Logic\ArticleTableSource\PortalContentCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
@@ -189,6 +190,8 @@
     <Folder Include="ServiceLayer\" />
     <Folder Include="ViewControllers\" />
     <Folder Include="Logic\" />
+    <Folder Include="Logic\ArticleTableSource\" />
+    <Folder Include="Logic\BlackAlertView\" />
   </ItemGroup>
   <ItemGroup>
     <XamarinComponentReference Include="json.net">

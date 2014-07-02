@@ -45,6 +45,16 @@ namespace ItExpert
 
                 return height;
             }
+
+            public static void Reset()
+            {
+                TitleHeight = 0;
+                MessageHeight = 0;
+                RadioButtonsHeight = 0;
+                BottomButtonsHeight = 0;
+                VerticalOffset = 0;
+                Padding = new UIEdgeInsets();
+            }
         }
 
         #endregion
@@ -54,6 +64,8 @@ namespace ItExpert
         public AlertView(RectangleF frame)
             : base(frame)
         {
+            ComponentHeight.Reset();
+
             ContentMode = UIViewContentMode.Redraw;
 
             BackgroundColor = UIColor.Clear;
