@@ -79,6 +79,11 @@ namespace ItExpert
 				NavigationController.PopToViewController (showController, true);
 				showController.ShowFromAnotherScreen (Page.Trends);
 			}
+			else
+			{
+				showController = new NewsViewController (Page.Trends);
+				NavigationController.PushViewController (showController, true);
+			}
 		}
 
 		private void ButNewsOnClick(object sender, EventArgs eventArgs)
@@ -97,6 +102,11 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, true);
 				showController.ShowFromAnotherScreen (Page.News);
+			}
+			else
+			{
+				showController = new NewsViewController (Page.News);
+				NavigationController.PushViewController (showController, true);
 			}
 		}
 

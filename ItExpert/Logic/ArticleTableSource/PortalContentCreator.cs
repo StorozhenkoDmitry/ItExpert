@@ -30,6 +30,8 @@ namespace ItExpert
 
         protected override void Create(UITableViewCell cell, Article article)
         {
+			cell.ContentView.BackgroundColor = 
+				ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
             cell.SelectionStyle = UITableViewCellSelectionStyle.Default;
 
             CreateCellElements (cell.ContentView, article, ItExpertHelper.LargestImageSizeInArticlesPreview);
@@ -39,6 +41,8 @@ namespace ItExpert
        
         protected override void Update(UITableViewCell cell, Article article)
         {
+			cell.ContentView.BackgroundColor = 
+				ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
             cell.SelectionStyle = UITableViewCellSelectionStyle.Default;
 
             _article = article;

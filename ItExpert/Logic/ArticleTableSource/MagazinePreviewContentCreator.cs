@@ -22,6 +22,17 @@ namespace ItExpert
             AddImageView(cell);
             AddHeader(cell);
             AddButton(cell);
+			AddProgress (cell);
+			if (MagazineViewController.Current.IsLoadingPdf)
+			{
+				_progress.StartAnimating ();
+				_button.Enabled = false;
+			}
+			else
+			{
+				_progress.StopAnimating ();
+				_button.Enabled = true;
+			}
         }
 
         protected override void Update(UITableViewCell cell, Article article)
@@ -31,6 +42,17 @@ namespace ItExpert
             AddImageView(cell);
             AddHeader(cell);
             AddButton(cell);
+			AddProgress (cell);
+			if (MagazineViewController.Current.IsLoadingPdf)
+			{
+				_progress.StartAnimating ();
+				_button.Enabled = false;
+			}
+			else
+			{
+				_progress.StopAnimating ();
+				_button.Enabled = true;
+			}
         }
 
         private void AddImageView(UITableViewCell cell)
@@ -88,15 +110,28 @@ namespace ItExpert
             cell.ContentView.Add(_button);
         }
 
+		private void AddProgress(UITableViewCell cell)
+		{
+			if (_progress == null)
+			{
+				_progress = new UIActivityIndicatorView (
+					new RectangleF (_button.Frame.X, _button.Frame.Bottom + 10, 80, 50));
+				_progress.ActivityIndicatorViewStyle = UIActivityIndicatorViewStyle.WhiteLarge;
+				_progress.Color = UIColor.LightGray;
+				_progress.BackgroundColor = UIColor.Black;
+			}
+			cell.ContentView.Add(_progress);
+		}
+
         private void OnButtonPush(object sender, EventArgs e)
         {
             if (ApplicationWorker.Magazine.Exists)
             {
-
+				MagazineViewController.Current.OpenMagazinePdf ();
             }
             else
             {
-                
+				MagazineViewController.Current.DownloadMagazinePdf ();
             }
         }
 
@@ -107,6 +142,7 @@ namespace ItExpert
         private UIImageView _imageView;
         private UITextView _headerTextView;
         private UIButton _button;
+		private UIActivityIndicatorView _progress;
     }
 }
 

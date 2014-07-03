@@ -7,6 +7,7 @@ using System.Linq;
 using ItExpert.ServiceLayer;
 using System.Drawing;
 using System.IO;
+using MonoTouch.QuickLook;
 
 namespace ItExpert
 {
@@ -396,7 +397,35 @@ namespace ItExpert
 
 		private void OpenPdf(Magazine magazine)
 		{
-			new UIAlertView ("OnMagazineOpen", magazine.Name, null, "OK", null).Show ();
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			var fileName = magazine.Id.ToString("G") + ".pdf";
+			var path = Path.Combine(folder + Settings.PdfFolder, fileName);
+			if (!File.Exists(path))
+			{
+				//Toast.MakeText(this, "Файл не найден", ToastLength.Long).Show();
+				return;
+			}
+			PdfViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as PdfViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			DestroyPdfLoader ();
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, true);
+				showController.ShowPdf (path);
+			}
+			else
+			{
+				showController = new PdfViewController (path);
+				NavigationController.PushViewController (showController, true);
+			}
 		}
 
 		private void UpdateMagazinesPdfExists(List<Magazine> magazines, int year)

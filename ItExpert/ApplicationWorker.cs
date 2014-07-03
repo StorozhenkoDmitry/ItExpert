@@ -145,42 +145,6 @@ namespace ItExpert
 
         #region Helper methods
 
-//        public static void OpenPdf(Activity context, int magazineId)
-//        {
-//            var sdAvailable = IsExternalStorageAvailable();
-//            if (!sdAvailable)
-//            {
-//                Toast.MakeText(context, "Недоступна SD карта, невозможно открыть файл", ToastLength.Short).Show();
-//                return;
-//            }
-//            var folder = Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
-//            var fileName = magazineId.ToString("G") + ".pdf";
-//            var path = System.IO.Path.Combine(folder + Settings.PdfFolder, fileName);
-//            var file = new File(path);
-//            if (!file.Exists())
-//            {
-//                Toast.MakeText(context, "Не найден сохраненный файл PDF", ToastLength.Short).Show();
-//                return;
-//            }
-//            var uri = Uri.Parse(path);
-//            var intent = new Intent(context, typeof (MuPDFActivity));
-//            intent.SetFlags(ActivityFlags.NoHistory);
-//            intent.SetAction(Intent.ActionView);
-//            intent.SetData(uri);
-//            context.StartActivity(intent);
-//        }
-//
-//        public static bool IsExternalStorageAvailable()
-//        {
-//            var result = false;
-//            var state = Android.OS.Environment.ExternalStorageState;
-//            if (Android.OS.Environment.MediaMounted.Equals(state))
-//            {
-//                result = true;
-//            }
-//            return result;
-//        }
-
         public static void OnSettingsChanged()
         {
             var handler = Interlocked.CompareExchange(ref SettingsChanged, null, null);

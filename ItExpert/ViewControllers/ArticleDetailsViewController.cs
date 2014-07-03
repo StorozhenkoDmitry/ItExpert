@@ -140,16 +140,16 @@ namespace ItExpert
 				{
 					if (_article.ArticleType  == ArticleType.Magazine && _magazineAction == MagazineAction.Open)
 					{
-//						ShowDialog(ShowPdfDialog);
+						ShowShowPdfDialog ();
 						return;
 					}
 					if (_article.ArticleType  == ArticleType.Magazine && _magazineAction == MagazineAction.Download)
 					{
-//						ShowDialog(LoadPdfDialog);
+						ShowLoadPdfDialog ();
 						return;
 					}
 //					Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
-//					Finish();
+					DismissViewController (true, null);
 				}
 			}
 		}
@@ -347,16 +347,16 @@ namespace ItExpert
 							{
 								if (_article.ArticleType == ArticleType.Magazine && _magazineAction == MagazineAction.Open)
 								{
-//									ShowDialog(ShowPdfDialog);
-//									return;
+									ShowShowPdfDialog ();
+									return;
 								}
-								if (_article.ArticleType== ArticleType.Magazine && _magazineAction == MagazineAction.Download)
+								if (_article.ArticleType == ArticleType.Magazine && _magazineAction == MagazineAction.Download)
 								{
-//									ShowDialog(LoadPdfDialog);
-//									return;
+									ShowLoadPdfDialog ();
+									return;
 								}
 //								Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
-//								Finish();
+								DismissViewController(true, null);
 							});
 						}
 					}
@@ -443,6 +443,7 @@ namespace ItExpert
 
 		private void FilterSection()
 		{
+			OnDestroy ();
 			if (_article.ArticleType == ArticleType.Portal)
 			{
 				var sectionId = _article.Sections.OrderBy (x => x.DepthLevel).Select(x => x.Section.Id).Last();
@@ -466,6 +467,21 @@ namespace ItExpert
 			if (_article.ArticleType == ArticleType.Magazine)
 			{
 				var sectionId = _article.Rubrics.Last().Id;
+				MagazineViewController showController = null;
+				var controllers = NavigationController.ViewControllers;
+				foreach (var controller in controllers)
+				{
+					showController = controller as MagazineViewController;
+					if (showController != null)
+					{
+						break;
+					}
+				}
+				if (showController != null)
+				{
+					NavigationController.PopToViewController (showController, true);
+					showController.SearchRubric (sectionId);
+				}
 			}
 		}
 
@@ -488,6 +504,7 @@ namespace ItExpert
 				}
 			}
 			var blockId = _article.IdBlock;
+			OnDestroy ();
 			NewsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -505,6 +522,64 @@ namespace ItExpert
 			}
 		}
 
+		private void ShowLoadPdfDialog()
+		{
+			BlackAlertView alertView = new BlackAlertView ("Нет детальной статьи", "Отсутствует детальная статья. Скачать Pdf журнала?", "Нет", "Да");
+
+			alertView.ButtonPushed += (sender, e) =>
+			{
+				if (e.ButtonIndex == 1)
+				{
+					MagazineViewController showController = null;
+					var controllers = NavigationController.ViewControllers;
+					foreach (var controller in controllers)
+					{
+						showController = controller as MagazineViewController;
+						if (showController != null)
+						{
+							break;
+						}
+					}
+					if (showController != null)
+					{
+						NavigationController.PopToViewController (showController, true);
+						showController.DownloadMagazinePdf();
+					}
+				}
+			};
+
+			alertView.Show ();
+		}
+
+		private void ShowShowPdfDialog()
+		{
+			BlackAlertView alertView = new BlackAlertView ("Нет детальной статьи", "Отсутствует детальная статья. Открыть Pdf журнала?", "Нет", "Да");
+
+			alertView.ButtonPushed += (sender, e) =>
+			{
+				if (e.ButtonIndex == 1)
+				{
+					MagazineViewController showController = null;
+					var controllers = NavigationController.ViewControllers;
+					foreach (var controller in controllers)
+					{
+						showController = controller as MagazineViewController;
+						if (showController != null)
+						{
+							break;
+						}
+					}
+					if (showController != null)
+					{
+						NavigationController.PopToViewController (showController, true);
+						showController.OpenMagazinePdf();
+					}
+				}
+			};
+
+			alertView.Show ();
+		}
+
 		#endregion
 
 		private void UpdateScreen()
@@ -515,16 +590,16 @@ namespace ItExpert
 				_isLoading = false;
 				if (_article.ArticleType == ArticleType.Magazine && _magazineAction == MagazineAction.Open)
 				{
-					//					ShowDialog(ShowPdfDialog);
-					//					return;
+					ShowShowPdfDialog ();
+					return;
 				}
-				if (_article.ArticleType  == ArticleType.Magazine && _magazineAction == MagazineAction.Download)
+				if (_article.ArticleType == ArticleType.Magazine && _magazineAction == MagazineAction.Download)
 				{
-					//					ShowDialog(LoadPdfDialog);
-					//					return;
+					ShowLoadPdfDialog ();
+					return;
 				}
-				new UIAlertView ("Информация", "Отсутствует детальная статья", null, "OK", null).Show ();
-				//Закрыть экран
+//				Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
+				DismissViewController(true, null);
 				return;
 			}
 			var sectionString = string.Empty;
@@ -636,26 +711,27 @@ namespace ItExpert
                 _articleSectionView = ItExpertHelper.GetTextView(
                     ItExpertHelper.GetAttributedString(section, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true),
                     _maxWidth, new PointF(_padding.Left, top));
+				if (!_fromFavorite)
+				{
+					_articleSectionView.UserInteractionEnabled = true;
+					UITapGestureRecognizer tap = new UITapGestureRecognizer (() =>
+					{
+						var sectionString = _article.Sections.OrderBy (x => x.DepthLevel).Last().Section.Name;
+						BlackAlertView alertView = new BlackAlertView (String.Format ("Раздел: {0}", sectionString.Trim ()), String.Format ("Посмотреть все статьи из раздела: {0}?", sectionString.Trim ()), "Нет", "Да");
 
-                _articleSectionView.UserInteractionEnabled = true;
+						alertView.ButtonPushed += (sender, e) =>
+						{
+							if (e.ButtonIndex == 1)
+							{
+								FilterSection ();
+							}
+						};
 
-                UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
-                {
-					BlackAlertView alertView = new BlackAlertView(String.Format("Раздел: {0}", section.Trim()), String.Format("Посмотреть все статьи из раздела: {0}?", section.Trim()), "Нет", "Да");
+						alertView.Show ();
+					});
 
-                    alertView.ButtonPushed += (sender, e) => 
-                    {
-                        if (e.ButtonIndex == 1)
-                        {
-                            FilterSection();
-                        }
-                    };
-
-                    alertView.Show();
-                });
-
-                _articleSectionView.AddGestureRecognizer(tap);
-
+					_articleSectionView.AddGestureRecognizer (tap);
+				}
                 _scrollView.Add(_articleSectionView);
 
                 return _articleSectionView.Frame.Bottom + _padding.Bottom;
@@ -725,28 +801,31 @@ namespace ItExpert
                 _articleAuthorView = ItExpertHelper.GetTextView(
                     ItExpertHelper.GetAttributedString(author, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true),
                     _maxWidth, new PointF(_padding.Left, top));
-				_articleAuthorView.UserInteractionEnabled = true;
-                UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
-                {
-					var authors = _article.Authors;
-					var shortAuthors = authors.
-						Select(x=>x.Name.Split(new [] { ","}, StringSplitOptions.RemoveEmptyEntries)[0].Trim()).ToArray();
-					BlackAlertView alertView = new BlackAlertView("Выберете автора", "Отмена", shortAuthors, "Поиск");
+				if (!_fromFavorite)
+				{
+					_articleAuthorView.UserInteractionEnabled = true;
 
-                    alertView.ButtonPushed += (sender, e) => 
-                    {
-                        if (e.ButtonIndex == 1)
-                        {
-							var authorId = authors[e.SelectedRadioButton].Id;
-							FilterAuthor(authorId);
-                        }
-                    };
+					UITapGestureRecognizer tap = new UITapGestureRecognizer (() =>
+					{
+						var authors = _article.Authors;
+						var shortAuthors = authors.
+						Select (x => x.Name.Split (new [] { "," }, StringSplitOptions.RemoveEmptyEntries) [0].Trim ()).ToArray ();
+						BlackAlertView alertView = new BlackAlertView ("Выберете автора", "Отмена", shortAuthors, "Поиск");
 
-                    alertView.Show();
-                });
+						alertView.ButtonPushed += (sender, e) =>
+						{
+							if (e.ButtonIndex == 1)
+							{
+								var authorId = authors [e.SelectedRadioButton].Id;
+								FilterAuthor (authorId);
+							}
+						};
 
-				_articleAuthorView.AddGestureRecognizer(tap);
+						alertView.Show ();
+					});
 
+					_articleAuthorView.AddGestureRecognizer (tap);
+				}
                 _scrollView.Add(_articleAuthorView);
 
                 return _articleAuthorView.Frame.Bottom + _padding.Bottom;
@@ -773,6 +852,15 @@ namespace ItExpert
                 _scrollView.Add(_articleTextWebView);
             }
         }
+
+		private void OnDestroy()
+		{
+			ArticleChange -= OnArticleChange;
+			ArticleChange = null;
+//			ApplicationWorker.SettingsChanged -= ApplicationOnSettingsChanged;
+			_articlesId = null;
+			_authors = null;
+		}
 
         private void OnWebViewLoaded(object sender, EventArgs e)
         {

@@ -33,12 +33,18 @@ namespace ItExpert
 		private string _header = null;
 		private BottomToolbarView _bottomBar = null;
 		private UIActivityIndicatorView _loadingIndicator;
+		private bool _fromAnother = false;
 
 		#endregion
 
 		#region UIViewController members
 
 		public NewsViewController(){
+		}
+
+		public NewsViewController(Page page) {
+			_fromAnother = true;
+			_currentPage = page;
 		}
 
 		static bool UserInterfaceIdiomIsPhone {
@@ -64,11 +70,6 @@ namespace ItExpert
 		public override void ViewWillAppear (bool animated)
 		{
 			base.ViewWillAppear (animated);
-
-            if (_articlesTableView != null)
-            {
-                _articlesTableView.DeselectRow(_articlesTableView.IndexPathForSelectedRow, true);
-            }
 		}
 
 		public override void ViewDidAppear (bool animated)
@@ -76,6 +77,7 @@ namespace ItExpert
 			base.ViewDidAppear (animated);
 			if (_articlesTableView != null)
 			{
+				_articlesTableView.DeselectRow(_articlesTableView.IndexPathForSelectedRow, true);
 				_articlesTableView.ReloadData ();
 			}
 		}
@@ -127,13 +129,30 @@ namespace ItExpert
             _articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
 			View.Add (_articlesTableView);
 
-			var screenWidth =
-				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
-			ApplicationWorker.Settings.ScreenWidth = screenWidth;
-			ApplicationWorker.Settings.SaveSettings();
-			_isLoadingData = true;
-			ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
-			ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
+			if (!_fromAnother)
+			{
+				var screenWidth =
+					ApplicationWorker.Settings.GetScreenWidthForScreen ((int)UIScreen.MainScreen.Bounds.Size.Width);
+				ApplicationWorker.Settings.ScreenWidth = screenWidth;
+				ApplicationWorker.Settings.SaveSettings ();
+				_isLoadingData = true;
+				ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
+				ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
+			}
+			else
+			{
+				_fromAnother = false;
+				if (_currentPage == Page.News)
+				{
+					_currentPage = Page.Trends;
+					PageNewsActivate ();
+				}
+				if (_currentPage == Page.Trends)
+				{
+					_currentPage = Page.News;
+					PageTrendsActivate ();
+				}
+			}
 		}
 
 		//Создание кнопки Загрузить еще
@@ -924,7 +943,7 @@ namespace ItExpert
 			{
 				//				Toast.MakeText(this, "Больше статей нет", ToastLength.Short).Show();
 				_prevArticlesExists = false;
-				if (_addPreviousArticleButton != null)
+				if (_addPreviousArticleButton != null && _articles.Any())
 				{
 					_articles.RemoveAt(_articles.Count() - 1);
 				}
