@@ -393,12 +393,18 @@ namespace ItExpert
 							_articles.Insert(0,
                                 new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 						}
-
+						if (IsDoubleRow())
+						{
+							_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+						}
                         if (ApplicationWorker.Magazine != null)
                         {
                             _articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
                         }
-
+						if (IsDoubleRow())
+						{
+							_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+						}
 						var action = MagazineAction.NoAction;
 						if (!_isRubricSearch)
 						{
@@ -408,16 +414,23 @@ namespace ItExpert
 
                         if (_articles != null && _articles.Any())
                         {
-                            if (_articlesTableView.Source != null) 
-                            {
-                                (_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-                                _articlesTableView.Source.Dispose();
-                                _articlesTableView.Source = null;
-                            }
-							var source = new ArticlesTableSource(_articles, false, action);
-                            source.PushDetailsView += OnPushArticleDetails;
-                            _articlesTableView.Source = source;
-                            _articlesTableView.ReloadData();
+							if (!IsDoubleRow())
+							{
+								if (_articlesTableView.Source != null) 
+								{
+									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+									_articlesTableView.Source.Dispose();
+									_articlesTableView.Source = null;
+								}
+								var source = new ArticlesTableSource(_articles, false, action);
+								source.PushDetailsView += OnPushArticleDetails;
+								_articlesTableView.Source = source;
+								_articlesTableView.ReloadData();
+							}
+							else
+							{
+
+							}
                         }
 					}
 				}
@@ -519,14 +532,29 @@ namespace ItExpert
 							{
 								_articles.Insert(0,
 									new Article() { ArticleType = ArticleType.Header, Name = _header });
+								if (IsDoubleRow())
+								{
+									_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+								}
 							}
 							if (_banner != null)
 							{
 								_articles.Insert(0,
 									new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+								if (IsDoubleRow())
+								{
+									_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+								}
 							}
 							if (_addPreviousArticleButton != null && _prevArticlesExists)
 							{
+								if (IsDoubleRow())
+								{
+									if (_articles.Count() % 2 != 0)
+									{
+										_articles.Add(new Article() { ArticleType = ArticleType.Placeholder });
+									}
+								}
 								_articles.Add(new Article()
 								{
 									ArticleType = ArticleType.PreviousArticlesButton,
@@ -540,16 +568,22 @@ namespace ItExpert
 							}
 							if (_articles != null && _articles.Any())
 							{
-								if (_articlesTableView.Source != null) 
+								if (!IsDoubleRow())
 								{
-									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-									_articlesTableView.Source.Dispose();
-									_articlesTableView.Source = null;
+									if (_articlesTableView.Source != null) 
+									{
+										(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+										_articlesTableView.Source.Dispose();
+										_articlesTableView.Source = null;
+									}
+									var source = new ArticlesTableSource(_articles, false, action);
+									source.PushDetailsView += OnPushArticleDetails;
+									_articlesTableView.Source = source;
+									_articlesTableView.ReloadData();
 								}
-								var source = new ArticlesTableSource(_articles, false, action);
-								source.PushDetailsView += OnPushArticleDetails;
-								_articlesTableView.Source = source;
-								_articlesTableView.ReloadData();
+								else
+								{
+								}
 							}
 						}
 					}
@@ -580,14 +614,29 @@ namespace ItExpert
 							{
 								_articles.Insert(0,
 									new Article() { ArticleType = ArticleType.Header, Name = _header });
+								if (IsDoubleRow())
+								{
+									_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+								}
 							}
 							if (_banner != null)
 							{
 								_articles.Insert(0,
 									new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+								if (IsDoubleRow())
+								{
+									_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+								}
 							}
 							if (_addPreviousArticleButton != null && _prevArticlesExists)
 							{
+								if (IsDoubleRow())
+								{
+									if (_articles.Count() % 2 != 0)
+									{
+										_articles.Add(new Article() { ArticleType = ArticleType.Placeholder });
+									}
+								}
 								_articles.Add(new Article()
 								{
 									ArticleType = ArticleType.PreviousArticlesButton,
@@ -974,10 +1023,18 @@ namespace ItExpert
 							{
 								_articles.Insert(0,
                                     new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+								if (IsDoubleRow())
+								{
+									_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+								}
 							}
 							if (ApplicationWorker.Magazine != null)
 							{
 								_articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
+								if (IsDoubleRow())
+								{
+									_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+								}
 							}
 							var action = MagazineAction.NoAction;
 							if (!_isRubricSearch)
@@ -987,16 +1044,22 @@ namespace ItExpert
 							//Загрузить _articles в список
 							if (_articles != null && _articles.Any())
 							{
-								if (_articlesTableView.Source != null) 
+								if (!IsDoubleRow())
 								{
-									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-									_articlesTableView.Source.Dispose();
-									_articlesTableView.Source = null;
+									if (_articlesTableView.Source != null) 
+									{
+										(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+										_articlesTableView.Source.Dispose();
+										_articlesTableView.Source = null;
+									}
+									var source = new ArticlesTableSource(_articles, false, action);
+									source.PushDetailsView += OnPushArticleDetails;
+									_articlesTableView.Source = source;
+									_articlesTableView.ReloadData();}
+								else
+								{
+
 								}
-								var source = new ArticlesTableSource(_articles, false, action);
-								source.PushDetailsView += OnPushArticleDetails;
-								_articlesTableView.Source = source;
-								_articlesTableView.ReloadData();
 							}
 							SetLoadingImageVisible (false);
 						}
@@ -1021,15 +1084,20 @@ namespace ItExpert
 						{
 							magAction = _magazine.Exists ? MagazineAction.Open : MagazineAction.Download;
 						}
-						if (_articlesTableView.Source != null) 
+						if (!IsDoubleRow())
 						{
-							(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-							_articlesTableView.Source.Dispose();
-							_articlesTableView.Source = null;
+							if (_articlesTableView.Source != null) 
+							{
+								(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+								_articlesTableView.Source.Dispose();
+								_articlesTableView.Source = null;
+							}
+							var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
+							_articlesTableView.Source = source;
+							_articlesTableView.ReloadData();}
+						else
+						{
 						}
-						var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-						_articlesTableView.Source = source;
-						_articlesTableView.ReloadData();
 					});
 					var lst = ApplicationWorker.Db.GetMagazineArticlesFromDb(_magazine.Id);
 					if (lst != null && lst.Any())
@@ -1058,10 +1126,18 @@ namespace ItExpert
 							{
 								_articles.Insert(0,
 									new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+								if (IsDoubleRow())
+								{
+									_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+								}
 							}
 							if (ApplicationWorker.Magazine != null)
 							{
 								_articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
+								if (IsDoubleRow())
+								{
+									_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+								}
 							}
 							InvokeOnMainThread(() =>
 							{
@@ -1072,16 +1148,22 @@ namespace ItExpert
 								}
 								if (_articles != null && _articles.Any())
 								{
-									if (_articlesTableView.Source != null) 
+									if (!IsDoubleRow())
 									{
-										(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-										_articlesTableView.Source.Dispose();
-										_articlesTableView.Source = null;
+										if (_articlesTableView.Source != null) 
+										{
+											(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+											_articlesTableView.Source.Dispose();
+											_articlesTableView.Source = null;
+										}
+										var source = new ArticlesTableSource(_articles, false, magAction);
+										source.PushDetailsView += OnPushArticleDetails;
+										_articlesTableView.Source = source;
+										_articlesTableView.ReloadData();
 									}
-									var source = new ArticlesTableSource(_articles, false, magAction);
-									source.PushDetailsView += OnPushArticleDetails;
-									_articlesTableView.Source = source;
-									_articlesTableView.ReloadData();
+									else
+									{
+									}
 								}
 								SetLoadingImageVisible(false);
 							});
@@ -1131,17 +1213,17 @@ namespace ItExpert
 			foreach (var rubric in rubrics)
 			{
 				returnLst.Add(new Article() {ArticleType = ArticleType.Header, Name = rubric.Name});
-//				if (IsDoubleRow())
-//				{
-//					returnLst.Add(new Article() {ArticleType = ArticleType.Placeholder});
-//				}
+				if (IsDoubleRow())
+				{
+					returnLst.Add(new Article() {ArticleType = ArticleType.Placeholder});
+				}
 				var rubricId = rubric.Id;
 				var articles = lst.Where(x => x.Rubrics.First().Id == rubricId).OrderBy(x => x.Sort);
 				returnLst.AddRange(articles);
-//				if (IsDoubleRow() && articles.Count()%2 != 0)
-//				{
-//					returnLst.Add(new Article() {ArticleType = ArticleType.Placeholder});
-//				}
+				if (IsDoubleRow() && articles.Count()%2 != 0)
+				{
+					returnLst.Add(new Article() {ArticleType = ArticleType.Placeholder});
+				}
 			}
 			return returnLst;
 		}
@@ -1171,6 +1253,13 @@ namespace ItExpert
 		private bool IsConnectionAccept()
 		{
 			var result = true;
+			return result;
+		}
+
+		private bool IsDoubleRow()
+		{
+			var screenWidth = View.Bounds.Width;
+			var result = screenWidth > ApplicationWorker.WidthForDoubleRow;
 			return result;
 		}
 

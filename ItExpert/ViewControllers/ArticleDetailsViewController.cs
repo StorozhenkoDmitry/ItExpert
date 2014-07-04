@@ -716,7 +716,7 @@ namespace ItExpert
 					_articleSectionView.UserInteractionEnabled = true;
 					UITapGestureRecognizer tap = new UITapGestureRecognizer (() =>
 					{
-						var sectionString = _article.Sections.OrderBy (x => x.DepthLevel).Last().Section.Name;
+						var sectionString = section.Split(new []{"/"}, StringSplitOptions.RemoveEmptyEntries).Last();
 						BlackAlertView alertView = new BlackAlertView (String.Format ("Раздел: {0}", sectionString.Trim ()), String.Format ("Посмотреть все статьи из раздела: {0}?", sectionString.Trim ()), "Нет", "Да");
 
 						alertView.ButtonPushed += (sender, e) =>

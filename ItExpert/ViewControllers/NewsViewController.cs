@@ -555,16 +555,24 @@ namespace ItExpert
 					{
 						InvokeOnMainThread(() =>
 						{
-							if (_articlesTableView.Source != null) 
+							if (!IsDoubleRow())
 							{
-								(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+								if (_articlesTableView.Source != null) 
+								{
+									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
-								_articlesTableView.Source.Dispose();
-								_articlesTableView.Source = null;
+									_articlesTableView.Source.Dispose();
+									_articlesTableView.Source = null;
+								}
+								var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
+								source.PushDetailsView += OnPushArticleDetails;
+								_articlesTableView.Source = source;
+								_articlesTableView.ReloadData();
 							}
-							var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-							_articlesTableView.Source = source;
-							_articlesTableView.ReloadData();
+							else
+							{
+							}
+
 						});
 						var isTrends = _blockId == 30;
 						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, isTrends);
@@ -580,19 +588,23 @@ namespace ItExpert
 			}
 			if (_articles != null && _articles.Any())
 			{
-				if (_articlesTableView.Source != null) 
+				if (!IsDoubleRow())
 				{
-					(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+					if (_articlesTableView.Source != null) 
+					{
+						(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
-					_articlesTableView.Source.Dispose();
-					_articlesTableView.Source = null;
+						_articlesTableView.Source.Dispose();
+						_articlesTableView.Source = null;
+					}
+					var source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
+					source.PushDetailsView += OnPushArticleDetails;
+					_articlesTableView.Source = source;
+					_articlesTableView.ReloadData();
 				}
-
-				ArticlesTableSource source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
-				source.PushDetailsView += OnPushArticleDetails;
-
-				_articlesTableView.Source = source;
-				_articlesTableView.ReloadData();
+				else
+				{
+				}
 			}
 		}
 
@@ -771,16 +783,23 @@ namespace ItExpert
 					{
 						InvokeOnMainThread(() =>
 						{
-							if (_articlesTableView.Source != null) 
+							if (!IsDoubleRow())
 							{
-								(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+								if (_articlesTableView.Source != null) 
+								{
+									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
-								_articlesTableView.Source.Dispose();
-								_articlesTableView.Source = null;
+									_articlesTableView.Source.Dispose();
+									_articlesTableView.Source = null;
+								}
+								var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
+								source.PushDetailsView += OnPushArticleDetails;
+								_articlesTableView.Source = source;
+								_articlesTableView.ReloadData();
 							}
-							var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-							_articlesTableView.Source = source;
-							_articlesTableView.ReloadData();
+							else
+							{
+							}
 							SetLoadingImageVisible(true);
 						});
 						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, false);
@@ -850,16 +869,23 @@ namespace ItExpert
 					{
 						InvokeOnMainThread(() =>
 						{
-							if (_articlesTableView.Source != null) 
+							if (!IsDoubleRow())
 							{
-								(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+								if (_articlesTableView.Source != null) 
+								{
+									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
-								_articlesTableView.Source.Dispose();
-								_articlesTableView.Source = null;
+									_articlesTableView.Source.Dispose();
+									_articlesTableView.Source = null;
+								}
+								var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
+								source.PushDetailsView += OnPushArticleDetails;
+								_articlesTableView.Source = source;
+								_articlesTableView.ReloadData();
 							}
-							var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-							_articlesTableView.Source = source;
-							_articlesTableView.ReloadData();
+							else
+							{
+							}
 							SetLoadingImageVisible(true);
 						});
 						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, true);
@@ -907,33 +933,56 @@ namespace ItExpert
 			{
 				_articles.Insert(0,
 					new Article() {ArticleType = ArticleType.Header, Name = _header});
+				if (IsDoubleRow())
+				{
+					_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+				}
 			}
 			//Добавление расширенного объекта: баннера
 			if (_banner != null)
 			{
 				_articles.Insert(0,
                     new Article() {ArticleType = ArticleType.Banner, ExtendedObject = _banner});
+				if (IsDoubleRow())
+				{
+					_articles.Insert(1, new Article() {ArticleType = ArticleType.Placeholder});
+				}
 			}
 			//Добавление кнопки Загрузить еще
 			if (_addPreviousArticleButton != null && _prevArticlesExists)
 			{
+				if (IsDoubleRow())
+				{
+					if (_articles.Count() % 2 != 0)
+					{
+						_articles.Add(new Article() { ArticleType = ArticleType.Placeholder });
+					}
+				}
 				_articles.Add(new Article()
 				{
                     ArticleType = ArticleType.PreviousArticlesButton,
 					ExtendedObject = _addPreviousArticleButton
 				});
 			}
-			if (_articlesTableView.Source != null) 
+			if (!IsDoubleRow ())
 			{
-				(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+				if (_articlesTableView.Source != null) 
+				{
+					(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
-				_articlesTableView.Source.Dispose();
-				_articlesTableView.Source = null;
+					_articlesTableView.Source.Dispose();
+					_articlesTableView.Source = null;
+				}
+				var source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
+				source.PushDetailsView += OnPushArticleDetails;
+				_articlesTableView.Source = source;
+				_articlesTableView.ReloadData();
 			}
-			var source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
-			source.PushDetailsView += OnPushArticleDetails;
-			_articlesTableView.Source = source;
-			_articlesTableView.ReloadData();
+			else
+			{
+
+			}
+
 		}
 
 		//Добавление последующих статей
@@ -974,16 +1023,31 @@ namespace ItExpert
 			{
 				_articles.Insert(0,
 					new Article() { ArticleType = ArticleType.Header, Name = _header });
+				if (IsDoubleRow())
+				{
+					_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+				}
 			}
 			//Добавление расширенного объекта: баннера
 			if (_banner != null)
 			{
 				_articles.Insert(0,
                     new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+				if (IsDoubleRow())
+				{
+					_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+				}
 			}
 			//Добавление кнопки Загрузить еще
 			if (_addPreviousArticleButton != null && _prevArticlesExists)
 			{
+				if (IsDoubleRow())
+				{
+					if (_articles.Count()%2 != 0)
+					{
+						_articles.Add(new Article(){ArticleType = ArticleType.Placeholder});
+					}
+				}
 				_articles.Add(new Article()
 				{
                     ArticleType = ArticleType.PreviousArticlesButton,
@@ -1003,6 +1067,13 @@ namespace ItExpert
 		#endregion
 
 		#region Helpers method
+
+		private bool IsDoubleRow()
+		{
+			var screenWidth = View.Bounds.Width;
+			var result = screenWidth > ApplicationWorker.WidthForDoubleRow;
+			return result;
+		}
 
 		private bool IsConnectionAccept()
 		{

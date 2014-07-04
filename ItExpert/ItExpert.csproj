@@ -179,6 +179,7 @@
     <Compile Include="Logic\BlackAlertView\RadioButtonGroup.cs" />
     <Compile Include="Logic\ArticleTableSource\PortalContentCreator.cs" />
     <Compile Include="ViewControllers\PdfViewController.cs" />
+    <Compile Include="Logic\DoubleArticleTableSource.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
