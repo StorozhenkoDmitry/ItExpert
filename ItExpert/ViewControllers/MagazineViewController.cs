@@ -8,6 +8,7 @@ using ItExpert.ServiceLayer;
 using System.Linq;
 using System.Threading;
 using System.IO;
+using MonoTouch.Foundation;
 
 namespace ItExpert
 {
@@ -34,6 +35,8 @@ namespace ItExpert
         private UITableView _articlesTableView;
 		private UIActivityIndicatorView _loadingIndicator;
 		public bool IsLoadingPdf = false;
+        private object _orientationsChangedNotification;
+        private float _tableViewTopOffset;
 
 		#endregion
 
@@ -56,9 +59,17 @@ namespace ItExpert
 			// Perform any additional setup after loading the view, typically from a nib.
 		}
 
+        public override void ViewWillAppear(bool animated)
+        {
+            base.ViewWillAppear(animated);
+
+            UpdateViewsLayout();
+        }
+
 		public override void ViewDidAppear (bool animated)
 		{
 			base.ViewDidAppear (animated);
+
 			if (_articlesTableView != null)
 			{
 				_articlesTableView.DeselectRow(_articlesTableView.IndexPathForSelectedRow, true);
@@ -69,6 +80,7 @@ namespace ItExpert
 		public override void ViewWillDisappear (bool animated)
 		{
 			base.ViewWillDisappear (animated);
+
 			ApplicationWorker.RemoteWorker.BannerGetted -= StartOnBannerGetted;
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesPriviewGetted;
 			ApplicationWorker.RemoteWorker.MagazineArticlesGetted -= OnMagazineArticlesGetted;
@@ -80,6 +92,13 @@ namespace ItExpert
 				_articlesTableView.ReloadData ();
 			}
 		}
+
+        public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+        {
+            base.DidRotate(fromInterfaceOrientation);
+
+            UpdateViewsLayout();
+        }
 
 		#endregion
 
@@ -110,10 +129,10 @@ namespace ItExpert
 			InitLoadingProgress ();
 			InitAddPreviousArticleButton ();
 
-            var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+            _tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
 
-            _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, 
-                View.Bounds.Height- topOffset - _bottomBar.Frame.Height), UITableViewStyle.Plain);
+            _articlesTableView = new UITableView(new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
+                View.Bounds.Height- _tableViewTopOffset - _bottomBar.Frame.Height), UITableViewStyle.Plain);
 
             _articlesTableView.ScrollEnabled = true; 
             _articlesTableView.UserInteractionEnabled = true;
@@ -414,23 +433,7 @@ namespace ItExpert
 
                         if (_articles != null && _articles.Any())
                         {
-							if (!IsDoubleRow())
-							{
-								if (_articlesTableView.Source != null) 
-								{
-									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-									_articlesTableView.Source.Dispose();
-									_articlesTableView.Source = null;
-								}
-								var source = new ArticlesTableSource(_articles, false, action);
-								source.PushDetailsView += OnPushArticleDetails;
-								_articlesTableView.Source = source;
-								_articlesTableView.ReloadData();
-							}
-							else
-							{
-
-							}
+                            UpdateTableView(_articles);							
                         }
 					}
 				}
@@ -568,22 +571,7 @@ namespace ItExpert
 							}
 							if (_articles != null && _articles.Any())
 							{
-								if (!IsDoubleRow())
-								{
-									if (_articlesTableView.Source != null) 
-									{
-										(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-										_articlesTableView.Source.Dispose();
-										_articlesTableView.Source = null;
-									}
-									var source = new ArticlesTableSource(_articles, false, action);
-									source.PushDetailsView += OnPushArticleDetails;
-									_articlesTableView.Source = source;
-									_articlesTableView.ReloadData();
-								}
-								else
-								{
-								}
+                                UpdateTableView(_articles);
 							}
 						}
 					}
@@ -843,6 +831,28 @@ namespace ItExpert
 			});
 		}
 
+        private void UpdateViewsLayout()
+        {
+            Console.WriteLine("Magazine Orientation changed");
+
+            if (_articlesTableView != null)
+            {
+                _articlesTableView.Frame = new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
+                    View.Bounds.Height - _tableViewTopOffset - _bottomBar.Frame.Height);
+
+                _articlesTableView.ReloadData();
+            }
+
+            if (_bottomBar != null)
+            {
+                _bottomBar.RemoveFromSuperview();
+                _bottomBar.Dispose();
+                _bottomBar = null;
+            }
+
+            InitBottomToolbar();
+        }
+
 		#endregion
 
 		#region Logic
@@ -1044,22 +1054,7 @@ namespace ItExpert
 							//Загрузить _articles в список
 							if (_articles != null && _articles.Any())
 							{
-								if (!IsDoubleRow())
-								{
-									if (_articlesTableView.Source != null) 
-									{
-										(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-										_articlesTableView.Source.Dispose();
-										_articlesTableView.Source = null;
-									}
-									var source = new ArticlesTableSource(_articles, false, action);
-									source.PushDetailsView += OnPushArticleDetails;
-									_articlesTableView.Source = source;
-									_articlesTableView.ReloadData();}
-								else
-								{
-
-								}
+                                UpdateTableView(_articles);
 							}
 							SetLoadingImageVisible (false);
 						}
@@ -1084,20 +1079,8 @@ namespace ItExpert
 						{
 							magAction = _magazine.Exists ? MagazineAction.Open : MagazineAction.Download;
 						}
-						if (!IsDoubleRow())
-						{
-							if (_articlesTableView.Source != null) 
-							{
-								(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-								_articlesTableView.Source.Dispose();
-								_articlesTableView.Source = null;
-							}
-							var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-							_articlesTableView.Source = source;
-							_articlesTableView.ReloadData();}
-						else
-						{
-						}
+
+                        UpdateTableView(new List<Article>());
 					});
 					var lst = ApplicationWorker.Db.GetMagazineArticlesFromDb(_magazine.Id);
 					if (lst != null && lst.Any())
@@ -1148,22 +1131,7 @@ namespace ItExpert
 								}
 								if (_articles != null && _articles.Any())
 								{
-									if (!IsDoubleRow())
-									{
-										if (_articlesTableView.Source != null) 
-										{
-											(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-											_articlesTableView.Source.Dispose();
-											_articlesTableView.Source = null;
-										}
-										var source = new ArticlesTableSource(_articles, false, magAction);
-										source.PushDetailsView += OnPushArticleDetails;
-										_articlesTableView.Source = source;
-										_articlesTableView.ReloadData();
-									}
-									else
-									{
-									}
+                                    UpdateTableView(_articles);									
 								}
 								SetLoadingImageVisible(false);
 							});
@@ -1228,7 +1196,35 @@ namespace ItExpert
 			return returnLst;
 		}
 
+        private void UpdateTableView(List<Article> articles)
+        {
+            if (!IsDoubleRow())
+            {
+                if (_articlesTableView.Source != null) 
+                {
+                    (_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
+                    _articlesTableView.Source.Dispose();
+                    _articlesTableView.Source = null;
+                }
+
+                var source = new ArticlesTableSource(articles, false, MagazineAction.NoAction);
+
+                source.PushDetailsView += OnPushArticleDetails;
+
+                _articlesTableView.Frame = new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
+                    View.Bounds.Height - _tableViewTopOffset - _bottomBar.Frame.Height);
+
+                _articlesTableView.ContentSize = new SizeF(_articlesTableView.Frame.Width, _articlesTableView.Frame.Height);
+
+                _articlesTableView.Source = source;
+                _articlesTableView.ReloadData();
+            }
+            else
+            {
+
+            }
+        }
 
 		public void ShowLastMagazine()
 		{

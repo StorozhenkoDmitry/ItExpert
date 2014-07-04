@@ -51,6 +51,8 @@ namespace ItExpert
 
             _isReadedButtonImageView.Image = buttonImage;
 
+            _isReadedButton.Frame =new RectangleF(cell.ContentView.Frame.Width - _padding.Right - 70, 2, 70, 60);
+
             UpdateTextView (_headerTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width,
                 _previewHeaderFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
 
@@ -120,7 +122,7 @@ namespace ItExpert
 
 		private void UpdateTextView(UITextView textViewToUpdate, float updatedTextViewWidth, UIFont font, UIColor foregroundColor, string updatedText, PointF updatedTextViewLocation, UIView imageView = null)
 		{
-			var attributedString = ItExpertHelper.GetAttributedString (updatedText, font, foregroundColor);
+            var attributedString = ItExpertHelper.GetAttributedString (updatedText, font, foregroundColor);
 
 			textViewToUpdate.TextStorage.SetString (attributedString);
 			textViewToUpdate.AttributedText = attributedString;

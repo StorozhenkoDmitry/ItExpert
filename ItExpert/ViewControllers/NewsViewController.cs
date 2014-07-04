@@ -34,6 +34,8 @@ namespace ItExpert
 		private BottomToolbarView _bottomBar = null;
 		private UIActivityIndicatorView _loadingIndicator;
 		private bool _fromAnother = false;
+        private NSObject _orientationsChangedNotification;
+        private float _tableViewTopOffset;
 
 		#endregion
 
@@ -46,6 +48,13 @@ namespace ItExpert
 			_fromAnother = true;
 			_currentPage = page;
 		}
+
+        public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+        {
+            base.DidRotate(fromInterfaceOrientation);
+
+            UpdateViewsLayout();
+        }
 
 		static bool UserInterfaceIdiomIsPhone {
 			get { return UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone; }
@@ -70,11 +79,14 @@ namespace ItExpert
 		public override void ViewWillAppear (bool animated)
 		{
 			base.ViewWillAppear (animated);
+
+            UpdateViewsLayout();
 		}
 
 		public override void ViewDidAppear (bool animated)
 		{
 			base.ViewDidAppear (animated);
+
 			if (_articlesTableView != null)
 			{
 				_articlesTableView.DeselectRow(_articlesTableView.IndexPathForSelectedRow, true);
@@ -85,6 +97,7 @@ namespace ItExpert
 		public override void ViewWillDisappear (bool animated)
 		{
 			base.ViewWillDisappear (animated);
+
 			ApplicationWorker.RemoteWorker.NewsGetted -= NewNewsGetted;
 			ApplicationWorker.RemoteWorker.NewsGetted -= PreviousNewsGetted;
 			SetLoadingImageVisible(false);
@@ -112,7 +125,7 @@ namespace ItExpert
             float scale = 3.8f;
             TabBarItem = new UITabBarItem("News", new UIImage(NSData.FromFile("News.png"), scale), 0);
             View.AutosizesSubviews = true;
-            var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+            _tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
             AutomaticallyAdjustsScrollViewInsets = false;
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 
@@ -120,8 +133,8 @@ namespace ItExpert
             InitBottomToolbar();
 			InitLoadingProgress ();
 
-            _articlesTableView = new UITableView(new RectangleF(0, topOffset, View.Bounds.Width, 
-				View.Bounds.Height- topOffset - _bottomBar.Frame.Height), UITableViewStyle.Plain);
+            _articlesTableView = new UITableView(new RectangleF(0, 0, 0, 
+                0), UITableViewStyle.Plain);
 			_articlesTableView.ScrollEnabled = true; 
 			_articlesTableView.UserInteractionEnabled = true;
 			_articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
@@ -484,6 +497,30 @@ namespace ItExpert
 			NavigationController.PushViewController (e.NewsDetailsView, true);
 		}
 
+        private void UpdateViewsLayout()
+        {
+            Console.WriteLine("News Orientation changed");
+
+
+            if (_articlesTableView != null)
+            {
+                _articlesTableView.Frame = new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
+                    View.Bounds.Height - _tableViewTopOffset - _bottomBar.Frame.Height);
+
+                _articlesTableView.ReloadData();
+            }
+
+            if (_bottomBar != null)
+            {
+                _bottomBar.RemoveFromSuperview();
+                _bottomBar.Dispose();
+                _bottomBar = null;
+
+            }
+
+            InitBottomToolbar();
+        }
+
 		#endregion
 
 		#region Activity logic
@@ -555,24 +592,7 @@ namespace ItExpert
 					{
 						InvokeOnMainThread(() =>
 						{
-							if (!IsDoubleRow())
-							{
-								if (_articlesTableView.Source != null) 
-								{
-									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-
-									_articlesTableView.Source.Dispose();
-									_articlesTableView.Source = null;
-								}
-								var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-								source.PushDetailsView += OnPushArticleDetails;
-								_articlesTableView.Source = source;
-								_articlesTableView.ReloadData();
-							}
-							else
-							{
-							}
-
+                            UpdateTableView(new List<Article>());
 						});
 						var isTrends = _blockId == 30;
 						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, isTrends);
@@ -588,23 +608,7 @@ namespace ItExpert
 			}
 			if (_articles != null && _articles.Any())
 			{
-				if (!IsDoubleRow())
-				{
-					if (_articlesTableView.Source != null) 
-					{
-						(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-
-						_articlesTableView.Source.Dispose();
-						_articlesTableView.Source = null;
-					}
-					var source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
-					source.PushDetailsView += OnPushArticleDetails;
-					_articlesTableView.Source = source;
-					_articlesTableView.ReloadData();
-				}
-				else
-				{
-				}
+                UpdateTableView(_articles);
 			}
 		}
 
@@ -783,23 +787,8 @@ namespace ItExpert
 					{
 						InvokeOnMainThread(() =>
 						{
-							if (!IsDoubleRow())
-							{
-								if (_articlesTableView.Source != null) 
-								{
-									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-
-									_articlesTableView.Source.Dispose();
-									_articlesTableView.Source = null;
-								}
-								var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-								source.PushDetailsView += OnPushArticleDetails;
-								_articlesTableView.Source = source;
-								_articlesTableView.ReloadData();
-							}
-							else
-							{
-							}
+                            UpdateTableView(new List<Article>());
+							
 							SetLoadingImageVisible(true);
 						});
 						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, false);
@@ -869,23 +858,8 @@ namespace ItExpert
 					{
 						InvokeOnMainThread(() =>
 						{
-							if (!IsDoubleRow())
-							{
-								if (_articlesTableView.Source != null) 
-								{
-									(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
-
-									_articlesTableView.Source.Dispose();
-									_articlesTableView.Source = null;
-								}
-								var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
-								source.PushDetailsView += OnPushArticleDetails;
-								_articlesTableView.Source = source;
-								_articlesTableView.ReloadData();
-							}
-							else
-							{
-							}
+                            UpdateTableView(new List<Article>());
+							
 							SetLoadingImageVisible(true);
 						});
 						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, true);
@@ -964,25 +938,8 @@ namespace ItExpert
 					ExtendedObject = _addPreviousArticleButton
 				});
 			}
-			if (!IsDoubleRow ())
-			{
-				if (_articlesTableView.Source != null) 
-				{
-					(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
-					_articlesTableView.Source.Dispose();
-					_articlesTableView.Source = null;
-				}
-				var source = new ArticlesTableSource(_articles, false, MagazineAction.NoAction);
-				source.PushDetailsView += OnPushArticleDetails;
-				_articlesTableView.Source = source;
-				_articlesTableView.ReloadData();
-			}
-			else
-			{
-
-			}
-
+            UpdateTableView(_articles);
 		}
 
 		//Добавление последующих статей
@@ -1062,7 +1019,35 @@ namespace ItExpert
 			}
 		}
 
+        private void UpdateTableView(List<Article> articles)
+        {
+            if (!IsDoubleRow())
+            {
+                if (_articlesTableView.Source != null) 
+                {
+                    (_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
+                    _articlesTableView.Source.Dispose();
+                    _articlesTableView.Source = null;
+                }
+
+                var source = new ArticlesTableSource(articles, false, MagazineAction.NoAction);
+
+                source.PushDetailsView += OnPushArticleDetails;
+
+                _articlesTableView.Frame = new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
+                    View.Bounds.Height - _tableViewTopOffset - _bottomBar.Frame.Height);
+
+                _articlesTableView.ContentSize = new SizeF(_articlesTableView.Frame.Width, _articlesTableView.Frame.Height);
+
+                _articlesTableView.Source = source;
+                _articlesTableView.ReloadData();
+            }
+            else
+            {
+
+            }
+        }
 
 		#endregion
 

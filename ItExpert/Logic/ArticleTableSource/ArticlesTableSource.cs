@@ -42,7 +42,7 @@ namespace ItExpert
 
 			if (cell == null)
 			{
-                cell = new ArticleTableViewCell(UITableViewCellStyle.Default, _cellIdentifier);				
+                cell = CreateCell(tableView);
 			}			
 
             cell.UpdateContent(_articles[indexPath.Row]);
@@ -52,7 +52,7 @@ namespace ItExpert
 
 		public override float GetHeightForRow (UITableView tableView, NSIndexPath indexPath)
 		{
-            var cell = new ArticleTableViewCell(UITableViewCellStyle.Default, _cellIdentifier);
+            var cell = CreateCell(tableView);
 
             return cell.GetHeightDependingOnContent(_articles[indexPath.Row]);
 		}
@@ -67,11 +67,11 @@ namespace ItExpert
 			}
 		}
 
-		private void OnCellPushed(ArticleDetailsViewController newsDetailsView)
+        private void OnCellPushed(ArticleDetailsViewController detailsView)
 		{
 			if (PushDetailsView != null)
 			{
-				PushDetailsView (this, new PushDetailsEventArgs (newsDetailsView));
+				PushDetailsView (this, new PushDetailsEventArgs (detailsView));
 			}
 		}
 
@@ -165,7 +165,15 @@ namespace ItExpert
 			ApplicationWorker.Db.DeleteArticle(article.Id);
 		}
 
+        private ArticleTableViewCell CreateCell(UITableView tableView)
+        {
+            var cell = new ArticleTableViewCell(UITableViewCellStyle.Default, _cellIdentifier);
 
+            cell.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
+            cell.ContentView.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
+
+            return cell;
+        }
 
 		private List<Article> _articles;
 		private string _cellIdentifier;
