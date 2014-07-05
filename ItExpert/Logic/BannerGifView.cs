@@ -6,13 +6,13 @@ using System.Drawing;
 
 namespace ItExpert
 {
-	public class BannerView : UIView
+	public class BannerGifView : UIView
 	{
-		private Banner _banner;
+		private readonly Banner _banner;
 		private float _koefScaling;
 		private float _screenWidth;
 
-		public BannerView (Banner banner, float koefScaling, float screenWidth)
+		public BannerGifView (Banner banner, float koefScaling, float screenWidth)
 		{
 			_banner = banner;
 			_koefScaling = koefScaling;
@@ -36,6 +36,11 @@ namespace ItExpert
 			bannerView.Frame = 
 				new RectangleF(x, 0, _koefScaling * (_banner.Picture.Width), _koefScaling * (_banner.Picture.Height));
 			return bannerView;
+		}
+
+		public Banner Banner
+		{
+			get{ return _banner; }
 		}
 	}
 }

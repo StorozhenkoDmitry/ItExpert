@@ -2,6 +2,7 @@
 using MonoTouch.UIKit;
 using System.Drawing;
 using ItExpert.Enum;
+using ItExpert.ServiceLayer;
 
 namespace ItExpert
 {
@@ -49,7 +50,7 @@ namespace ItExpert
 			_bottomBar = new BottomToolbarView ();
 			_bottomBar.Frame = new RectangleF(0, View.Frame.Height - height, View.Frame.Width, height);
 			_bottomBar.LayoutIfNeeded();
-			_bottomBar.FavoritesButton.SetState (true);	
+			_bottomBar.FavoritesButton.SetActiveState (true);	
 			_bottomBar.NewsButton.ButtonClick += ButNewsOnClick;
 			_bottomBar.TrendsButton.ButtonClick += ButTrendsOnClick;
 			_bottomBar.MagazineButton.ButtonClick += ButMagazineOnClick;
@@ -148,7 +149,7 @@ namespace ItExpert
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, true);
-				showController.ShowLastMagazine ();
+				showController.SetMagazineId (-1);
 			}
 			else
 			{
@@ -160,6 +161,31 @@ namespace ItExpert
 		private void ButFavoriteOnClick(object sender, EventArgs eventArgs)
 		{
 
+		}
+
+		#endregion
+
+		#region Helper methods
+
+		private bool IsConnectionAccept()
+		{
+			var result = true;
+			var internetStatus = Reachability.InternetConnectionStatus();
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.WiFi)
+			{
+				if (internetStatus != NetworkStatus.ReachableViaWiFiNetwork)
+				{
+					result = false;
+				}
+			}
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.All)
+			{
+				if (internetStatus == NetworkStatus.NotReachable)
+				{
+					result = false;
+				}
+			}
+			return result;
 		}
 
 		#endregion

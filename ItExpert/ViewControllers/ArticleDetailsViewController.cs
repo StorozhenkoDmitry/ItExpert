@@ -434,6 +434,21 @@ namespace ItExpert
 		private bool IsConnectionAccept()
 		{
 			var result = true;
+			var internetStatus = Reachability.InternetConnectionStatus();
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.WiFi)
+			{
+				if (internetStatus != NetworkStatus.ReachableViaWiFiNetwork)
+				{
+					result = false;
+				}
+			}
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.All)
+			{
+				if (internetStatus == NetworkStatus.NotReachable)
+				{
+					result = false;
+				}
+			}
 			return result;
 		}
 

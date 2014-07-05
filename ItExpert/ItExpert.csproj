@@ -108,6 +108,7 @@
     <BundleResource Include="Resources\Trends.png" />
     <BundleResource Include="Resources\RadioButtonChecked.png" />
     <BundleResource Include="Resources\RadioButtonUnchecked.png" />
+    <BundleResource Include="Resources\Splash.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -155,7 +156,6 @@
     <Compile Include="Logic\AnimatedImageView.cs" />
     <Compile Include="Logic\ItExpertHelper.cs" />
     <Compile Include="ViewControllers\ArticleDetailsViewController.cs" />
-    <Compile Include="Logic\BannerView.cs" />
     <Compile Include="Logic\BottomToolbarView.cs" />
     <Compile Include="Logic\BottomToolbarButton.cs" />
     <Compile Include="ViewControllers\MagazineViewController.cs" />
@@ -180,6 +180,10 @@
     <Compile Include="Logic\ArticleTableSource\PortalContentCreator.cs" />
     <Compile Include="ViewControllers\PdfViewController.cs" />
     <Compile Include="Logic\DoubleArticleTableSource.cs" />
+    <Compile Include="Logic\BannerImageView.cs" />
+    <Compile Include="Logic\BannerGifView.cs" />
+    <Compile Include="ViewControllers\SplashViewController.cs" />
+    <Compile Include="ServiceLayer\Reachability.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

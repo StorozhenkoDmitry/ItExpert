@@ -47,7 +47,7 @@ namespace ItExpert
 			}
 		}
 
-		public void SetState(bool isActive)
+		public void SetActiveState(bool isActive)
 		{
 			if (isActive)
 			{

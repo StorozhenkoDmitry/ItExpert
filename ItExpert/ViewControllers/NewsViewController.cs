@@ -9,6 +9,8 @@ using MonoTouch.UIKit;
 using ItExpert.Enum;
 using ItExpert.Model;
 using ItExpert.ServiceLayer;
+using System.IO;
+using System.Text;
 
 namespace ItExpert
 {
@@ -34,8 +36,7 @@ namespace ItExpert
 		private BottomToolbarView _bottomBar = null;
 		private UIActivityIndicatorView _loadingIndicator;
 		private bool _fromAnother = false;
-        private NSObject _orientationsChangedNotification;
-        private float _tableViewTopOffset;
+		private bool _firstLoad = true;
 
 		#endregion
 
@@ -52,8 +53,86 @@ namespace ItExpert
         public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
         {
             base.DidRotate(fromInterfaceOrientation);
-
-            UpdateViewsLayout();
+			var screenWidth =
+				ApplicationWorker.Settings.GetScreenWidthForScreen(
+					(int)View.Bounds.Width);
+			var banners = ApplicationWorker.Db.LoadBanners();
+			Banner banner = null;
+			if (banners != null && banners.Any())
+			{
+				banner = banners.FirstOrDefault(x => x.ScreenWidth == screenWidth);
+				if (banner != null)
+				{
+					var pictures = ApplicationWorker.Db.GetPicturesForParent(banner.Id);
+					if (pictures != null && pictures.Any())
+					{
+						var picture = pictures.FirstOrDefault(x => x.Type == PictypeType.Banner);
+						if (picture != null)
+						{
+							banner.Picture = picture;
+						}
+					}
+				}
+			}
+			if (banner != null)
+			{
+				InitBanner(banner);
+			}
+			if (_allArticles != null & _allArticles.Any ())
+			{
+				_articles.Clear ();
+				if (ApplicationWorker.Settings.HideReaded)
+				{
+					var buffer = _allArticles.Where (x => !x.IsReaded).ToList ();
+					if (buffer.Count () < 6)
+					{
+						var count = 6 - buffer.Count ();
+						buffer.AddRange (_allArticles.Where (x => x.IsReaded).Take (count));
+						buffer = buffer.OrderByDescending (x => x.ActiveFrom).ToList ();
+					}
+					_articles.AddRange (buffer);
+				}
+				else
+				{
+					_articles.AddRange (_allArticles.ToList ());
+				}
+				if (_headerAdded && !string.IsNullOrWhiteSpace(_header))
+				{
+					_articles.Insert(0,
+						new Article() {ArticleType = ArticleType.Header, Name = _header});
+					if (IsDoubleRow())
+					{
+						_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+					}
+				}
+				//Добавление расширенного объекта: баннера
+				if (_banner != null)
+				{
+					_articles.Insert(0,
+						new Article() {ArticleType = ArticleType.Banner, ExtendedObject = _banner});
+					if (IsDoubleRow())
+					{
+						_articles.Insert(1, new Article() {ArticleType = ArticleType.Placeholder});
+					}
+				}
+				//Добавление кнопки Загрузить еще
+				if (_addPreviousArticleButton != null && _prevArticlesExists)
+				{
+					if (IsDoubleRow())
+					{
+						if (_articles.Count() % 2 != 0)
+						{
+							_articles.Add(new Article() { ArticleType = ArticleType.Placeholder });
+						}
+					}
+					_articles.Add(new Article()
+					{
+						ArticleType = ArticleType.PreviousArticlesButton,
+						ExtendedObject = _addPreviousArticleButton
+					});
+				}
+			}
+			UpdateViewsLayout ();
         }
 
 		static bool UserInterfaceIdiomIsPhone {
@@ -71,16 +150,20 @@ namespace ItExpert
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
+			NavigationController.NavigationBarHidden = false;
 
-			Initialize ();
 			// Perform any additional setup after loading the view, typically from a nib.
 		}
 
 		public override void ViewWillAppear (bool animated)
 		{
 			base.ViewWillAppear (animated);
-
-            UpdateViewsLayout();
+			if (_firstLoad)
+			{
+				Initialize ();
+				UpdateViewsLayout ();
+				_firstLoad = false;
+			}
 		}
 
 		public override void ViewDidAppear (bool animated)
@@ -121,11 +204,23 @@ namespace ItExpert
 		{
 			_startPage = true;
 			ClearCache ();
+			if (string.IsNullOrWhiteSpace(ApplicationWorker.Css))
+			{
+				var folder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
+				var path = Path.Combine(folder, "css.dt");
+				var fileInfo = new FileInfo(path);
+				if (fileInfo.Exists)
+				{
+					using (var sr = new StreamReader(path, Encoding.UTF8))
+					{
+						ApplicationWorker.Css = sr.ReadToEnd();
+					} 
+				}
+			}
 
             float scale = 3.8f;
             TabBarItem = new UITabBarItem("News", new UIImage(NSData.FromFile("News.png"), scale), 0);
             View.AutosizesSubviews = true;
-            _tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
             AutomaticallyAdjustsScrollViewInsets = false;
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 
@@ -144,13 +239,40 @@ namespace ItExpert
 
 			if (!_fromAnother)
 			{
+				var width = View.Bounds.Width;
 				var screenWidth =
-					ApplicationWorker.Settings.GetScreenWidthForScreen ((int)UIScreen.MainScreen.Bounds.Size.Width);
-				ApplicationWorker.Settings.ScreenWidth = screenWidth;
-				ApplicationWorker.Settings.SaveSettings ();
-				_isLoadingData = true;
-				ApplicationWorker.RemoteWorker.BannerGetted += BannerGetted;
-				ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetBanner (ApplicationWorker.Settings));
+					ApplicationWorker.Settings.GetScreenWidthForScreen ((int)width);
+				var banners = ApplicationWorker.Db.LoadBanners();
+				Banner banner = null;
+				if (banners != null && banners.Any())
+				{
+					banner = banners.FirstOrDefault(x => x.ScreenWidth == screenWidth);
+					if (banner != null)
+					{
+						var pictures = ApplicationWorker.Db.GetPicturesForParent(banner.Id);
+						if (pictures != null && pictures.Any())
+						{
+							var picture = pictures.FirstOrDefault(x => x.Type == PictypeType.Banner);
+							if (picture != null)
+							{
+								banner.Picture = picture;
+							}
+						}
+					}
+				}
+				if (banner != null)
+				{
+					InitBanner(banner);
+				}
+				var connectAccept = IsConnectionAccept();
+				if (!connectAccept)
+				{
+					ShowOfflineModeDialog ();
+				}
+				else
+				{
+					SelectStartSection(ApplicationWorker.Settings.Page);
+				}
 			}
 			else
 			{
@@ -187,7 +309,7 @@ namespace ItExpert
 			_bottomBar = new BottomToolbarView ();
 			_bottomBar.Frame = new RectangleF(0, View.Frame.Height - height, View.Frame.Width, height);
 			_bottomBar.LayoutIfNeeded();
-			_bottomBar.NewsButton.SetState (true);	
+			_bottomBar.NewsButton.SetActiveState (true);	
 			_bottomBar.NewsButton.ButtonClick += ButNewsOnClick;
 			_bottomBar.TrendsButton.ButtonClick += ButTrendsOnClick;
 			_bottomBar.MagazineButton.ButtonClick += ButMagazineOnClick;
@@ -199,8 +321,8 @@ namespace ItExpert
 		//Инициализация баннера
 		private void InitBanner(Banner banner)
 		{
-			var maxPictureHeight = UIScreen.MainScreen.Bounds.Size.Height * 0.15;
-			var screenWidth = UIScreen.MainScreen.Bounds.Size.Width;
+			var maxPictureHeight = View.Bounds.Height * 0.15;
+			var screenWidth = View.Bounds.Width;
 			var picture = banner.Picture;
 			//Если баннер не анимированный Gif
 			if (picture.Extension != PictureExtension.Gif)
@@ -216,7 +338,7 @@ namespace ItExpert
 				{
 					x = (int)(((int)screenWidth - (int)(koefScaling * (picture.Width))) / 2);
 				}
-				var image = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
+				var image = new BannerImageView(ItExpertHelper.GetImageFromBase64String(picture.Data), banner);
 				image.Frame = new RectangleF (x, 0, picture.Width * koefScaling, picture.Height * koefScaling);
                 _banner = image;
 			}
@@ -228,7 +350,7 @@ namespace ItExpert
 				{
 					koefScaling = (float)maxPictureHeight / picture.Height;
 				}
-                _banner = new BannerView (banner, koefScaling, screenWidth);
+                _banner = new BannerGifView (banner, koefScaling, screenWidth);
 			}
 			//Прикрепить обработчик клика по баннеру
 		}
@@ -270,34 +392,6 @@ namespace ItExpert
 		#endregion
 
 		#region Event Handlers
-
-		void BannerGetted (object sender, BannerEventArgs e)
-		{
-			ApplicationWorker.RemoteWorker.BannerGetted -= BannerGetted;
-			_isLoadingData = false;
-			InvokeOnMainThread (() =>
-			{
-				if (!e.Error)
-				{
-					Banner banner = null;
-					if (e.Banners != null && e.Banners.Any())
-					{
-						banner = e.Banners.FirstOrDefault();
-					}
-					if (banner != null)
-					{
-						InitBanner(banner);
-					}
-				}
-				else
-				{
-					new UIAlertView ("Ошибка", "Ошибка при получении баннера", null, "OK", null).Show ();
-				}
-			});
-			_isLoadingData = true;
-			ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
-			ThreadPool.QueueUserWorkItem (state => ApplicationWorker.RemoteWorker.BeginGetNews (ApplicationWorker.Settings, -1, -1, -1, -1, -1, null));
-		}
 
 		void NewNewsGetted (object sender, ArticleEventArgs e)
 		{
@@ -499,13 +593,11 @@ namespace ItExpert
 
         private void UpdateViewsLayout()
         {
-            Console.WriteLine("News Orientation changed");
-
-
             if (_articlesTableView != null)
             {
-                _articlesTableView.Frame = new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
-                    View.Bounds.Height - _tableViewTopOffset - _bottomBar.Frame.Height);
+				var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+                _articlesTableView.Frame = new RectangleF(0, tableViewTopOffset, View.Bounds.Width, 
+                    View.Bounds.Height - tableViewTopOffset - _bottomBar.Frame.Height);
 
                 _articlesTableView.ReloadData();
             }
@@ -525,25 +617,173 @@ namespace ItExpert
 
 		#region Activity logic
 
+		void ShowOfflineModeDialog()
+		{
+			var alertView = new BlackAlertView ("Оффлайн режим", "Нет доступных подключений. Перевести приложение в режим Оффлайн?", "Нет", "Да");
+
+			alertView.ButtonPushed += (sender, e) =>
+			{
+				if (e.ButtonIndex == 0)
+				{
+					ToOfflineModeNo();
+				}
+				if (e.ButtonIndex == 1)
+				{
+					ToOfflineModeYes();
+				}
+			};
+
+			alertView.Show ();
+		}
+
+		private void ToOfflineModeYes()
+		{
+			ApplicationWorker.Settings.OfflineMode = true;
+			ToOfflineModeNo();
+		}
+
+		private void ToOfflineModeNo()
+		{
+			ClearCache();
+			_isLoadingData = false;
+			var screenWidth =
+				ApplicationWorker.Settings.GetScreenWidthForScreen(
+					(int)View.Bounds.Width);
+			var bannerFound = false;
+			var banners = ApplicationWorker.Db.LoadBanners();
+			Banner banner = null;
+			if (banners != null && banners.Any())
+			{
+				banner = banners.FirstOrDefault(x => x.ScreenWidth == screenWidth);
+				if (banner != null)
+				{
+					var pictures = ApplicationWorker.Db.GetPicturesForParent(banner.Id);
+					if (pictures != null && pictures.Any())
+					{
+						var picture = pictures.FirstOrDefault(x => x.Type == PictypeType.Banner);
+						if (picture != null)
+						{
+							banner.Picture = picture;
+							bannerFound = true;
+						}
+					}
+				}
+			}
+			if (bannerFound)
+			{
+				InitBanner(banner);
+			}
+			SelectStartSection(ApplicationWorker.Settings.Page);
+		}
+
+		private void SelectStartSection(Page page)
+		{
+			var e = ApplicationWorker.StartArticlesEventArgs;
+			if (page == Page.News)
+			{
+				_currentPage = Page.News;
+				_prevArticlesExists = true;
+				_bottomBar.TrendsButton.SetActiveState (false);
+				_bottomBar.NewsButton.SetActiveState (true);
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					if (e == null)
+					{
+//						Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					}
+					else
+					{
+						NewNewsGetted(null, e);
+					}
+				}
+				else
+				{
+					SetLoadingImageVisible(true);
+					Action getList = () =>
+					{
+						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, false);
+						if (lst.Count() < 20)
+						{
+							_prevArticlesExists = false;
+						}
+						InvokeOnMainThread(() =>
+						{
+							AddNewArticles(lst);
+							SetLoadingImageVisible(false);
+						});
+					};
+					ThreadPool.QueueUserWorkItem(state => getList());
+				}
+			}
+			if (page == Page.Trends)
+			{
+				_prevArticlesExists = true;
+				_currentPage = Page.Trends;
+				_bottomBar.TrendsButton.SetActiveState (true);
+				_bottomBar.NewsButton.SetActiveState (false);
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					if (e == null)
+					{
+//						Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					}
+					else
+					{
+						NewNewsGetted(null, e);
+					}
+				}
+				else
+				{
+					SetLoadingImageVisible(true);
+					Action getList = () =>
+					{
+						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, true);
+						if (lst.Count() < 20)
+						{
+							_prevArticlesExists = false;
+						}
+						InvokeOnMainThread(() =>
+						{
+							AddNewArticles(lst);
+							SetLoadingImageVisible(false);
+						});
+					};
+					ThreadPool.QueueUserWorkItem(state => getList());
+				}
+			}
+			if (page == Page.Magazine)
+			{
+				ButMagazineOnClick(null, null);
+			}
+			if (page == Page.Archive)
+			{
+				ButArchiveOnClick(null, null);
+			}
+			if (page == Page.Favorite)
+			{
+				ButFavoriteOnClick(null, null);
+			}
+		}
+
 		public void ShowFromAnotherScreen(Page pageToShow)
 		{
 			var sectionChange = false;
 			var blockChange = false;
 			var sectionId = 0;
 			var blockId = 0;
-			_bottomBar.NewsButton.SetState (false);
-			_bottomBar.TrendsButton.SetState (false);
+			_bottomBar.NewsButton.SetActiveState (false);
+			_bottomBar.TrendsButton.SetActiveState (false);
 			if (pageToShow == Page.News)
 			{
 				sectionId = -1;
 				blockId = -1;
-				_bottomBar.NewsButton.SetState (true);
+				_bottomBar.NewsButton.SetActiveState (true);
 			}
 			if (pageToShow == Page.Trends)
 			{
 				sectionId = -1;
 				blockId = 30;
-				_bottomBar.TrendsButton.SetState (true);
+				_bottomBar.TrendsButton.SetActiveState (true);
 			}
 			if (_sectionId != sectionId)
 			{
@@ -617,8 +857,8 @@ namespace ItExpert
 			_sectionId = sectionId;
 			_blockId = blockId;
 			_authorId = authorId;
-			_bottomBar.TrendsButton.SetState (false);
-			_bottomBar.NewsButton.SetState (true);
+			_bottomBar.TrendsButton.SetActiveState (false);
+			_bottomBar.NewsButton.SetActiveState (true);
 			_currentPage = Page.News;
 			if (!ApplicationWorker.Settings.OfflineMode)
 			{
@@ -663,8 +903,8 @@ namespace ItExpert
 		{
 			_sectionId = sectionId;
 			_blockId = blockId;
-			_bottomBar.TrendsButton.SetState (false);
-			_bottomBar.NewsButton.SetState (true);
+			_bottomBar.TrendsButton.SetActiveState (false);
+			_bottomBar.NewsButton.SetActiveState (true);
 			_currentPage = Page.News;
 			if (!ApplicationWorker.Settings.OfflineMode)
 			{
@@ -743,8 +983,8 @@ namespace ItExpert
 			{
 				_prevArticlesExists = true;
 				_currentPage = Page.News;
-				_bottomBar.TrendsButton.SetState (false);
-				_bottomBar.NewsButton.SetState (true);
+				_bottomBar.TrendsButton.SetActiveState (false);
+				_bottomBar.NewsButton.SetActiveState (true);
 				if (_isLoadingData)
 				{
 					ApplicationWorker.RemoteWorker.NewsGetted -= NewNewsGetted;
@@ -813,8 +1053,8 @@ namespace ItExpert
 			{
 				_prevArticlesExists = true;
 				_currentPage = Page.Trends;
-				_bottomBar.TrendsButton.SetState (true);
-				_bottomBar.NewsButton.SetState (false);
+				_bottomBar.TrendsButton.SetActiveState (true);
+				_bottomBar.NewsButton.SetActiveState (false);
 				if (_isLoadingData)
 				{
 					ApplicationWorker.RemoteWorker.NewsGetted -= NewNewsGetted;
@@ -1035,8 +1275,9 @@ namespace ItExpert
 
                 source.PushDetailsView += OnPushArticleDetails;
 
-                _articlesTableView.Frame = new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
-                    View.Bounds.Height - _tableViewTopOffset - _bottomBar.Frame.Height);
+				var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+                _articlesTableView.Frame = new RectangleF(0, tableViewTopOffset, View.Bounds.Width, 
+                    View.Bounds.Height - tableViewTopOffset - _bottomBar.Frame.Height);
 
                 _articlesTableView.ContentSize = new SizeF(_articlesTableView.Frame.Width, _articlesTableView.Frame.Height);
 
@@ -1063,6 +1304,21 @@ namespace ItExpert
 		private bool IsConnectionAccept()
 		{
 			var result = true;
+			var internetStatus = Reachability.InternetConnectionStatus();
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.WiFi)
+			{
+				if (internetStatus != NetworkStatus.ReachableViaWiFiNetwork)
+				{
+					result = false;
+				}
+			}
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.All)
+			{
+				if (internetStatus == NetworkStatus.NotReachable)
+				{
+					result = false;
+				}
+			}
 			return result;
 		}
 

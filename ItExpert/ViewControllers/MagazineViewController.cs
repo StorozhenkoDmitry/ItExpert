@@ -35,8 +35,7 @@ namespace ItExpert
         private UITableView _articlesTableView;
 		private UIActivityIndicatorView _loadingIndicator;
 		public bool IsLoadingPdf = false;
-        private object _orientationsChangedNotification;
-        private float _tableViewTopOffset;
+		private bool _firstLoad = true;
 
 		#endregion
 
@@ -54,17 +53,19 @@ namespace ItExpert
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
-
-			Initialize ();
 			// Perform any additional setup after loading the view, typically from a nib.
 		}
 
         public override void ViewWillAppear(bool animated)
-        {
-            base.ViewWillAppear(animated);
-
-            UpdateViewsLayout();
-        }
+		{
+			base.ViewWillAppear (animated);
+			if (_firstLoad)
+			{
+				Initialize ();
+				UpdateViewsLayout ();
+				_firstLoad = false;
+			}
+		}
 
 		public override void ViewDidAppear (bool animated)
 		{
@@ -96,8 +97,108 @@ namespace ItExpert
         public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
         {
             base.DidRotate(fromInterfaceOrientation);
+			var screenWidth =
+				ApplicationWorker.Settings.GetScreenWidthForScreen(
+					(int)View.Bounds.Width);
+			var banners = ApplicationWorker.Db.LoadBanners();
+			Banner banner = null;
+			if (banners != null && banners.Any())
+			{
+				banner = banners.FirstOrDefault(x => x.ScreenWidth == screenWidth);
+				if (banner != null)
+				{
+					var pictures = ApplicationWorker.Db.GetPicturesForParent(banner.Id);
+					if (pictures != null && pictures.Any())
+					{
+						var picture = pictures.FirstOrDefault(x => x.Type == PictypeType.Banner);
+						if (picture != null)
+						{
+							banner.Picture = picture;
+						}
+					}
+				}
+			}
+			if (banner != null)
+			{
+				InitBanner(banner);
+			}
+			if (_allArticles != null && _allArticles.Any ())
+			{
+				_articles.Clear ();
+				if (ApplicationWorker.Settings.HideReaded)
+				{
+					var buffer = _allArticles.Where (x => !x.IsReaded).ToList ();
+					if (buffer.Count () < 6)
+					{
+						var count = 6 - buffer.Count ();
+						buffer.AddRange (_allArticles.Where (x => x.IsReaded).Take (count));
+						buffer = buffer.OrderByDescending (x => x.ActiveFrom).ToList ();
+					}
+					if (!_isRubricSearch)
+					{
+						buffer = SortAndAddHeader (buffer);
+					}
+					_articles.AddRange (buffer);
+				}
+				else
+				{
+					var lst = _allArticles.ToList ();
+					if (!_isRubricSearch)
+					{
+						lst = SortAndAddHeader (lst);
+					}
+					_articles.AddRange (lst);
+				}
 
-            UpdateViewsLayout();
+				if (_isRubricSearch && _headerAdded && !string.IsNullOrWhiteSpace (_header))
+				{
+					_articles.Insert (0,
+						new Article () { ArticleType = ArticleType.Header, Name = _header });
+					if (IsDoubleRow ())
+					{
+						_articles.Insert (1, new Article () { ArticleType = ArticleType.Placeholder });
+					}
+				}
+				if (_banner != null)
+				{
+					_articles.Insert(0,
+						new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+					if (IsDoubleRow())
+					{
+						_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+					}
+				}
+				if (ApplicationWorker.Magazine != null)
+				{
+					_articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
+					if (IsDoubleRow())
+					{
+						_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+					}
+				}
+
+				if (_isRubricSearch && _addPreviousArticleButton != null && _prevArticlesExists)
+				{
+					if (IsDoubleRow())
+					{
+						if (_articles.Count() % 2 != 0)
+						{
+							_articles.Add(new Article() { ArticleType = ArticleType.Placeholder });
+						}
+					}
+					_articles.Add(new Article()
+					{
+						ArticleType = ArticleType.PreviousArticlesButton,
+						ExtendedObject = _addPreviousArticleButton
+					});
+				}
+				var action = MagazineAction.NoAction;
+				if (!_isRubricSearch)
+				{
+					action = _magazine.Exists ? MagazineAction.Open : MagazineAction.Download;
+				}
+			}
+			UpdateViewsLayout ();
         }
 
 		#endregion
@@ -123,36 +224,75 @@ namespace ItExpert
 		public void Initialize()
 		{
 			Current = this;
+			View.AutosizesSubviews = true;
+			AutomaticallyAdjustsScrollViewInsets = false;
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
-
 			InitBottomToolbar ();
 			InitLoadingProgress ();
 			InitAddPreviousArticleButton ();
 
-            _tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
-
-            _articlesTableView = new UITableView(new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
-                View.Bounds.Height- _tableViewTopOffset - _bottomBar.Frame.Height), UITableViewStyle.Plain);
-
+			_articlesTableView = new UITableView(new RectangleF(0, 0, 0, 
+				0), UITableViewStyle.Plain);
             _articlesTableView.ScrollEnabled = true; 
             _articlesTableView.UserInteractionEnabled = true;
             _articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
             _articlesTableView.Bounces = true;
             _articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
-
             View.Add(_articlesTableView);
 
 			var screenWidth =
-				ApplicationWorker.Settings.GetScreenWidthForScreen((int)UIScreen.MainScreen.Bounds.Size.Width);
-			ApplicationWorker.RemoteWorker.BannerGetted += StartOnBannerGetted;
-			var settings = new Settings()
+				ApplicationWorker.Settings.GetScreenWidthForScreen((int)View.Bounds.Width);
+			var loadBanners = true;
+			var banners = ApplicationWorker.Db.LoadBanners();
+			Banner banner = null;
+			if (banners != null && banners.Any())
 			{
-				ScreenWidth = screenWidth,
-				ScreenResolution = ApplicationWorker.Settings.ScreenResolution
-			};
-			ThreadPool.QueueUserWorkItem(
-				state => ApplicationWorker.RemoteWorker.BeginGetBanner(settings));
-			_isLoadingData = true;
+				banner = banners.FirstOrDefault(x => x.ScreenWidth == screenWidth);
+				if (banner != null)
+				{
+					var pictures = ApplicationWorker.Db.GetPicturesForParent(banner.Id);
+					if (pictures != null && pictures.Any())
+					{
+						var picture = pictures.FirstOrDefault(x => x.Type == PictypeType.Banner);
+						if (picture != null)
+						{
+							banner.Picture = picture;
+							loadBanners = false;
+						}
+					}
+				}
+			}
+			if (loadBanners)
+			{
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					var connectAccept = IsConnectionAccept();
+					if (!connectAccept)
+					{
+//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+//							.Show();
+						return;
+					}
+					ApplicationWorker.RemoteWorker.BannerGetted += StartOnBannerGetted;
+					var settings = new Settings()
+					{
+						ScreenWidth = screenWidth,
+						ScreenResolution = ApplicationWorker.Settings.ScreenResolution
+					};
+					ThreadPool.QueueUserWorkItem(
+						state => ApplicationWorker.RemoteWorker.BeginGetBanner(settings));
+					_isLoadingData = true;
+				}
+				else
+				{
+					InitData();
+				}
+			}
+			else
+			{
+				InitBanner(banner);
+				InitData();
+			}
 		}
 
 		private void InitBottomToolbar()
@@ -162,7 +302,7 @@ namespace ItExpert
 			_bottomBar = new BottomToolbarView ();
 			_bottomBar.Frame = new RectangleF(0, View.Frame.Height - height, View.Frame.Width, height);
 			_bottomBar.LayoutIfNeeded();
-			_bottomBar.MagazineButton.SetState (true);	
+			_bottomBar.MagazineButton.SetActiveState (true);	
 			_bottomBar.NewsButton.ButtonClick += ButNewsOnClick;
 			_bottomBar.TrendsButton.ButtonClick += ButTrendsOnClick;
 			_bottomBar.MagazineButton.ButtonClick += ButMagazineOnClick;
@@ -173,8 +313,8 @@ namespace ItExpert
 
         private void InitBanner(Banner banner)
         {
-            var maxPictureHeight = UIScreen.MainScreen.Bounds.Size.Height * 0.15;
-            var screenWidth = UIScreen.MainScreen.Bounds.Size.Width;
+			var maxPictureHeight = View.Bounds.Height * 0.15;
+			var screenWidth = View.Bounds.Width;
             var picture = banner.Picture;
             //Если баннер не анимированный Gif
             if (picture.Extension != PictureExtension.Gif)
@@ -190,7 +330,7 @@ namespace ItExpert
                 {
                     x = (int)(((int)screenWidth - (int)(koefScaling * (picture.Width))) / 2);
                 }
-                var image = new UIImageView(ItExpertHelper.GetImageFromBase64String(picture.Data));
+				var image = new BannerImageView(ItExpertHelper.GetImageFromBase64String(picture.Data), banner);
                 image.Frame = new RectangleF (x, 0, picture.Width * koefScaling, picture.Height * koefScaling);
                 _banner = image;
             }
@@ -202,7 +342,7 @@ namespace ItExpert
                 {
                     koefScaling = (float)maxPictureHeight / picture.Height;
                 }
-                _banner = new BannerView (banner, koefScaling, screenWidth);
+                _banner = new BannerGifView (banner, koefScaling, screenWidth);
             }
             //Прикрепить обработчик клика по баннеру
         }
@@ -411,19 +551,20 @@ namespace ItExpert
 						{
 							_articles.Insert(0,
                                 new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
-						}
-						if (IsDoubleRow())
-						{
-							_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+							if (IsDoubleRow())
+							{
+								_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+							}
 						}
                         if (ApplicationWorker.Magazine != null)
                         {
                             _articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
+							if (IsDoubleRow())
+							{
+								_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
+							}
                         }
-						if (IsDoubleRow())
-						{
-							_articles.Insert(1, new Article() { ArticleType = ArticleType.Placeholder });
-						}
+
 						var action = MagazineAction.NoAction;
 						if (!_isRubricSearch)
 						{
@@ -433,7 +574,7 @@ namespace ItExpert
 
                         if (_articles != null && _articles.Any())
                         {
-                            UpdateTableView(_articles);							
+							UpdateTableView(_articles, action);							
                         }
 					}
 				}
@@ -571,7 +712,7 @@ namespace ItExpert
 							}
 							if (_articles != null && _articles.Any())
 							{
-                                UpdateTableView(_articles);
+								UpdateTableView(_articles, action);
 							}
 						}
 					}
@@ -740,6 +881,22 @@ namespace ItExpert
 				_headerAdded = false;
 				_header = null;
 				_prevArticlesExists = true;
+				if (!IsDoubleRow())
+				{
+					if (_articlesTableView.Source != null) 
+					{
+						(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+						_articlesTableView.Source.Dispose();
+						_articlesTableView.Source = null;
+					}
+					var source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
+					_articlesTableView.Source = source;
+					_articlesTableView.ReloadData();
+				}
+				else
+				{
+
+				}
 				LoadMagazineArticles();
 			}
 		}
@@ -833,12 +990,11 @@ namespace ItExpert
 
         private void UpdateViewsLayout()
         {
-            Console.WriteLine("Magazine Orientation changed");
-
             if (_articlesTableView != null)
             {
-                _articlesTableView.Frame = new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
-                    View.Bounds.Height - _tableViewTopOffset - _bottomBar.Frame.Height);
+				var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+                _articlesTableView.Frame = new RectangleF(0, tableViewTopOffset, View.Bounds.Width, 
+                    View.Bounds.Height - tableViewTopOffset - _bottomBar.Frame.Height);
 
                 _articlesTableView.ReloadData();
             }
@@ -1054,13 +1210,14 @@ namespace ItExpert
 							//Загрузить _articles в список
 							if (_articles != null && _articles.Any())
 							{
-                                UpdateTableView(_articles);
+								UpdateTableView(_articles, action);
 							}
 							SetLoadingImageVisible (false);
 						}
 						return;
 					}
 				}
+				SetLoadingImageVisible (true);
 				_isLoadingData = true;
 				ApplicationWorker.RemoteWorker.MagazineArticlesGetted += OnMagazineArticlesGetted;
 				ThreadPool.QueueUserWorkItem(
@@ -1080,7 +1237,14 @@ namespace ItExpert
 							magAction = _magazine.Exists ? MagazineAction.Open : MagazineAction.Download;
 						}
 
-                        UpdateTableView(new List<Article>());
+
+						if (!IsDoubleRow())
+						{
+							UpdateTableView(new List<Article>(), magAction);
+						}
+						else
+						{
+						}
 					});
 					var lst = ApplicationWorker.Db.GetMagazineArticlesFromDb(_magazine.Id);
 					if (lst != null && lst.Any())
@@ -1131,7 +1295,7 @@ namespace ItExpert
 								}
 								if (_articles != null && _articles.Any())
 								{
-                                    UpdateTableView(_articles);									
+									UpdateTableView(_articles, magAction);									
 								}
 								SetLoadingImageVisible(false);
 							});
@@ -1196,7 +1360,7 @@ namespace ItExpert
 			return returnLst;
 		}
 
-        private void UpdateTableView(List<Article> articles)
+		private void UpdateTableView(List<Article> articles, MagazineAction action)
         {
             if (!IsDoubleRow())
             {
@@ -1208,12 +1372,12 @@ namespace ItExpert
                     _articlesTableView.Source = null;
                 }
 
-                var source = new ArticlesTableSource(articles, false, MagazineAction.NoAction);
+				var source = new ArticlesTableSource(articles, false, action);
 
                 source.PushDetailsView += OnPushArticleDetails;
-
-                _articlesTableView.Frame = new RectangleF(0, _tableViewTopOffset, View.Bounds.Width, 
-                    View.Bounds.Height - _tableViewTopOffset - _bottomBar.Frame.Height);
+				var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+                _articlesTableView.Frame = new RectangleF(0, tableViewTopOffset, View.Bounds.Width, 
+					View.Bounds.Height - tableViewTopOffset - _bottomBar.Frame.Height);
 
                 _articlesTableView.ContentSize = new SizeF(_articlesTableView.Frame.Width, _articlesTableView.Frame.Height);
 
@@ -1225,11 +1389,6 @@ namespace ItExpert
 
             }
         }
-
-		public void ShowLastMagazine()
-		{
-
-		}
 
 		public void DestroyPdfLoader()
 		{
@@ -1249,6 +1408,21 @@ namespace ItExpert
 		private bool IsConnectionAccept()
 		{
 			var result = true;
+			var internetStatus = Reachability.InternetConnectionStatus();
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.WiFi)
+			{
+				if (internetStatus != NetworkStatus.ReachableViaWiFiNetwork)
+				{
+					result = false;
+				}
+			}
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.All)
+			{
+				if (internetStatus == NetworkStatus.NotReachable)
+				{
+					result = false;
+				}
+			}
 			return result;
 		}
 

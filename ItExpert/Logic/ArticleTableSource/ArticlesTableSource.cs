@@ -59,12 +59,39 @@ namespace ItExpert
 
 		public override void RowSelected (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
 		{
+			var article = _articles [indexPath.Row];
+			if (article.ArticleType == ArticleType.MagazinePreview)
+			{
+				tableView.DeselectRow (indexPath, false);
+				return;
+			}
+			if (article.ArticleType == ArticleType.Banner)
+			{
+				var obj = article.ExtendedObject;
+				Banner banner = null;
+				var bannerImg = obj as BannerImageView;
+				if (bannerImg != null)
+				{
+					banner = bannerImg.Banner;
+				}
+				var bannerGif = obj as BannerGifView;
+				if (bannerGif != null)
+				{
+					banner = bannerGif.Banner;
+				}
+				if (banner != null)
+				{
+					UIApplication.SharedApplication.OpenUrl (new NSUrl (banner.Url));
+				}
+				return;
+			}
             ArticleDetailsViewController articleDetailsView = OpenArticle(_articles[indexPath.Row]);
 
 			if (articleDetailsView != null)
 			{
 				OnCellPushed (articleDetailsView);
 			}
+
 		}
 
         private void OnCellPushed(ArticleDetailsViewController detailsView)

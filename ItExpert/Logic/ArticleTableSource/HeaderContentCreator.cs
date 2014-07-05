@@ -48,8 +48,9 @@ namespace ItExpert
             var range = _headerTextView.LayoutManager.GetGlyphRange (_headerTextView.TextContainer);
             var containerSize = _headerTextView.LayoutManager.BoundingRectForGlyphRange (range, _headerTextView.TextContainer);
 
-            _headerTextView.Frame = new RectangleF(_padding.Left, _padding.Top, containerSize.Width, containerSize.Height);
 
+            _headerTextView.Frame = new RectangleF(_padding.Left, _padding.Top, containerSize.Width, containerSize.Height);
+			_backgroundView.Frame = new RectangleF (0, 0, cell.ContentView.Bounds.Width, _padding.Top + _headerTextView.Frame.Height + _padding.Bottom);
             cell.ContentView.Add(_backgroundView);
 
             cell.UserInteractionEnabled = false;

@@ -30,7 +30,7 @@ namespace ItExpert
             Window.MakeKeyAndVisible();
 
             rootController.AutomaticallyAdjustsScrollViewInsets = false;
-			rootController.PushViewController (new NewsViewController (), false);
+			rootController.PushViewController (new SplashViewController (), false);
         }
 	}
 }
