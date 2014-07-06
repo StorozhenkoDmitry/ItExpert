@@ -174,6 +174,7 @@ namespace ItExpert
 			{
 				_articlesTableView.DeselectRow(_articlesTableView.IndexPathForSelectedRow, true);
 				_articlesTableView.ReloadData ();
+
 			}
 		}
 

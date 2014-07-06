@@ -17,6 +17,7 @@ namespace ItExpert
 			_banner = banner;
 			_koefScaling = koefScaling;
 			_screenWidth = screenWidth;
+
 		}
 
 		public float GetHeight()
