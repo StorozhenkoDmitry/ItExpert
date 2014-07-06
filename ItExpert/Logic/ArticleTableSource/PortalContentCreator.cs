@@ -14,7 +14,7 @@ namespace ItExpert
 		{
             CreateCellElements (cellContentView, article, ItExpertHelper.LargestImageSizeInArticlesPreview);
 
-			float height = _previewTextView.Frame.Bottom + _padding.Bottom;
+            float height = Math.Max(_previewTextView.Frame.Bottom, _imageViewContainer.Frame.Bottom);
 
 			_headerTextView.Dispose ();
 			_headerTextView = null;
@@ -25,13 +25,14 @@ namespace ItExpert
 			_imageViewContainer.Dispose ();
 			_imageViewContainer = null;
 
-			return height;
+            return height + _padding.Bottom;
 		}
 
         protected override void Create(UITableViewCell cell, Article article)
         {
 			cell.ContentView.BackgroundColor = 
 				ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+
             cell.SelectionStyle = UITableViewCellSelectionStyle.Default;
 
             CreateCellElements (cell.ContentView, article, ItExpertHelper.LargestImageSizeInArticlesPreview);
@@ -43,11 +44,18 @@ namespace ItExpert
         {
 			cell.ContentView.BackgroundColor = 
 				ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+
             cell.SelectionStyle = UITableViewCellSelectionStyle.Default;
 
             _article = article;
 
             var buttonImage = new UIImage(GetIsReadedButtonImageData(_article.IsReaded), (float)2.5);
+
+            if (_isReadedButtonImageView.Image != null)
+            {
+                _isReadedButtonImageView.Image.Dispose();
+                _isReadedButtonImageView.Image = null;
+            }
 
             _isReadedButtonImageView.Image = buttonImage;
 
@@ -142,7 +150,7 @@ namespace ItExpert
 			textViewToUpdate.Frame = new RectangleF (updatedTextViewLocation, new SizeF (containerSize.Width, containerSize.Height));
 		}
 
-        public NSData GetIsReadedButtonImageData(bool isReaded)
+        private NSData GetIsReadedButtonImageData(bool isReaded)
         {
             if (isReaded)
             {

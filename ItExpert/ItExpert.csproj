@@ -179,11 +179,15 @@
     <Compile Include="Logic\BlackAlertView\RadioButtonGroup.cs" />
     <Compile Include="Logic\ArticleTableSource\PortalContentCreator.cs" />
     <Compile Include="ViewControllers\PdfViewController.cs" />
-    <Compile Include="Logic\DoubleArticleTableSource.cs" />
     <Compile Include="Logic\BannerImageView.cs" />
     <Compile Include="Logic\BannerGifView.cs" />
     <Compile Include="ViewControllers\SplashViewController.cs" />
     <Compile Include="ServiceLayer\Reachability.cs" />
+    <Compile Include="Logic\ArticleTableSource\DoubleArticleTableViewCell.cs" />
+    <Compile Include="Logic\ArticleTableSource\DoubleArticleTableSource.cs" />
+    <Compile Include="Logic\ArticleTableSource\DoublePortalContentCreator.cs" />
+    <Compile Include="Logic\ArticleTableSource\DoubleArticle.cs" />
+    <Compile Include="Logic\ArticleTableSource\DoubleCellPushedEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

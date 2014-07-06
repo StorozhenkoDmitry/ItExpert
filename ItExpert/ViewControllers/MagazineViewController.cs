@@ -1362,32 +1362,37 @@ namespace ItExpert
 
 		private void UpdateTableView(List<Article> articles, MagazineAction action)
         {
-            if (!IsDoubleRow())
+            if (_articlesTableView.Source != null) 
             {
-                if (_articlesTableView.Source != null) 
-                {
-                    (_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+                (_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 
-                    _articlesTableView.Source.Dispose();
-                    _articlesTableView.Source = null;
-                }
+                _articlesTableView.Source.Dispose();
+                _articlesTableView.Source = null;
+            }
 
-				var source = new ArticlesTableSource(articles, false, action);
+            UITableViewSource source = null;
 
-                source.PushDetailsView += OnPushArticleDetails;
-				var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
-                _articlesTableView.Frame = new RectangleF(0, tableViewTopOffset, View.Bounds.Width, 
-					View.Bounds.Height - tableViewTopOffset - _bottomBar.Frame.Height);
+            if (UserInterfaceIdiomIsPhone)
+            {
+                source = new ArticlesTableSource(articles, false, MagazineAction.NoAction);
 
-                _articlesTableView.ContentSize = new SizeF(_articlesTableView.Frame.Width, _articlesTableView.Frame.Height);
-
-                _articlesTableView.Source = source;
-                _articlesTableView.ReloadData();
+                (source as ArticlesTableSource).PushDetailsView += OnPushArticleDetails;
             }
             else
             {
+                source = new DoubleArticleTableSource(articles, false, MagazineAction.NoAction);
 
+                (source as DoubleArticleTableSource).PushDetailsView += OnPushArticleDetails;
             }
+
+            var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+            _articlesTableView.Frame = new RectangleF(0, tableViewTopOffset, View.Bounds.Width, 
+                View.Bounds.Height - tableViewTopOffset - _bottomBar.Frame.Height);
+
+            _articlesTableView.ContentSize = new SizeF(_articlesTableView.Frame.Width, _articlesTableView.Frame.Height);
+
+            _articlesTableView.Source = source;
+            _articlesTableView.ReloadData();
         }
 
 		public void DestroyPdfLoader()
