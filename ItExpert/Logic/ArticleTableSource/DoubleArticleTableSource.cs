@@ -60,6 +60,32 @@ namespace ItExpert
 			return _doubleArticles.Count;
 		}
 
+		public override void RowSelected (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
+		{
+			var article = _articles [indexPath.Row];
+			tableView.DeselectRow (indexPath, false);
+			if (article.ArticleType == ArticleType.Banner)
+			{
+				var obj = article.ExtendedObject;
+				Banner banner = null;
+				var bannerImg = obj as BannerImageView;
+				if (bannerImg != null)
+				{
+					banner = bannerImg.Banner;
+				}
+				var bannerGif = obj as BannerGifView;
+				if (bannerGif != null)
+				{
+					banner = bannerGif.Banner;
+				}
+				if (banner != null)
+				{
+					UIApplication.SharedApplication.OpenUrl (new NSUrl (banner.Url));
+				}
+				return;
+			}
+		}
+
 		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 		{
             DoubleArticleTableViewCell cell = tableView.DequeueReusableCell (_cellIdentifier) as DoubleArticleTableViewCell;
@@ -114,6 +140,33 @@ namespace ItExpert
 			_selectItemId = -1;
 		}
 
+		public void UpdateSource()
+		{
+			_doubleArticles.Clear();
+			bool addNextToRight = false;
+			var articles = _articles;
+			foreach (var article in articles)
+			{
+				if (addNextToRight && (article.ArticleType == ArticleType.Portal || article.ArticleType == ArticleType.Magazine))
+				{
+					_doubleArticles.Last().RightContent = article;
+
+					addNextToRight = false;
+
+					continue;
+				}
+
+				addNextToRight = false;
+
+				if (article.ArticleType == ArticleType.Portal || article.ArticleType == ArticleType.Magazine)
+				{
+					addNextToRight = true;
+				}
+
+				_doubleArticles.Add(new DoubleArticle() { LeftContent = article });
+			}
+		}
+
 		//Вызывается при открытии статьи
         private ArticleDetailsViewController OpenArticle(Article article)
         {
@@ -125,7 +178,7 @@ namespace ItExpert
                     article.ArticleType == ArticleType.PreviousArticlesButton || article.ArticleType == ArticleType.MagazinePreview) return null;
                 _selectItemId = article.Id;
                 article.IsReaded = true;
-                ThreadPool.QueueUserWorkItem(state => SaveArticle(article));
+				ThreadPool.QueueUserWorkItem(state => ArticlesTableSource.SaveArticle(article));
                 ApplicationWorker.ClearNews();
                 ApplicationWorker.AppendToNewsList(
                     _articles.Where(x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal));
@@ -142,51 +195,13 @@ namespace ItExpert
 			{
 				if (article.IsReaded || (!article.IsReaded && article.IsFavorite))
 				{
-					ThreadPool.QueueUserWorkItem(state => SaveArticle(article));
+					ThreadPool.QueueUserWorkItem(state => ArticlesTableSource.SaveArticle(article));
 				}
 				if (!article.IsReaded && !article.IsFavorite)
 				{
-					ThreadPool.QueueUserWorkItem(state => DeleteArticle(article));
+					ThreadPool.QueueUserWorkItem(state => ArticlesTableSource.DeleteArticle(article));
 				}
 			}
-		}
-
-		private static void SaveArticle(Article article)
-		{
-			var dbArticle = ApplicationWorker.Db.GetArticle(article.Id);
-			if (dbArticle != null)
-			{
-				ApplicationWorker.Db.UpdateArticle(article);
-			}
-			else
-			{
-				ApplicationWorker.Db.DeleteItemSectionsForArticle(article.Id);
-				ApplicationWorker.Db.DeletePicturesForParent(article.Id);
-				ApplicationWorker.Db.InsertArticle(article);
-				if (article.ArticleType == ArticleType.Portal)
-				{
-					ApplicationWorker.Db.InsertItemSections(article.Sections);
-				}
-				if (article.PreviewPicture != null)
-				{
-					ApplicationWorker.Db.InsertPicture(article.PreviewPicture);
-				}
-				if (article.DetailPicture != null)
-				{
-					ApplicationWorker.Db.InsertPicture(article.DetailPicture);
-				}
-				if (article.AwardsPicture != null)
-				{
-					ApplicationWorker.Db.InsertPicture(article.AwardsPicture);
-				}
-			}
-		}
-
-		private static void DeleteArticle(Article article)
-		{
-			ApplicationWorker.Db.DeleteItemSectionsForArticle(article.Id);
-			ApplicationWorker.Db.DeletePicturesForParent(article.Id);
-			ApplicationWorker.Db.DeleteArticle(article.Id);
 		}
 
         private DoubleArticleTableViewCell CreateCell(UITableView tableView)

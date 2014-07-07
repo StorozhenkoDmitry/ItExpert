@@ -25,62 +25,66 @@ namespace ItExpert
         }
 
         public void AddButtons(List<UIButton> buttons)
-        {
-            ItExpertHelper.RemoveSubviews(_scrollView);
+		{
+			ItExpertHelper.RemoveSubviews (_scrollView);
 
-            if (buttons.Count == 0)
-            {
-                return;
-            }
+			if (buttons.Count == 0)
+			{
+				return;
+			}
 
-            if (_buttons == null)
-            {
-                _buttons = new List<UIButton>();
-            }
+			if (_buttons == null)
+			{
+				_buttons = new List<UIButton> ();
+			}
 
-            _buttons.Clear();
-            _buttons.AddRange(buttons);
+			_buttons.Clear ();
+			_buttons.AddRange (buttons);
 
-            float buttonWidth = 60;
-            float totalWidth = 0;
+			float buttonWidth = 60;
+			float totalWidth = 0;
 
-            Action removeButtonsHighliting = () =>
-            {
-                foreach (var button in _buttons)
-                {
-                    button.BackgroundColor = UIColor.Black;
-                }
-            };
+			Action removeButtonsHighliting = () =>
+			{
+				foreach (var button in _buttons)
+				{
+					button.BackgroundColor = UIColor.Black;
+				}
+			};
 
-            for (int i = 0; i < _buttons.Count; i++)
-            {
-                var button = _buttons[i];
+			for (int i = 0; i < _buttons.Count; i++)
+			{
+				var button = _buttons [i];
 
-                button.Frame = new RectangleF(buttonWidth * i, 0, buttonWidth, Frame.Height);
+				button.Frame = new RectangleF (buttonWidth * i, 0, buttonWidth, Frame.Height);
 
-                button.SetTitle(button.Title(UIControlState.Normal), UIControlState.Normal);
-                button.SetTitleColor(UIColor.White, UIControlState.Normal);
-                button.BackgroundColor = UIColor.Black;
+				button.SetTitle (button.Title (UIControlState.Normal), UIControlState.Normal);
+				button.SetTitleColor (UIColor.White, UIControlState.Normal);
+				button.BackgroundColor = UIColor.Black;
 
-                if (i == 0)
-                {
-                    button.BackgroundColor = UIColor.FromRGB(160, 160, 160);
-                }
+				if (i == 0)
+				{
+					button.BackgroundColor = UIColor.FromRGB (160, 160, 160);
+				}
 
-                button.TouchUpInside += (sender, e) =>
-                {
-                    removeButtonsHighliting();
+				button.TouchUpInside += (sender, e) =>
+				{
+					removeButtonsHighliting ();
 
-                    (sender as UIButton).BackgroundColor = UIColor.FromRGB(160, 160, 160);
-                };
+					(sender as UIButton).BackgroundColor = UIColor.FromRGB (160, 160, 160);
+				};
 
-                _scrollView.Add(buttons[i]);
+				_scrollView.Add (buttons [i]);
 
-                totalWidth += buttonWidth;
-            }
+				totalWidth += buttonWidth;
+			}
 
-            _scrollView.ContentSize = new SizeF(totalWidth, Frame.Height);
-        }
+			_scrollView.ContentSize = new SizeF (totalWidth, Frame.Height);
+			if (Frame.Width > totalWidth)
+			{
+				Frame = new RectangleF ((Frame.Width - totalWidth) / 2, Frame.Y, totalWidth, Frame.Height);
+			}
+		}
 
         private UIScrollView _scrollView;
         private List<UIButton> _buttons;

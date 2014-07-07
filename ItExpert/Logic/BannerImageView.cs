@@ -11,7 +11,6 @@ namespace ItExpert
 		public BannerImageView (UIImage image, Banner banner):base(image)
 		{
 			_banner = banner;
-
 		}
 
 		public Banner Banner

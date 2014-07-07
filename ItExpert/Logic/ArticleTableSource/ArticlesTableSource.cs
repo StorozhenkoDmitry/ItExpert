@@ -60,11 +60,7 @@ namespace ItExpert
 		public override void RowSelected (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
 		{
 			var article = _articles [indexPath.Row];
-			if (article.ArticleType == ArticleType.MagazinePreview)
-			{
-				tableView.DeselectRow (indexPath, false);
-				return;
-			}
+			tableView.DeselectRow (indexPath, false);
 			if (article.ArticleType == ArticleType.Banner)
 			{
 				var obj = article.ExtendedObject;
@@ -154,7 +150,7 @@ namespace ItExpert
 			}
 		}
 
-		private static void SaveArticle(Article article)
+		public static void SaveArticle(Article article)
 		{
 			var dbArticle = ApplicationWorker.Db.GetArticle(article.Id);
 			if (dbArticle != null)
@@ -185,7 +181,7 @@ namespace ItExpert
 			}
 		}
 
-		private static void DeleteArticle(Article article)
+		public static void DeleteArticle(Article article)
 		{
 			ApplicationWorker.Db.DeleteItemSectionsForArticle(article.Id);
 			ApplicationWorker.Db.DeletePicturesForParent(article.Id);
