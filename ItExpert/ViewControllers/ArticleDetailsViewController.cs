@@ -710,7 +710,7 @@ namespace ItExpert
 
         private void AddContent(string section, string author, string text)
         {
-            _scrollView = new UIScrollView(new RectangleF(0, 0, _maxWidth, View.Frame.Height));
+            _scrollView = new UIScrollView(new RectangleF(0, 0, View.Frame.Width, View.Frame.Height));
             _scrollView.UserInteractionEnabled = true;
             _scrollView.ScrollEnabled = true;
 

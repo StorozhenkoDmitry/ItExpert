@@ -107,6 +107,23 @@ namespace ItExpert
                 subView.RemoveFromSuperview();
             }
         }
+
+        public static RectangleF GetRealScreenSize()
+        {
+            var appDelegate = UIApplication.SharedApplication.Delegate;
+
+            var window = appDelegate.Window;
+
+            RectangleF bounds = window.Bounds;
+
+            if (UIApplication.SharedApplication.StatusBarOrientation == UIInterfaceOrientation.LandscapeLeft || 
+                UIApplication.SharedApplication.StatusBarOrientation == UIInterfaceOrientation.LandscapeRight)
+            {
+                bounds = new RectangleF(0, 0, window.Bounds.Height, window.Bounds.Width);
+            }
+
+            return bounds;
+        }
 	}
 }
 

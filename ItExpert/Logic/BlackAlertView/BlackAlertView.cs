@@ -7,6 +7,19 @@ namespace ItExpert
 {
     public class BlackAlertView: UIViewController
     {
+        public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+        {
+            base.DidRotate(fromInterfaceOrientation);
+
+            if (_alertView != null)
+            {
+                _backgroundView.Frame = ItExpertHelper.GetRealScreenSize();
+
+                _alertView.Frame = new RectangleF(_backgroundView.Frame.Width / 2 - _contentViewWidth / 2, 0, _contentViewWidth, 0);
+                _alertView.CorrectHeight();
+            }
+        }
+
         public BlackAlertView(string title, string message, string cancelButton, string confirmButton = null) 
         {
             AddAlertView();
@@ -28,20 +41,20 @@ namespace ItExpert
 
         public void Show()
         {
-            var appDelegate = UIApplication.SharedApplication.Delegate;
+            _alertWindow = new UIWindow(UIScreen.MainScreen.Bounds);
 
-            var window = appDelegate.Window;
+            _oldKeyWindow = UIApplication.SharedApplication.KeyWindow;
 
-            window.Add(View);
+            _alertWindow.WindowLevel = UIWindowLevel.Alert;
+
+            _alertWindow.RootViewController = this;
+
+            _alertWindow.MakeKeyAndVisible();
         }
 
         private void AddAlertView()
         {
-            var appDelegate = UIApplication.SharedApplication.Delegate;
-
-            var window = appDelegate.Window;
-
-            View.Frame = window.Frame;
+            View.Frame = ItExpertHelper.GetRealScreenSize();
 
             View.BackgroundColor = UIColor.Clear;
 
@@ -49,7 +62,7 @@ namespace ItExpert
 
             _backgroundView.BackgroundColor = UIColor.FromRGBA(0, 0, 0, 80);
 
-            _contentViewWidth = View.Frame.Width - 50;
+            _contentViewWidth = 270;
 
             _alertView = new AlertView(new RectangleF(View.Frame.Width / 2 - _contentViewWidth / 2, 0, _contentViewWidth, 0));
 
@@ -62,7 +75,19 @@ namespace ItExpert
 
         private void OnButtonPushed(object sender, BlackAlertViewButtonEventArgs e)
         {
-            View.RemoveFromSuperview();
+            if (_alertWindow != null)
+            {
+                _alertWindow.ResignKeyWindow();
+                _alertWindow.Alpha = 0;
+
+                if (_oldKeyWindow != null)
+                {
+                    _oldKeyWindow.MakeKeyWindow();
+                }
+
+                _alertWindow.Dispose();
+                _alertView = null;
+            }
 
             if (ButtonPushed != null)
             {
@@ -74,6 +99,8 @@ namespace ItExpert
 
         private UIView _backgroundView;
         private AlertView _alertView;
+        private UIWindow _alertWindow;
+        private UIWindow _oldKeyWindow;
     }
 }
 

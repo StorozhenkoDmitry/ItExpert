@@ -271,15 +271,11 @@ namespace ItExpert
 
         #region private methods
 
-        private void CorrectHeight()
+        public void CorrectHeight()
         {
-            var appDelegate = UIApplication.SharedApplication.Delegate;
-
-            var window = appDelegate.Window;
-
             var height = ComponentHeight.GetTotalHeight();
 
-            Frame = new RectangleF(Frame.X, window.Frame.Height / 2 - height / 2, Frame.Width, height);
+            Frame = new RectangleF(Frame.X, ItExpertHelper.GetRealScreenSize().Height / 2 - height / 2, Frame.Width, height);
 
             if (_radioButtonsGroup != null)
             {
