@@ -26,7 +26,7 @@ namespace ItExpert
         private ArchiveView _archiveView;
 		private UIActivityIndicatorView _loadingIndicator;
 		private UIActivityIndicatorView _loadingPdfIndicator;
-
+		private List<MagazineYear> _years;
 		#endregion
 
 		#region UIViewController members
@@ -39,11 +39,20 @@ namespace ItExpert
         {
         }
 
+		public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+		{
+			base.DidRotate (fromInterfaceOrientation);
+		}
+
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
+		}
+
+		public override void ViewWillAppear (bool animated)
+		{
+			base.ViewWillAppear (animated);
 			Initialize ();
-			// Perform any additional setup after loading the view, typically from a nib.
 		}
 
 		public override void ViewWillDisappear (bool animated)
@@ -105,6 +114,7 @@ namespace ItExpert
 				{
 					List<Magazine> previewList = null;
 					years = years.OrderByDescending(x => x.Value).ToList();
+					_years = years;
 					var yearButtons = new List<UIButton>();
 					for (var i = 0; i < years.Count(); i++)
 					{
@@ -173,8 +183,9 @@ namespace ItExpert
 
 					if (years != null && years.Any())
 					{
+						years = years.OrderByDescending(x => x.Value).ToList();
+						_years = years;
                         List<UIButton> yearButtons = new List<UIButton>();
-
 						for (var i = 0; i < years.Count(); i++)
 						{
 							var year = years[i];

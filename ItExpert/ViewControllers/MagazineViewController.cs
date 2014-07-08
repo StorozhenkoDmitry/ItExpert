@@ -62,9 +62,10 @@ namespace ItExpert
 			if (_firstLoad)
 			{
 				Initialize ();
-				UpdateViewsLayout ();
+
 				_firstLoad = false;
 			}
+			UpdateViewsLayout ();
 		}
 
 		public override void ViewDidAppear (bool animated)

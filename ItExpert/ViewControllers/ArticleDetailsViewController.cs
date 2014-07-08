@@ -30,8 +30,25 @@ namespace ItExpert
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
+		}
 
-            AutomaticallyAdjustsScrollViewInsets = false;
+		public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+		{
+			base.DidRotate (fromInterfaceOrientation);
+			_maxWidth = View.Frame.Width - _padding.Left - _padding.Right;
+			ItExpertHelper.RemoveSubviews(View);
+			UpdateScreen ();
+		}
+
+		public override void ViewWillAppear (bool animated)
+		{
+			base.ViewWillAppear (animated);
+			Initialize ();
+		}
+
+		void Initialize()
+		{
+			AutomaticallyAdjustsScrollViewInsets = false;
 
 			//Tim
 			if (_fromFavorite)
@@ -39,40 +56,33 @@ namespace ItExpert
 				//ссылки не интерактивны
 			}
 
-            ShowSplash(true);
+			ShowSplash(true);
 
 			_padding = new UIEdgeInsets (8, 8, 8, 8);
 
-            _maxWidth = View.Frame.Width - _padding.Left - _padding.Right;
-            
+			_maxWidth = View.Frame.Width - _padding.Left - _padding.Right;
+
 			View.BackgroundColor = UIColor.White;
 
-            UISwipeGestureRecognizer leftSwipeRecognizer = new UISwipeGestureRecognizer(() => OnArticleChange(this, new SwipeEventArgs() { Direction = SwipeDirection.Next }));
+			UISwipeGestureRecognizer leftSwipeRecognizer = new UISwipeGestureRecognizer(() => OnArticleChange(this, new SwipeEventArgs() { Direction = SwipeDirection.Next }));
 
-            leftSwipeRecognizer.Direction = UISwipeGestureRecognizerDirection.Left;
+			leftSwipeRecognizer.Direction = UISwipeGestureRecognizerDirection.Left;
 
-            View.AddGestureRecognizer(leftSwipeRecognizer);
+			View.AddGestureRecognizer(leftSwipeRecognizer);
 
-            UISwipeGestureRecognizer rightSwipeRecognizer = new UISwipeGestureRecognizer(() => OnArticleChange(this, new SwipeEventArgs() { Direction = SwipeDirection.Previous }));
+			UISwipeGestureRecognizer rightSwipeRecognizer = new UISwipeGestureRecognizer(() => OnArticleChange(this, new SwipeEventArgs() { Direction = SwipeDirection.Previous }));
 
-            rightSwipeRecognizer.Direction = UISwipeGestureRecognizerDirection.Right;
+			rightSwipeRecognizer.Direction = UISwipeGestureRecognizerDirection.Right;
 
-            View.AddGestureRecognizer(rightSwipeRecognizer);
+			View.AddGestureRecognizer(rightSwipeRecognizer);
+			GetArticleData ();
 		}
-
-        public override void ViewDidAppear(bool animated)
-        {
-            base.ViewDidAppear(animated);
-
-            GetArticleData ();
-        }
 
 		#region Worked with server
 
 		private void GetArticleData()
 		{
 			ShowSplash (true);
-
 			var requestNeeded = false;
 			var article = ApplicationWorker.GetArticle(_article.Id);
 			if (article != null)
