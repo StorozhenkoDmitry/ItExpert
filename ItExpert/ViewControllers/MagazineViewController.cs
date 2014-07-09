@@ -36,6 +36,8 @@ namespace ItExpert
 		private UIActivityIndicatorView _loadingIndicator;
 		public bool IsLoadingPdf = false;
 		private bool _firstLoad = true;
+		private UIInterfaceOrientation _currentOrientation;
+		private int _rubricId = -1;
 
 		#endregion
 
@@ -59,13 +61,228 @@ namespace ItExpert
         public override void ViewWillAppear(bool animated)
 		{
 			base.ViewWillAppear (animated);
+			if (!_firstLoad && _currentOrientation != InterfaceOrientation)
+			{
+				_currentOrientation = InterfaceOrientation;
+				var screenWidth =
+					ApplicationWorker.Settings.GetScreenWidthForScreen(
+						(int)View.Bounds.Width);
+				var banners = ApplicationWorker.Db.LoadBanners();
+				Banner banner = null;
+				if (banners != null && banners.Any())
+				{
+					banner = banners.FirstOrDefault(x => x.ScreenWidth == screenWidth);
+					if (banner != null)
+					{
+						var pictures = ApplicationWorker.Db.GetPicturesForParent(banner.Id);
+						if (pictures != null && pictures.Any())
+						{
+							var picture = pictures.FirstOrDefault(x => x.Type == PictypeType.Banner);
+							if (picture != null)
+							{
+								banner.Picture = picture;
+							}
+						}
+					}
+				}
+				if (banner != null)
+				{
+					InitBanner(banner);
+				}
+				InitMagazine (_magazine);
+				UpdateViewsLayout ();
+			}
+			if (_rubricId != -1)
+			{
+				if (ApplicationWorker.Settings.OfflineMode)
+				{
+					//					Toast.MakeText(this, "Поиск невозможен в оффлайн режиме", ToastLength.Long).Show();
+					_rubricId = -1;
+					return;
+				}
+				var rubric =
+					_articles.Where(
+						x =>
+						x.ArticleType == ArticleType.Magazine &&
+						x.Rubrics != null)
+						.SelectMany(x => x.Rubrics)
+						.FirstOrDefault(x => x.Id == _rubricId);
+				_rubricId = -1;
+				if (rubric != null)
+				{
+					var connectAccept = IsConnectionAccept();
+					if (!connectAccept)
+					{
+						//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+						//							.Show();
+						return;
+					}
+					_headerAdded = true;
+					_header = rubric.Name;
+					_articles.Clear();
+					_allArticles.Clear();
+					if (_articlesTableView != null && _articlesTableView.Source != null)
+					{
+						if (_articlesTableView.Source is DoubleArticleTableSource)
+						{
+							(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+						}
+					}
+					if (_articlesTableView != null)
+					{
+						_articlesTableView.ReloadData ();
+					}
+					_prevArticlesExists = true;
+					_articles = null;
+					_searchRubric = rubric;
+					_isLoadingData = true;
+					_isRubricSearch = true;
+					ApplicationWorker.RemoteWorker.MagazineArticlesGetted += SearchRubricOnMagazineArticlesGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetMagazinesArticlesByRubric(
+							ApplicationWorker.Settings, rubric, Magazine.BlockId, -1));
+					SetLoadingImageVisible (true);
+					return;
+				}
+			}
+			if (!_firstLoad && !_isLoadingData)
+			{
+				if (_allArticles == null || !_allArticles.Any ())
+					return;
+				var position = -1;
+				Article selectArticle = null;
+				var selectItemId = -1;
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is ArticlesTableSource)
+					{
+						selectItemId = (_articlesTableView.Source as ArticlesTableSource).GetSelectItemId ();
+						(_articlesTableView.Source as ArticlesTableSource).ResetSelectItem ();
+					}
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						selectItemId = (_articlesTableView.Source as DoubleArticleTableSource).GetSelectItemId ();
+						(_articlesTableView.Source as DoubleArticleTableSource).ResetSelectItem ();
+					}
+				}
+				if (selectItemId != -1)
+				{
+					for (var i = 0; i < _articles.Count (); i++)
+					{
+						if (_articles [i].Id == selectItemId)
+						{
+							position = i;
+							break;
+						}
+					}
+					if (ApplicationWorker.Settings.HideReaded)
+					{
+						if (position > 0)
+						{
+							var isFound = false;
+							while (!isFound)
+							{
+								position--;
+								if (position == 0)
+								{
+									break;
+								}
+								if ((_articles [position].ArticleType != ArticleType.Magazine &&
+									_articles [position].ArticleType != ArticleType.Portal) &&
+									!_articles [position].IsReaded)
+								{
+									isFound = true;
+									selectArticle = _articles [position];
+								}
+							}
+						}
+					}
+				}
+				_articles.Clear ();
+				if (ApplicationWorker.Settings.HideReaded)
+				{
+					var buffer = _allArticles.Where (x => !x.IsReaded).ToList ();
+					if (buffer.Count () < 6)
+					{
+						var count = 6 - buffer.Count ();
+						buffer.AddRange (_allArticles.Where (x => x.IsReaded).Take (count));
+						buffer = buffer.OrderByDescending (x => x.ActiveFrom).ToList ();
+					}
+					if (!_isRubricSearch)
+					{
+						buffer = SortAndAddHeader(buffer);
+					}
+					_articles.AddRange (buffer);
+					if (selectArticle != null && position > 0)
+					{
+						position = 0;
+						for (var i = 0; i < _articles.Count (); i++)
+						{
+							if (_articles [i].Id == selectArticle.Id)
+							{
+								position = i;
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					var lst = _allArticles.ToList();
+					if (!_isRubricSearch)
+					{
+						lst = SortAndAddHeader(lst);
+					}
+					_articles.AddRange(lst);
+				}
+				if (_isRubricSearch && _headerAdded && !string.IsNullOrWhiteSpace (_header))
+				{
+					_articles.Insert (0,
+						new Article () { ArticleType = ArticleType.Header, Name = _header });
+				}
+				if (_banner != null)
+				{
+					_articles.Insert(0,
+						new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+				}
+				if (!_isRubricSearch && ApplicationWorker.Magazine != null)
+				{
+					_articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
+				}
+
+				if (_isRubricSearch && _addPreviousArticleButton != null && _prevArticlesExists)
+				{
+					_articles.Add(new Article()
+					{
+						ArticleType = ArticleType.PreviousArticlesButton,
+						ExtendedObject = _addPreviousArticleButton
+					});
+				}
+				UpdateViewsLayout ();
+				if (ApplicationWorker.Settings.HideReaded && position > 0)
+				{
+					if (!UserInterfaceIdiomIsPhone)
+					{
+						if (_banner != null && _addPreviousArticleButton != null)
+						{
+							position = (int)Math.Floor ((double)(position - 2) / 2);
+						}
+						else
+						{
+							position = (int)Math.Floor ((double)position / 2);
+						}
+					}
+					//Прокрутить список к position
+				}
+			}
 			if (_firstLoad)
 			{
+				_currentOrientation = InterfaceOrientation;
 				Initialize ();
-
 				_firstLoad = false;
+				UpdateViewsLayout ();
 			}
-			UpdateViewsLayout ();
 		}
 
 		public override void ViewDidAppear (bool animated)
@@ -97,6 +314,7 @@ namespace ItExpert
         public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
         {
             base.DidRotate(fromInterfaceOrientation);
+			_currentOrientation = InterfaceOrientation;
 			var screenWidth =
 				ApplicationWorker.Settings.GetScreenWidthForScreen(
 					(int)View.Bounds.Width);
@@ -160,7 +378,7 @@ namespace ItExpert
 					_articles.Insert(0,
 						new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
 				}
-				if (ApplicationWorker.Magazine != null)
+				if (!_isRubricSearch && ApplicationWorker.Magazine != null)
 				{
 					_articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
 				}
@@ -191,6 +409,7 @@ namespace ItExpert
 		public void SetMagazineId(int magazineId)
 		{
 			_magazineId = magazineId;
+			_rubricId = -1;
 			_isRubricSearch = false;
 			_searchRubric = null;
 			_headerAdded = false;
@@ -836,7 +1055,7 @@ namespace ItExpert
 				_headerAdded = false;
 				_header = null;
 				_prevArticlesExists = true;
-
+				_rubricId = -1;
 				var action = MagazineAction.NoAction;
 				if (!_isRubricSearch)
 				{
@@ -1067,57 +1286,7 @@ namespace ItExpert
 
 		public void SearchRubric(int rubricId)
 		{
-			if (rubricId != -1)
-			{
-				if (ApplicationWorker.Settings.OfflineMode)
-				{
-//					Toast.MakeText(this, "Поиск невозможен в оффлайн режиме", ToastLength.Long).Show();
-					return;
-				}
-				var rubric =
-					_articles.Where(
-						x =>
-						x.ArticleType == ArticleType.Magazine &&
-						x.Rubrics != null)
-						.SelectMany(x => x.Rubrics)
-						.FirstOrDefault(x => x.Id == rubricId);
-				if (rubric != null)
-				{
-					var connectAccept = IsConnectionAccept();
-					if (!connectAccept)
-					{
-//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-//							.Show();
-						return;
-					}
-					_headerAdded = true;
-					_header = rubric.Name;
-					_articles.Clear();
-					_allArticles.Clear();
-					if (_articlesTableView != null && _articlesTableView.Source != null)
-					{
-						if (_articlesTableView.Source is DoubleArticleTableSource)
-						{
-							(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
-						}
-					}
-					if (_articlesTableView != null)
-					{
-						_articlesTableView.ReloadData ();
-					}
-					_prevArticlesExists = true;
-					_articles = null;
-					_searchRubric = rubric;
-					_isLoadingData = true;
-					_isRubricSearch = true;
-					ApplicationWorker.RemoteWorker.MagazineArticlesGetted += SearchRubricOnMagazineArticlesGetted;
-					ThreadPool.QueueUserWorkItem(
-						state =>
-						ApplicationWorker.RemoteWorker.BeginGetMagazinesArticlesByRubric(
-							ApplicationWorker.Settings, rubric, Magazine.BlockId, -1));
-					SetLoadingImageVisible (true);
-				}
-			}
+			_rubricId = rubricId;
 		}
 
 		//Инициализация панели журнала

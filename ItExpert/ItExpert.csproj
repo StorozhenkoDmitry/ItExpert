@@ -188,6 +188,7 @@
     <Compile Include="Logic\ArticleTableSource\DoublePortalContentCreator.cs" />
     <Compile Include="Logic\ArticleTableSource\DoubleArticle.cs" />
     <Compile Include="Logic\ArticleTableSource\DoubleCellPushedEventArgs.cs" />
+    <Compile Include="Enum\Filter.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
