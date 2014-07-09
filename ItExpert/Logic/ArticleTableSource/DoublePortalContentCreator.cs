@@ -175,6 +175,8 @@ namespace ItExpert
                 }
                 else
                 {
+                    _leftContent.MainContainer.Frame = new RectangleF(0, 0, cell.ContentView.Frame.Width / 2, cell.ContentView.Frame.Height);
+
                     UpdateContentElements(_leftContent.MainContainer, article.LeftContent, ItExpertHelper.LargestImageSizeInArticlesPreview, _leftContent);
                 }
 
@@ -191,6 +193,8 @@ namespace ItExpert
                 }
                 else
                 {
+                    _rightContent.MainContainer.Frame = new RectangleF(cell.ContentView.Frame.Width / 2, 0, cell.ContentView.Frame.Width / 2, cell.ContentView.Frame.Height);
+
                     UpdateContentElements(_rightContent.MainContainer, article.RightContent, ItExpertHelper.LargestImageSizeInArticlesPreview, _rightContent);
                 }
 
@@ -217,18 +221,10 @@ namespace ItExpert
 
             content.HeaderTextView.UserInteractionEnabled = true;
 
-            content.ImageView = new UIImageView(new RectangleF (largestImageWidth/2 - article.PreviewPicture.Width / 2, 
-                0, article.PreviewPicture.Width, article.PreviewPicture.Height));
-
-            content.ImageView.Image = ItExpertHelper.GetImageFromBase64String(article.PreviewPicture.Data);
-
-            content.ImageViewContainer = new UIView (new RectangleF (mainContainer.Bounds.Width - largestImageWidth - _padding.Right, 
-                content.HeaderTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height));
-
-            content.ImageViewContainer.Add (content.ImageView);
-
-            content.ImageView.UserInteractionEnabled = true;
-            content.ImageViewContainer.UserInteractionEnabled = true;
+            if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
+            {
+                CreateImageView(content, article, largestImageWidth, mainContainer);
+            }
 
             content.PreviewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText,_previewTextFont, _forecolor), 
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
@@ -253,20 +249,38 @@ namespace ItExpert
             UpdateTextView (content.HeaderTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width,
                 _previewHeaderFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
 
-            if (content.ImageView != null && content.ImageView.Image != null)
+            if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
             {
-                if (content.ImageView.Image != null)
+                if (content.ImageView != null && content.ImageView.Image != null)
                 {
-                    content.ImageView.Image.Dispose ();
-                    content.ImageView.Image = null;
+                    if (content.ImageView.Image != null)
+                    {
+                        content.ImageView.Image.Dispose();
+                        content.ImageView.Image = null;
+                    }
+
+                    content.ImageView.Image = ItExpertHelper.GetImageFromBase64String(article.PreviewPicture.Data);
+                    content.ImageView.Frame = new RectangleF(ItExpertHelper.LargestImageSizeInArticlesPreview / 2 - article.PreviewPicture.Width / 2, 
+                        0, article.PreviewPicture.Width, article.PreviewPicture.Height);
+
+                    content.ImageViewContainer.Frame = new RectangleF(mainContainer.Bounds.Width - largestImageWidth - _padding.Right, 
+                        content.HeaderTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height);
                 }
+                else
+                {
+                    CreateImageView(content, article, largestImageWidth, mainContainer);
+                }
+            }
+            else
+            {
+                content.ImageView.Image.Dispose();
+                content.ImageView.Image = null;
 
-                content.ImageView.Image = ItExpertHelper.GetImageFromBase64String (article.PreviewPicture.Data);
-                content.ImageView.Frame = new RectangleF (ItExpertHelper.LargestImageSizeInArticlesPreview / 2 - article.PreviewPicture.Width / 2, 
-                    0, article.PreviewPicture.Width, article.PreviewPicture.Height);
+                content.ImageView.Dispose();
+                content.ImageView = null;
 
-                content.ImageViewContainer.Frame = new RectangleF (mainContainer.Bounds.Width - largestImageWidth - _padding.Right, 
-                    content.HeaderTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height);
+                content.ImageViewContainer.Dispose();
+                content.ImageViewContainer = null;
             }
 
             UpdateTextView (content.PreviewTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left, 
@@ -380,6 +394,22 @@ namespace ItExpert
             CreateContnentElements(content.MainContainer, article, ItExpertHelper.LargestImageSizeInArticlesPreview, content);
 
             content.IsReadedButton.Tag = (int)contentPosition;
+        }
+
+        private void CreateImageView(Content content, Article article, float largestImageWidth, UIView mainContainer)
+        {
+            content.ImageView = new UIImageView(new RectangleF (largestImageWidth/2 - article.PreviewPicture.Width / 2, 
+                0, article.PreviewPicture.Width, article.PreviewPicture.Height));
+
+            content.ImageView.Image = ItExpertHelper.GetImageFromBase64String(article.PreviewPicture.Data);
+
+            content.ImageViewContainer = new UIView (new RectangleF (mainContainer.Bounds.Width - largestImageWidth - _padding.Right, 
+                content.HeaderTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height));
+
+            content.ImageViewContainer.Add (content.ImageView);
+
+            content.ImageView.UserInteractionEnabled = true;
+            content.ImageViewContainer.UserInteractionEnabled = true;
         }
 
         public override float GetContentHeight(UIView cellContentView, Article article)

@@ -64,20 +64,27 @@ namespace ItExpert
             UpdateTextView (_headerTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width,
                 _previewHeaderFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
 
-            if (_imageView != null && _imageView.Image != null)
+            if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
             {
-                if (_imageView.Image != null)
+                if (_imageView != null && _imageView.Image != null)
                 {
-                    _imageView.Image.Dispose ();
-                    _imageView.Image = null;
+                    if (_imageView.Image != null)
+                    {
+                        _imageView.Image.Dispose();
+                        _imageView.Image = null;
+                    }
+
+                    _imageView.Image = ItExpertHelper.GetImageFromBase64String(article.PreviewPicture.Data);
+                    _imageView.Frame = new RectangleF(ItExpertHelper.LargestImageSizeInArticlesPreview / 2 - article.PreviewPicture.Width / 2, 
+                        0, article.PreviewPicture.Width, article.PreviewPicture.Height);
+
+                    _imageViewContainer.Frame = new RectangleF(cell.ContentView.Bounds.Width - ItExpertHelper.LargestImageSizeInArticlesPreview - _padding.Right, 
+                        _headerTextView.Frame.Bottom + _padding.Top, ItExpertHelper.LargestImageSizeInArticlesPreview, article.PreviewPicture.Height);
                 }
-
-                _imageView.Image = ItExpertHelper.GetImageFromBase64String (article.PreviewPicture.Data);
-                _imageView.Frame = new RectangleF (ItExpertHelper.LargestImageSizeInArticlesPreview / 2 - article.PreviewPicture.Width / 2, 
-                    0, article.PreviewPicture.Width, article.PreviewPicture.Height);
-
-                _imageViewContainer.Frame = new RectangleF (cell.ContentView.Bounds.Width - ItExpertHelper.LargestImageSizeInArticlesPreview - _padding.Right, 
-                    _headerTextView.Frame.Bottom + _padding.Top, ItExpertHelper.LargestImageSizeInArticlesPreview, article.PreviewPicture.Height);
+                else
+                {
+                    CreateImageView(article, ItExpertHelper.LargestImageSizeInArticlesPreview, cell.ContentView);
+                }
             }
 
             UpdateTextView (_previewTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left, 
@@ -104,15 +111,10 @@ namespace ItExpert
             _headerTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, _previewHeaderFont, _forecolor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
 
-			_imageView = new UIImageView(new RectangleF (largestImageWidth/2 - article.PreviewPicture.Width / 2, 
-				0, article.PreviewPicture.Width, article.PreviewPicture.Height));
-
-			_imageView.Image = ItExpertHelper.GetImageFromBase64String(article.PreviewPicture.Data);
-
-            _imageViewContainer = new UIView (new RectangleF (cellContentView.Bounds.Width - largestImageWidth - _padding.Right, 
-				_headerTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height));
-
-			_imageViewContainer.Add (_imageView);
+            if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
+            {
+                CreateImageView(article, largestImageWidth, cellContentView);
+            }
 
             _previewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText,_previewTextFont, _forecolor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, _headerTextView.Frame.Bottom + _padding.Top), _imageViewContainer);
@@ -137,12 +139,12 @@ namespace ItExpert
 
 			textViewToUpdate.TextContainer.Size = new Size ((int)updatedTextViewWidth, int.MaxValue);
 
-			if (imageView != null)
-			{
-				var imageRectangle = ItExpertHelper.ConvertRectangleToSubviewCoordinates (imageView.Frame, updatedTextViewLocation);
+           if (imageView != null)
+           {
+               var imageRectangle = ItExpertHelper.ConvertRectangleToSubviewCoordinates(imageView.Frame, updatedTextViewLocation);
 
-				textViewToUpdate.TextContainer.ExclusionPaths = new UIBezierPath[] { UIBezierPath.FromRect (imageRectangle) };
-			}
+               textViewToUpdate.TextContainer.ExclusionPaths = new UIBezierPath[] { UIBezierPath.FromRect(imageRectangle) };
+           }
 
 			var range = textViewToUpdate.LayoutManager.GetGlyphRange (textViewToUpdate.TextContainer);
 			var containerSize = textViewToUpdate.LayoutManager.BoundingRectForGlyphRange (range, textViewToUpdate.TextContainer);
@@ -171,6 +173,19 @@ namespace ItExpert
             _isReadedButtonImageView.Image = buttonImage;
 
 			ArticlesTableSource.SetIsReadedForArticle(_article);
+        }
+
+        private void CreateImageView(Article article, float largestImageWidth, UIView cellContentView)
+        {
+            _imageView = new UIImageView(new RectangleF(largestImageWidth / 2 - article.PreviewPicture.Width / 2, 
+                0, article.PreviewPicture.Width, article.PreviewPicture.Height));
+
+            _imageView.Image = ItExpertHelper.GetImageFromBase64String(article.PreviewPicture.Data);
+
+            _imageViewContainer = new UIView(new RectangleF(cellContentView.Bounds.Width - largestImageWidth - _padding.Right, 
+                _headerTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height));
+
+            _imageViewContainer.Add(_imageView);
         }
 
 		private UIView _imageViewContainer;

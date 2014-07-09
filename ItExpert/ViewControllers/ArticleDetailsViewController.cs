@@ -767,7 +767,7 @@ namespace ItExpert
 
         private float AddArticlePicture(float top)
 		{
-            if (_article.DetailPicture != null)
+            if (_article.DetailPicture != null && _article.DetailPicture.Data != null)
             {
                 float scale = 1;
 

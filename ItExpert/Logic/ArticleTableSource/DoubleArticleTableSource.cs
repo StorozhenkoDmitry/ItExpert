@@ -105,6 +105,7 @@ namespace ItExpert
                 };
             }           
 
+            cell.ContentView.Bounds = cell.Bounds;
             cell.UpdateContent(_doubleArticles[indexPath.Row]);
 
             return cell;
