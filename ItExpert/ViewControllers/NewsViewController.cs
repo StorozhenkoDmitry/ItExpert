@@ -30,13 +30,14 @@ namespace ItExpert
         private UIView _banner = null;
 		private UIView _addPreviousArticleButton = null;
 		private bool _prevArticlesExists = true;
-		private bool _startPage = false;
 		private bool _headerAdded = false;
 		private string _header = null;
 		private BottomToolbarView _bottomBar = null;
 		private UIActivityIndicatorView _loadingIndicator;
 		private bool _fromAnother = false;
 		private bool _firstLoad = true;
+		private Filter Filter = Filter.None;
+		private UIInterfaceOrientation _currentOrientation;
 
 		#endregion
 
@@ -53,6 +54,7 @@ namespace ItExpert
         public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
         {
             base.DidRotate(fromInterfaceOrientation);
+			_currentOrientation = InterfaceOrientation;
 			var screenWidth =
 				ApplicationWorker.Settings.GetScreenWidthForScreen(
 					(int)View.Bounds.Width);
@@ -150,12 +152,258 @@ namespace ItExpert
 		public override void ViewWillAppear (bool animated)
 		{
 			base.ViewWillAppear (animated);
+			if (!_firstLoad && _currentOrientation != InterfaceOrientation)
+			{
+				_currentOrientation = InterfaceOrientation;
+				var screenWidth =
+					ApplicationWorker.Settings.GetScreenWidthForScreen(
+						(int)View.Bounds.Width);
+				var banners = ApplicationWorker.Db.LoadBanners();
+				Banner banner = null;
+				if (banners != null && banners.Any())
+				{
+					banner = banners.FirstOrDefault(x => x.ScreenWidth == screenWidth);
+					if (banner != null)
+					{
+						var pictures = ApplicationWorker.Db.GetPicturesForParent(banner.Id);
+						if (pictures != null && pictures.Any())
+						{
+							var picture = pictures.FirstOrDefault(x => x.Type == PictypeType.Banner);
+							if (picture != null)
+							{
+								banner.Picture = picture;
+							}
+						}
+					}
+				}
+				if (banner != null)
+				{
+					InitBanner(banner);
+				}
+				UpdateViewsLayout ();
+			}
+			if (Filter == Filter.Section)
+			{
+				_bottomBar.TrendsButton.SetActiveState (false);
+				_bottomBar.NewsButton.SetActiveState (true);
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					var connectAccept = IsConnectionAccept();
+					if (!connectAccept)
+					{
+						//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+						//						ToastLength.Long).Show();
+						return;
+					}
+					var section = ApplicationWorker.Db.GetSection(_sectionId);
+					if (section != null)
+					{
+						_headerAdded = true;
+						_header = section.Name;
+					}
+					_prevArticlesExists = true;
+					_isLoadingData = true;
+					if (_articles != null)
+					{
+						_articles.Clear();
+					}
+					if (_articlesTableView != null && _articlesTableView.Source != null)
+					{
+						if (_articlesTableView.Source is DoubleArticleTableSource)
+						{
+							(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+						}
+					}
+					_articlesTableView.ReloadData ();
+					_search = null;
+					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+							_sectionId, -1, _search));
+					SetLoadingImageVisible(true);
+					return;
+				}
+				else
+				{
+					//				Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
+					//					ToastLength.Long).Show();
+					return;
+				}
+			}
+			if (Filter == Filter.Author)
+			{
+				_bottomBar.TrendsButton.SetActiveState (false);
+				_bottomBar.NewsButton.SetActiveState (true);
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					var connectAccept = IsConnectionAccept();
+					if (!connectAccept)
+					{
+						//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+						//						ToastLength.Long).Show();
+						return;
+					}
+					var author = ApplicationWorker.Db.GetAuthor(_authorId);
+					if (author != null)
+					{
+						_headerAdded = true;
+						_header = author.Name;
+					}
+					_prevArticlesExists = true;
+					_isLoadingData = true;
+					if (_articles != null)
+					{
+						_articles.Clear();
+					}
+					if (_articlesTableView != null && _articlesTableView.Source != null)
+					{
+						if (_articlesTableView.Source is DoubleArticleTableSource)
+						{
+							(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+						}
+					}
+					_articlesTableView.ReloadData ();
+					_search = null;
+					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+							_sectionId, _authorId, _search));
+					SetLoadingImageVisible(true);
+					return;
+				}
+				else
+				{
+					//				Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
+					//					ToastLength.Long).Show();
+					return;
+				}
+			}
+			if (!_firstLoad && !_isLoadingData)
+			{
+				if (_allArticles == null || !_allArticles.Any ())
+					return;
+				var position = -1;
+				Article selectArticle = null;
+				var selectItemId = -1;
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is ArticlesTableSource)
+					{
+						selectItemId = (_articlesTableView.Source as ArticlesTableSource).GetSelectItemId ();
+						(_articlesTableView.Source as ArticlesTableSource).ResetSelectItem ();
+					}
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						selectItemId = (_articlesTableView.Source as DoubleArticleTableSource).GetSelectItemId ();
+						(_articlesTableView.Source as DoubleArticleTableSource).ResetSelectItem ();
+					}
+				}
+				if (selectItemId != -1)
+				{
+					for (var i = 0; i < _articles.Count (); i++)
+					{
+						if (_articles [i].Id == selectItemId)
+						{
+							position = i;
+							break;
+						}
+					}
+					if (ApplicationWorker.Settings.HideReaded)
+					{
+						if (position > 0)
+						{
+							var isFound = false;
+							while (!isFound)
+							{
+								position--;
+								if (position == 0)
+								{
+									break;
+								}
+								if ((_articles [position].ArticleType != ArticleType.Magazine &&
+								    _articles [position].ArticleType != ArticleType.Portal) &&
+								    !_articles [position].IsReaded)
+								{
+									isFound = true;
+									selectArticle = _articles [position];
+								}
+							}
+						}
+					}
+				}
+				_articles.Clear ();
+				if (ApplicationWorker.Settings.HideReaded)
+				{
+					var buffer = _allArticles.Where (x => !x.IsReaded).ToList ();
+					if (buffer.Count () < 6)
+					{
+						var count = 6 - buffer.Count ();
+						buffer.AddRange (_allArticles.Where (x => x.IsReaded).Take (count));
+						buffer = buffer.OrderByDescending (x => x.ActiveFrom).ToList ();
+					}
+					_articles.AddRange (buffer);
+					if (selectArticle != null && position > 0)
+					{
+						position = 0;
+						for (var i = 0; i < _articles.Count (); i++)
+						{
+							if (_articles [i].Id == selectArticle.Id)
+							{
+								position = i;
+								break;
+							}
+						}
+					}
+				}
+				else
+				{
+					_articles.AddRange (_allArticles.ToList ());
+				}
+				if (_headerAdded && !string.IsNullOrWhiteSpace (_header))
+				{
+					_articles.Insert (0,
+						new Article () { ArticleType = ArticleType.Header, Name = _header });
+				}
+				//Добавление расширенного объекта: баннера
+				if (_banner != null)
+				{
+					_articles.Insert (0,
+						new Article () { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+				}
+				//Добавление кнопки Загрузить еще
+				if (_addPreviousArticleButton != null && _prevArticlesExists)
+				{
+					_articles.Add (new Article () {
+						ArticleType = ArticleType.PreviousArticlesButton,
+						ExtendedObject = _addPreviousArticleButton
+					});
+				}
+				UpdateViewsLayout ();
+				if (ApplicationWorker.Settings.HideReaded && position > 0)
+				{
+					if (!UserInterfaceIdiomIsPhone)
+					{
+						if (_banner != null && _addPreviousArticleButton != null)
+						{
+							position = (int)Math.Floor ((double)(position - 2) / 2);
+						}
+						else
+						{
+							position = (int)Math.Floor ((double)position / 2);
+						}
+					}
+					//Прокрутить список к position
+				}
+			}
 			if (_firstLoad)
 			{
+				_currentOrientation = InterfaceOrientation;
 				Initialize ();
 				_firstLoad = false;
+				UpdateViewsLayout ();
 			}
-			UpdateViewsLayout ();
 		}
 
 		public override void ViewDidAppear (bool animated)
@@ -193,7 +441,6 @@ namespace ItExpert
 
 		void Initialize()
 		{
-			_startPage = true;
 			ClearCache ();
 			if (string.IsNullOrWhiteSpace(ApplicationWorker.Css))
 			{
@@ -343,7 +590,6 @@ namespace ItExpert
 				}
                 _banner = new BannerGifView (banner, koefScaling, screenWidth);
 			}
-			//Прикрепить обработчик клика по баннеру
 		}
 
 		void InitLoadingProgress()
@@ -495,6 +741,7 @@ namespace ItExpert
 
 		private void ButNewsOnClick(object sender, EventArgs e)
 		{
+			Filter = Filter.None;
 			_headerAdded = false;
 			_header = null;
 			PageNewsActivate();
@@ -502,6 +749,7 @@ namespace ItExpert
 
 		private void ButTrendsOnClick(object sender, EventArgs e)
 		{
+			Filter = Filter.None;
 			_headerAdded = false;
 			_header = null;
 			PageTrendsActivate();
@@ -743,20 +991,25 @@ namespace ItExpert
 			}
 			if (page == Page.Magazine)
 			{
+				_currentPage = Page.None;
 				ButMagazineOnClick(null, null);
 			}
 			if (page == Page.Archive)
 			{
+				_currentPage = Page.None;
 				ButArchiveOnClick(null, null);
 			}
 			if (page == Page.Favorite)
 			{
+				_currentPage = Page.None;
 				ButFavoriteOnClick(null, null);
 			}
 		}
 
 		public void ShowFromAnotherScreen(Page pageToShow)
 		{
+			_headerAdded = false;
+			_header = null;
 			var sectionChange = false;
 			var blockChange = false;
 			var sectionId = 0;
@@ -795,8 +1048,9 @@ namespace ItExpert
 					return;
 				}
 			}
-			if (sectionChange || blockChange || _search != null)
+			if (sectionChange || blockChange || _search != null || _currentPage == Page.None || Filter != Filter.None)
 			{
+				Filter = Filter.None;
 				_search = null;
 				if (_articles != null)
 				{
@@ -850,110 +1104,21 @@ namespace ItExpert
 		}
 
 		public void FilterAuthor(int sectionId, int blockId, int authorId)
-		{
+		{	
 			_sectionId = sectionId;
 			_blockId = blockId;
 			_authorId = authorId;
-			_bottomBar.TrendsButton.SetActiveState (false);
-			_bottomBar.NewsButton.SetActiveState (true);
 			_currentPage = Page.News;
-			if (!ApplicationWorker.Settings.OfflineMode)
-			{
-				var connectAccept = IsConnectionAccept();
-				if (!connectAccept)
-				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-//						ToastLength.Long).Show();
-					return;
-				}
-				var author = ApplicationWorker.Db.GetAuthor(_authorId);
-				if (author != null)
-				{
-					_headerAdded = true;
-					_header = author.Name;
-				}
-				_prevArticlesExists = true;
-				_isLoadingData = true;
-				if (_articles != null)
-				{
-					_articles.Clear();
-				}
-				if (_articlesTableView != null && _articlesTableView.Source != null)
-				{
-					if (_articlesTableView.Source is DoubleArticleTableSource)
-					{
-						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
-					}
-				}
-				_articlesTableView.ReloadData ();
-				_search = null;
-				ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
-				ThreadPool.QueueUserWorkItem(
-					state =>
-					ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
-						_sectionId, _authorId, _search));
-				SetLoadingImageVisible(true);
-				return;
-			}
-			else
-			{
-//				Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
-//					ToastLength.Long).Show();
-				return;
-			}
+			Filter = Filter.Author;
 		}
 
 		public void FilterSection(int sectionId, int blockId)
 		{
 			_sectionId = sectionId;
 			_blockId = blockId;
-			_bottomBar.TrendsButton.SetActiveState (false);
-			_bottomBar.NewsButton.SetActiveState (true);
+			_authorId = -1;
 			_currentPage = Page.News;
-			if (!ApplicationWorker.Settings.OfflineMode)
-			{
-				var connectAccept = IsConnectionAccept();
-				if (!connectAccept)
-				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-//						ToastLength.Long).Show();
-					return;
-				}
-				var section = ApplicationWorker.Db.GetSection(_sectionId);
-				if (section != null)
-				{
-					_headerAdded = true;
-					_header = section.Name;
-				}
-				_prevArticlesExists = true;
-				_isLoadingData = true;
-				if (_articles != null)
-				{
-					_articles.Clear();
-				}
-				if (_articlesTableView != null && _articlesTableView.Source != null)
-				{
-					if (_articlesTableView.Source is DoubleArticleTableSource)
-					{
-						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
-					}
-				}
-				_articlesTableView.ReloadData ();
-				_search = null;
-				ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
-				ThreadPool.QueueUserWorkItem(
-					state =>
-					ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
-						_sectionId, -1, _search));
-				SetLoadingImageVisible(true);
-				return;
-			}
-			else
-			{
-//				Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
-//					ToastLength.Long).Show();
-				return;
-			}
+			Filter = Filter.Section;
 		}
 
 		private void UpdateData(ArticleEventArgs e)

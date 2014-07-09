@@ -741,18 +741,21 @@ namespace ItExpert
 					_articleSectionView.UserInteractionEnabled = true;
 					UITapGestureRecognizer tap = new UITapGestureRecognizer (() =>
 					{
-						var sectionString = section.Split(new []{"/"}, StringSplitOptions.RemoveEmptyEntries).Last();
-						BlackAlertView alertView = new BlackAlertView (String.Format ("Раздел: {0}", sectionString.Trim ()), String.Format ("Посмотреть все статьи из раздела: {0}?", sectionString.Trim ()), "Нет", "Да");
-
-						alertView.ButtonPushed += (sender, e) =>
+						if (!ApplicationWorker.Settings.OfflineMode)
 						{
-							if (e.ButtonIndex == 1)
-							{
-								FilterSection ();
-							}
-						};
+							var sectionString = section.Split (new []{ "/" }, StringSplitOptions.RemoveEmptyEntries).Last ();
+							BlackAlertView alertView = new BlackAlertView (String.Format ("Раздел: {0}", sectionString.Trim ()), String.Format ("Посмотреть все статьи из раздела: {0}?", sectionString.Trim ()), "Нет", "Да");
 
-						alertView.Show ();
+							alertView.ButtonPushed += (sender, e) =>
+							{
+								if (e.ButtonIndex == 1)
+								{
+									FilterSection ();
+								}
+							};
+
+							alertView.Show ();
+						}
 					});
 
 					_articleSectionView.AddGestureRecognizer (tap);
@@ -832,21 +835,25 @@ namespace ItExpert
 
 					UITapGestureRecognizer tap = new UITapGestureRecognizer (() =>
 					{
-						var authors = _article.Authors;
-						var shortAuthors = authors.
-						Select (x => x.Name.Split (new [] { "," }, StringSplitOptions.RemoveEmptyEntries) [0].Trim ()).ToArray ();
-						BlackAlertView alertView = new BlackAlertView ("Выберете автора", "Отмена", shortAuthors, "Поиск");
-
-						alertView.ButtonPushed += (sender, e) =>
+						if (!ApplicationWorker.Settings.OfflineMode)
 						{
-							if (e.ButtonIndex == 1)
-							{
-								var authorId = authors [e.SelectedRadioButton].Id;
-								FilterAuthor (authorId);
-							}
-						};
+							var authors = _article.Authors;
+							var shortAuthors = authors.
+								Select (x => x.Name.Split (new [] { "," }, 
+								StringSplitOptions.RemoveEmptyEntries) [0].Trim ()).ToArray ();
+							BlackAlertView alertView = new BlackAlertView ("Выберете автора", "Отмена", shortAuthors, "Поиск");
 
-						alertView.Show ();
+							alertView.ButtonPushed += (sender, e) =>
+							{
+								if (e.ButtonIndex == 1)
+								{
+									var authorId = authors [e.SelectedRadioButton].Id;
+									FilterAuthor (authorId);
+								}
+							};
+
+							alertView.Show ();
+						}
 					});
 
 					_articleAuthorView.AddGestureRecognizer (tap);
