@@ -791,16 +791,34 @@ namespace ItExpert
                     }
                 }
 
-                var image = ItExpertHelper.GetImageFromBase64String(picture.Data, scale);
+                if (_article.AwardsPicture != null && _article.AwardsPicture.Data != null)
+                {
+                    UIImage awardImage = ItExpertHelper.GetImageFromBase64String(_article.AwardsPicture.Data);
 
-				_articleImageView = new UIImageView(new RectangleF((View.Frame.Width - image.Size.Width) / 2, 
-                    top, image.Size.Width, image.Size.Height));
+                    _articleAwardImageView = new UIImageView(new RectangleF(0, 0, awardImage.Size.Width, awardImage.Size.Height));
 
-                _articleImageView.Image = image;
+                    _articleAwardImageView.Image = awardImage;
+                }
 
-                _scrollView.Add(_articleImageView);
+                UIImage previewImage = ItExpertHelper.GetImageFromBase64String(picture.Data, scale);
 
-                return _articleImageView.Frame.Bottom + _padding.Bottom;
+                _articleImageView = new UIImageView(new RectangleF(0, 0, previewImage.Size.Width, previewImage.Size.Height));
+
+                _articleImageView.Image = previewImage;
+
+                _articleImagesContainer = new UIView(new RectangleF(View.Frame.Width / 2 - _articleImageView.Frame.Width / 2,
+                    top, _articleImageView.Frame.Width, _articleImageView.Frame.Height));
+
+                _articleImagesContainer.Add(_articleImageView);
+
+                if (_articleAwardImageView != null)
+                {
+                    _articleImagesContainer.Add(_articleAwardImageView);
+                }
+
+                _scrollView.Add(_articleImagesContainer);
+
+                return _articleImagesContainer.Frame.Bottom + _padding.Bottom;
             }
 
             return top;
@@ -912,7 +930,9 @@ namespace ItExpert
 
         private UIScrollView _scrollView;
         private UITextView _articleSectionView;
+        private UIView _articleImagesContainer;
 		private UIImageView _articleImageView;
+        private UIImageView _articleAwardImageView;
         private UITextView _articleHeaderView;
         private UITextView _articleAuthorView;
 		private UIWebView _articleTextWebView;

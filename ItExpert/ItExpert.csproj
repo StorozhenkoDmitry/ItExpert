@@ -189,6 +189,8 @@
     <Compile Include="Logic\ArticleTableSource\DoubleArticle.cs" />
     <Compile Include="Logic\ArticleTableSource\DoubleCellPushedEventArgs.cs" />
     <Compile Include="Enum\Filter.cs" />
+    <Compile Include="Logic\Toast.cs" />
+    <Compile Include="Logic\BlackAlertView\ToastLength.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

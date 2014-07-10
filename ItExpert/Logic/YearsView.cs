@@ -24,6 +24,41 @@ namespace ItExpert
             Add(_scrollView);
         }
 
+        public override RectangleF Frame
+        {
+            get
+            {
+                return base.Frame;
+            }
+            set
+            {
+                base.Frame = value;
+
+                if (_scrollView != null)
+                {
+                    _scrollView.Frame = Bounds;
+                    _scrollView.ContentSize = new SizeF (GetButtonsWidth(), Frame.Height);
+                }
+            }
+        }
+
+        public float GetButtonsWidth()
+        {
+            if (_scrollView != null && _buttons != null)
+            {
+                float totalWidth = 0;
+
+                foreach (var button in _buttons)
+                {
+                    totalWidth += button.Frame.Width;
+                }
+
+                return totalWidth;
+            }
+
+            return 0;
+        }
+
         public void AddButtons(List<UIButton> buttons)
 		{
 			ItExpertHelper.RemoveSubviews (_scrollView);

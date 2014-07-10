@@ -37,6 +37,23 @@ namespace ItExpert
             _padding = new UIEdgeInsets(5, 10, 5, 5);
         }
 
+        public override RectangleF Frame
+        {
+            get
+            {
+                return base.Frame;
+            }
+            set
+            {
+                base.Frame = value;
+
+                if (_scrollView != null)
+                {
+                    _scrollView.Frame = new RectangleF(0, 0, Frame.Width, Frame.Height);
+                }
+            }
+        }
+
         public void AddMagazineViews(List<Magazine> magazines)
         {
             ItExpertHelper.RemoveSubviews(_scrollView);

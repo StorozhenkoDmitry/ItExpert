@@ -275,8 +275,8 @@ namespace ItExpert
 				}
 				else
 				{
-					//				Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
-					//					ToastLength.Long).Show();
+                    Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
+                        ToastLength.Long).Show();
 					return;
 				}
 			}

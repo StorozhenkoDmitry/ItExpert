@@ -42,6 +42,21 @@ namespace ItExpert
 		public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
 		{
 			base.DidRotate (fromInterfaceOrientation);
+
+            if (fromInterfaceOrientation == UIInterfaceOrientation.Portrait || fromInterfaceOrientation == UIInterfaceOrientation.PortraitUpsideDown)
+            {
+                _yearsView.Frame = new RectangleF(Math.Max(0, View.Bounds.Width / 2 - _yearsView.GetButtonsWidth() / 2), NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight,
+                    View.Frame.Width, 40);
+            }
+            else
+            {
+                _yearsView.Frame = new RectangleF(0, NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight,
+                    View.Frame.Width, 40);
+            }
+
+            _archiveView.Frame = new RectangleF(0, _yearsView.Frame.Bottom, View.Frame.Width, View.Frame.Height - _yearsView.Frame.Bottom);
+
+            _archiveView.AddMagazineViews(_magazines);
 		}
 
 		public override void ViewDidLoad ()
