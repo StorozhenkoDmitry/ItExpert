@@ -30,7 +30,6 @@ namespace ItExpert
             _textView.BackgroundColor = UIColor.Clear;
 
             Add(_textView);
-
             _disappearTimer = new Timer(duration);
 
             _disappearTimer.Elapsed += OnDisappearTimerTick;
@@ -64,7 +63,7 @@ namespace ItExpert
 
             _disappearTimer.Start();
 
-            _parentView.View.Add(this);
+            _parentView.Add(this);
         }
 
         private void OnDisappearTimerTick(object sender, ElapsedEventArgs e)
@@ -74,15 +73,13 @@ namespace ItExpert
             _disappearTimer.Dispose();
             _disappearTimer = null;
 
-            _parentView = null;
-
-            // зависает
-            RemoveFromSuperview();
-
-            _textView.Dispose();
-            _textView = null;
-
-            Dispose();
+			InvokeOnMainThread (() =>
+			{
+				RemoveFromSuperview();
+				_textView.Dispose();
+				_textView = null;
+				Dispose();
+			});
         }
 
         private UIEdgeInsets _padding;

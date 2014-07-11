@@ -188,14 +188,14 @@ namespace ItExpert
 				_bottomBar.NewsButton.SetActiveState (true);
 				if (!ApplicationWorker.Settings.OfflineMode)
 				{
-					var connectAccept = IsConnectionAccept();
+					var connectAccept = IsConnectionAccept ();
 					if (!connectAccept)
 					{
-						//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-						//						ToastLength.Long).Show();
+						Toast.MakeText (this, "Нет доступных подключений, для указанных в настройках",
+							ToastLength.Long).Show ();					
 						return;
 					}
-					var section = ApplicationWorker.Db.GetSection(_sectionId);
+					var section = ApplicationWorker.Db.GetSection (_sectionId);
 					if (section != null)
 					{
 						_headerAdded = true;
@@ -205,7 +205,7 @@ namespace ItExpert
 					_isLoadingData = true;
 					if (_articles != null)
 					{
-						_articles.Clear();
+						_articles.Clear ();
 					}
 					if (_articlesTableView != null && _articlesTableView.Source != null)
 					{
@@ -217,17 +217,17 @@ namespace ItExpert
 					_articlesTableView.ReloadData ();
 					_search = null;
 					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
-					ThreadPool.QueueUserWorkItem(
+					ThreadPool.QueueUserWorkItem (
 						state =>
-						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+						ApplicationWorker.RemoteWorker.BeginGetNews (ApplicationWorker.Settings, -1, -1, _blockId,
 							_sectionId, -1, _search));
-					SetLoadingImageVisible(true);
+					SetLoadingImageVisible (true);
 					return;
 				}
 				else
 				{
-					//				Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
-					//					ToastLength.Long).Show();
+					Toast.MakeText (this, "Поиск не доступен в оффлайн режиме",
+						ToastLength.Long).Show ();
 					return;
 				}
 			}
@@ -240,8 +240,8 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-						//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-						//						ToastLength.Long).Show();
+						Toast.MakeText (this, "Нет доступных подключений, для указанных в настройках",
+							ToastLength.Long).Show ();
 						return;
 					}
 					var author = ApplicationWorker.Db.GetAuthor(_authorId);
@@ -615,11 +615,11 @@ namespace ItExpert
 					var dbSizeLimit = ApplicationWorker.Settings.GetDbLimitSizeInMb()*(1024*1024);
 					if (dbSize > dbSizeLimit)
 					{
-//						InvokeOnMainThread(
-//							() => Toast.MakeText(this, "Очищается кэш, пожалуйста подождите", ToastLength.Short).Show());
+						InvokeOnMainThread(
+							() => Toast.MakeText(this, "Очищается кэш, пожалуйста подождите", ToastLength.Short).Show());
 						ApplicationWorker.Db.ClearCache();
-//						InvokeOnMainThread(
-//							() => Toast.MakeText(this, "Кэш очищен", ToastLength.Short).Show());
+						InvokeOnMainThread(
+							() => Toast.MakeText(this, "Кэш очищен", ToastLength.Short).Show());
 					}
 				};
 				ThreadPool.QueueUserWorkItem(state => action());
@@ -651,7 +651,7 @@ namespace ItExpert
 				}
 				else
 				{
-					//Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
 				SetLoadingImageVisible(false);
 			});
@@ -677,7 +677,7 @@ namespace ItExpert
 				}
 				else
 				{
-					//Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
 			});
 		}
@@ -704,8 +704,8 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-//						ToastLength.Short).Show();
+					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+						ToastLength.Short).Show();
 					return;
 				}
 				_isLoadingData = true;
@@ -927,7 +927,7 @@ namespace ItExpert
 				{
 					if (e == null)
 					{
-//						Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+						Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 					}
 					else
 					{
@@ -963,7 +963,7 @@ namespace ItExpert
 				{
 					if (e == null)
 					{
-//						Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+						Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 					}
 					else
 					{
@@ -1043,8 +1043,8 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-//						ToastLength.Long).Show();
+					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+						ToastLength.Long).Show();
 					return;
 				}
 			}
@@ -1173,8 +1173,8 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-//							.Show();
+						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+							.Show();
 						return;
 					}
 				}
@@ -1249,8 +1249,8 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-//							.Show();
+						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+							.Show();
 						return;
 					}
 				}
@@ -1311,7 +1311,7 @@ namespace ItExpert
 		{
 			if (lst == null || !lst.Any())
 			{
-				//Toast.MakeText(this, "Статей нет", ToastLength.Short).Show();
+				Toast.MakeText(this, "Статей нет", ToastLength.Short).Show();
 				_prevArticlesExists = false;
 				return;
 			} 
@@ -1360,7 +1360,7 @@ namespace ItExpert
 		{
 			if (lst == null || !lst.Any())
 			{
-				//				Toast.MakeText(this, "Больше статей нет", ToastLength.Short).Show();
+				Toast.MakeText(this, "Больше статей нет", ToastLength.Short).Show();
 				_prevArticlesExists = false;
 				if (_addPreviousArticleButton != null && _articles.Any())
 				{

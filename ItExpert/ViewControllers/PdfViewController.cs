@@ -30,7 +30,12 @@ namespace ItExpert
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
+			// Perform any additional setup after loading the view, typically from a nib.
+		}
 
+		public override void ViewWillAppear (bool animated)
+		{
+			base.ViewWillAppear (animated);
 			Initialize ();
 			if (!string.IsNullOrEmpty (_path))
 			{
@@ -38,7 +43,14 @@ namespace ItExpert
 				_webView.LoadRequest(new NSUrlRequest(new NSUrl(localDocUrl, false)));
 				_webView.ScalesPageToFit = true;
 			}
-			// Perform any additional setup after loading the view, typically from a nib.
+		}
+
+		public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+		{
+			base.DidRotate(fromInterfaceOrientation);
+			var topOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
+			_webView.Frame = new RectangleF (0, topOffset, View.Bounds.Width, 
+				View.Bounds.Height - topOffset); 
 		}
 
 		#endregion

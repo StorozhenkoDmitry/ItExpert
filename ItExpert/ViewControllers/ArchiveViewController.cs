@@ -17,16 +17,12 @@ namespace ItExpert
 		#region Fields
 
 		private int _currentYear = -1;
-		private int _currentDownloadId = -1;
 		private MagazineView _downloadMagazineView;
-		private bool _toMenu = false;
-		private bool _toSettings = false;
 		private List<Magazine> _magazines = null; 
         private YearsView _yearsView;
         private ArchiveView _archiveView;
 		private UIActivityIndicatorView _loadingIndicator;
 		private UIActivityIndicatorView _loadingPdfIndicator;
-		private List<MagazineYear> _years;
 		#endregion
 
 		#region UIViewController members
@@ -113,8 +109,8 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-//						.Show();
+					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+						.Show();
 					return;
 				}
 				SetLoadingImageVisible (true);
@@ -129,7 +125,6 @@ namespace ItExpert
 				{
 					List<Magazine> previewList = null;
 					years = years.OrderByDescending(x => x.Value).ToList();
-					_years = years;
 					var yearButtons = new List<UIButton>();
 					for (var i = 0; i < years.Count(); i++)
 					{
@@ -199,7 +194,6 @@ namespace ItExpert
 					if (years != null && years.Any())
 					{
 						years = years.OrderByDescending(x => x.Value).ToList();
-						_years = years;
                         List<UIButton> yearButtons = new List<UIButton>();
 						for (var i = 0; i < years.Count(); i++)
 						{
@@ -229,7 +223,7 @@ namespace ItExpert
 				}
 				else
 				{
-					//					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
 				}
 				SetLoadingImageVisible (false);
 			});
@@ -257,8 +251,8 @@ namespace ItExpert
 						var connectAccept = IsConnectionAccept();
 						if (!connectAccept)
 						{
-//							Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-//								ToastLength.Long).Show();
+							Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+								ToastLength.Long).Show();
 							return;
 						}
 						SetLoadingImageVisible (true);
@@ -299,7 +293,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
 					_currentYear = -1;
 				}
 				SetLoadingImageVisible (false);
@@ -369,7 +363,6 @@ namespace ItExpert
 				InvokeOnMainThread(() =>
 				{
 					SetLoadingProgressVisible(false);
-					_currentDownloadId = -1;
 					_downloadMagazineView = null;
 				});
 				return;
@@ -400,7 +393,6 @@ namespace ItExpert
 //					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
 				}
 				SetLoadingProgressVisible(false);
-				_currentDownloadId = -1;
 				_downloadMagazineView = null;
 			});
 		}
@@ -419,7 +411,7 @@ namespace ItExpert
 			magazineView.Magazine.Exists = false;
 			ApplicationWorker.Db.UpdateMagazine(magazineView.Magazine);
 			magazineView.UpdateMagazineExists(false);
-//			Toast.MakeText(this, "Файл удален", ToastLength.Short).Show();
+			Toast.MakeText(this, "Файл удален", ToastLength.Short).Show();
 		}
 
 		private void OpenPdf(Magazine magazine)
@@ -429,7 +421,7 @@ namespace ItExpert
 			var path = Path.Combine(folder + Settings.PdfFolder, fileName);
 			if (!File.Exists(path))
 			{
-				//Toast.MakeText(this, "Файл не найден", ToastLength.Long).Show();
+				Toast.MakeText(this, "Файл не найден", ToastLength.Long).Show();
 				return;
 			}
 			PdfViewController showController = null;
@@ -510,12 +502,12 @@ namespace ItExpert
 		{
 			if (ApplicationWorker.Settings.OfflineMode)
 			{
-//				Toast.MakeText(this, "Загрузка Pdf невозможна в оффлайн режиме", ToastLength.Long).Show();
+				Toast.MakeText(this, "Загрузка Pdf невозможна в оффлайн режиме", ToastLength.Long).Show();
 				return;   
 			}
 			if (string.IsNullOrWhiteSpace(magazineView.Magazine.PdfFileSrc))
 			{
-//				Toast.MakeText(this, "Pdf файл недоступен", ToastLength.Long).Show();
+				Toast.MakeText(this, "Pdf файл недоступен", ToastLength.Long).Show();
 				return;
 			}
 			if (!ApplicationWorker.PdfLoader.IsOperation())
@@ -523,18 +515,17 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long).Show();
+					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long).Show();
 					return;
 				}
 				_downloadMagazineView = magazineView;
 				var magazine = magazineView.Magazine;
 				SetLoadingProgressVisible(true);
-				_currentDownloadId = magazine.Id;
 				ThreadPool.QueueUserWorkItem(state => ApplicationWorker.PdfLoader.BeginGetMagazinePdf(magazine.PdfFileSrc));
 			}
 			else
 			{
-//				Toast.MakeText(this, "Идет загрузка... Дождитесь завершения", ToastLength.Short).Show();
+				Toast.MakeText(this, "Идет загрузка... Дождитесь завершения", ToastLength.Short).Show();
 			}
 		}
 

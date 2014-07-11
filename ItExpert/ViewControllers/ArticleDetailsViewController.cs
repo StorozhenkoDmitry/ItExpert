@@ -50,12 +50,6 @@ namespace ItExpert
 		{
 			AutomaticallyAdjustsScrollViewInsets = false;
 
-			//Tim
-			if (_fromFavorite)
-			{
-				//ссылки не интерактивны
-			}
-
 			ShowSplash(true);
 
 			_padding = new UIEdgeInsets (8, 8, 8, 8);
@@ -122,8 +116,8 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-//							ToastLength.Long).Show();
+						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+							ToastLength.Long).Show();
 						return;
 					}
 					_article = article;
@@ -158,7 +152,7 @@ namespace ItExpert
 						ShowLoadPdfDialog ();
 						return;
 					}
-//					Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
+					Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
 					DismissViewController (true, null);
 				}
 			}
@@ -208,7 +202,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 					_isLoading = false;
 				}
 			});
@@ -258,7 +252,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 					_isLoading = false;
 				}
 			});
@@ -329,8 +323,8 @@ namespace ItExpert
 							var connectAccept = IsConnectionAccept();
 							if (!connectAccept)
 							{
-//								Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-//									ToastLength.Long).Show();
+								Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+									ToastLength.Long).Show();
 								return;
 							}
 							_article = article;
@@ -365,7 +359,7 @@ namespace ItExpert
 									ShowLoadPdfDialog ();
 									return;
 								}
-//								Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
+								Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
 								DismissViewController(true, null);
 							});
 						}
@@ -623,7 +617,7 @@ namespace ItExpert
 					ShowLoadPdfDialog ();
 					return;
 				}
-//				Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
+				Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
 				DismissViewController(true, null);
 				return;
 			}

@@ -89,7 +89,11 @@ namespace ItExpert
 		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 		{
             DoubleArticleTableViewCell cell = tableView.DequeueReusableCell (_cellIdentifier) as DoubleArticleTableViewCell;
-
+			if (cell != null)
+			{
+				cell.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
+				cell.ContentView.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
+			}
             if (cell == null)
             {
                 cell = CreateCell(tableView);

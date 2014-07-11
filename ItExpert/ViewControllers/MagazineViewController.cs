@@ -96,7 +96,7 @@ namespace ItExpert
 			{
 				if (ApplicationWorker.Settings.OfflineMode)
 				{
-					//					Toast.MakeText(this, "Поиск невозможен в оффлайн режиме", ToastLength.Long).Show();
+					Toast.MakeText (this, "Поиск невозможен в оффлайн режиме", ToastLength.Long).Show ();
 					_rubricId = -1;
 					return;
 				}
@@ -113,8 +113,8 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-						//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-						//							.Show();
+						Toast.MakeText (this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+							.Show ();
 						return;
 					}
 					_headerAdded = true;
@@ -478,8 +478,8 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-//							.Show();
+						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+							.Show();
 						return;
 					}
 					ApplicationWorker.RemoteWorker.BannerGetted += StartOnBannerGetted;
@@ -623,8 +623,8 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-//						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-//							.Show();
+						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+							.Show();
 						return;
 					}
 					ApplicationWorker.RemoteWorker.MagazinesPriviewGetted += OnMagazinesPriviewGetted;
@@ -677,7 +677,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при загрузке Баннера", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при загрузке Баннера", ToastLength.Short).Show();
 				}
 				InitData();
 			});
@@ -709,7 +709,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
 				LoadMagazineArticles();
 			});
@@ -775,7 +775,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
 				SetLoadingImageVisible (false);
 			});
@@ -788,7 +788,7 @@ namespace ItExpert
 			var connectAccept = IsConnectionAccept();
 			if (!connectAccept)
 			{
-//				Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long).Show();
+				Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long).Show();
 				return;
 			}
 			var button = sender as UIButton;
@@ -830,7 +830,7 @@ namespace ItExpert
 				{
 					if (!e.Articles.Any())
 					{
-//						Toast.MakeText(this, "Больше статей нет", ToastLength.Short).Show();
+						Toast.MakeText(this, "Больше статей нет", ToastLength.Short).Show();
 						_prevArticlesExists = false;
 						if (_addPreviousArticleButton != null && _articles.Any())
 						{
@@ -959,7 +959,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
 				}
 				SetLoadingImageVisible (false);
 			});
@@ -1056,11 +1056,6 @@ namespace ItExpert
 				_header = null;
 				_prevArticlesExists = true;
 				_rubricId = -1;
-				var action = MagazineAction.NoAction;
-				if (!_isRubricSearch)
-				{
-					action = _magazine.Exists ? MagazineAction.Open : MagazineAction.Download;
-				}
 				if (_articlesTableView.Source != null) 
 				{
 					if (_articlesTableView.Source is ArticlesTableSource)
@@ -1182,7 +1177,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
 				}
 				IsLoadingPdf = false;
 				if (_articlesTableView != null)
@@ -1224,7 +1219,7 @@ namespace ItExpert
 			var path = Path.Combine(folder + Settings.PdfFolder, fileName);
 			if (!File.Exists(path))
 			{
-				//Toast.MakeText(this, "Файл не найден", ToastLength.Long).Show();
+				Toast.MakeText(this, "Файл не найден", ToastLength.Long).Show();
 				return;
 			}
 			PdfViewController showController = null;
@@ -1254,12 +1249,12 @@ namespace ItExpert
 		{
 			if (ApplicationWorker.Settings.OfflineMode)
 			{
-//				Toast.MakeText(this, "Загрузка Pdf невозможна в оффлайн режиме", ToastLength.Long).Show();
+				Toast.MakeText(this, "Загрузка Pdf невозможна в оффлайн режиме", ToastLength.Long).Show();
 				return;
 			}
 			if (string.IsNullOrWhiteSpace(_magazine.PdfFileSrc))
 			{
-//				Toast.MakeText(this, "Pdf файл недоступен", ToastLength.Long).Show();
+				Toast.MakeText(this, "Pdf файл недоступен", ToastLength.Long).Show();
 				return;
 			}
 			if (!ApplicationWorker.PdfLoader.IsOperation())
@@ -1267,7 +1262,7 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long).Show();
+					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long).Show();
 					return;
 				}
 				IsLoadingPdf = true;
@@ -1280,7 +1275,7 @@ namespace ItExpert
 			}
 			else
 			{
-//				Toast.MakeText(this, "Идет загрузка... Дождитесь завершения", ToastLength.Short).Show();
+				Toast.MakeText(this, "Идет загрузка... Дождитесь завершения", ToastLength.Short).Show();
 			}
 		}
 
@@ -1316,8 +1311,8 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-//					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-//						.Show();
+					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+						.Show();
 					return;
 				}
 				if (_lastMagazine)
@@ -1331,7 +1326,6 @@ namespace ItExpert
 							_articles = _allArticles.Where(x => !x.IsReaded).ToList();
 							if (_articles.Count() < 6)
 							{
-//								Toast.MakeText(this, "Непрочитанных статей меньше 6, будут выведены некоторые прочитанные статьи", ToastLength.Short).Show();
 								var count = 6 - _articles.Count();
 								_articles.AddRange(_allArticles.Where(x => x.IsReaded).Take(count));
 								_articles = _articles.OrderByDescending(x => x.ActiveFrom).ToList();
