@@ -442,6 +442,9 @@ namespace ItExpert
 		void Initialize()
 		{
 			ClearCache ();
+
+            InitNavigationBar();
+
 			if (string.IsNullOrWhiteSpace(ApplicationWorker.Css))
 			{
 				var folder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
@@ -625,6 +628,18 @@ namespace ItExpert
 				ThreadPool.QueueUserWorkItem(state => action());
 			}
 		}
+
+        private void InitNavigationBar()
+        {
+            NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { NavigationBarButton.Menu, NavigationBarButton.Logo };
+
+            UIBarButtonItem space = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+            space.Width = -10;
+
+            NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.Settings, NavigationBarButton.Refresh,
+                NavigationBarButton.DumpInCache };
+        }
 
 		#endregion
 

@@ -109,6 +109,27 @@
     <BundleResource Include="Resources\RadioButtonChecked.png" />
     <BundleResource Include="Resources\RadioButtonUnchecked.png" />
     <BundleResource Include="Resources\Splash.png" />
+    <BundleResource Include="Resources\NavigationBar\Back.png" />
+    <BundleResource Include="Resources\NavigationBar\DumpInCache.png" />
+    <BundleResource Include="Resources\NavigationBar\Evernote.png" />
+    <BundleResource Include="Resources\NavigationBar\Facebook.png" />
+    <BundleResource Include="Resources\NavigationBar\Favorite.png" />
+    <BundleResource Include="Resources\NavigationBar\FavoriteOn.png" />
+    <BundleResource Include="Resources\NavigationBar\Google.png" />
+    <BundleResource Include="Resources\NavigationBar\Instapaper.png" />
+    <BundleResource Include="Resources\NavigationBar\InstapaperLogo.png" />
+    <BundleResource Include="Resources\NavigationBar\Linkedin.png" />
+    <BundleResource Include="Resources\NavigationBar\Logo.png" />
+    <BundleResource Include="Resources\NavigationBar\Mail.png" />
+    <BundleResource Include="Resources\NavigationBar\Menu.png" />
+    <BundleResource Include="Resources\NavigationBar\Pocket.png" />
+    <BundleResource Include="Resources\NavigationBar\Readability.png" />
+    <BundleResource Include="Resources\NavigationBar\Refresh.png" />
+    <BundleResource Include="Resources\NavigationBar\Search.png" />
+    <BundleResource Include="Resources\NavigationBar\Settings.png" />
+    <BundleResource Include="Resources\NavigationBar\Share.png" />
+    <BundleResource Include="Resources\NavigationBar\Twitter.png" />
+    <BundleResource Include="Resources\NavigationBar\Vk.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -191,6 +212,14 @@
     <Compile Include="Enum\Filter.cs" />
     <Compile Include="Logic\Toast.cs" />
     <Compile Include="Logic\BlackAlertView\ToastLength.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarButton.cs" />
+    <Compile Include="Logic\NavigationBar\MenuView.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsView.cs" />
+    <Compile Include="Logic\NavigationBar\CacheView.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsTableSource.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsItem.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsTableViewCell.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\BaseSettingsItemContentCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
@@ -205,6 +234,9 @@
     <Folder Include="Logic\" />
     <Folder Include="Logic\ArticleTableSource\" />
     <Folder Include="Logic\BlackAlertView\" />
+    <Folder Include="Resources\NavigationBar\" />
+    <Folder Include="Logic\NavigationBar\" />
+    <Folder Include="Logic\NavigationBar\SettingsTableSource\" />
   </ItemGroup>
   <ItemGroup>
     <XamarinComponentReference Include="json.net">

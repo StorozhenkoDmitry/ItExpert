@@ -26,6 +26,9 @@ namespace ItExpert
 
             UINavigationController rootController = new UINavigationController();
 
+            UINavigationBar.Appearance.BarTintColor = UIColor.Black;
+            UINavigationBar.Appearance.TintColor = UIColor.FromRGB(160, 160, 160);
+
             Window.RootViewController = rootController;
             Window.MakeKeyAndVisible();
 

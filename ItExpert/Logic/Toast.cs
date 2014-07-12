@@ -68,7 +68,6 @@ namespace ItExpert
 
         private void OnDisappearTimerTick(object sender, ElapsedEventArgs e)
         {
-
             _disappearTimer.Stop();
             _disappearTimer.Dispose();
             _disappearTimer = null;
