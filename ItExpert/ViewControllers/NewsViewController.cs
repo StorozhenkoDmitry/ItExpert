@@ -1454,7 +1454,7 @@ namespace ItExpert
 				{
 					(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
 				}
-				if (_articlesTableView.Source is DoubleArticleTableSource)
+				else if (_articlesTableView.Source is DoubleArticleTableSource)
 				{
 					(_articlesTableView.Source as DoubleArticleTableSource).PushDetailsView -= OnPushArticleDetails;
 				}

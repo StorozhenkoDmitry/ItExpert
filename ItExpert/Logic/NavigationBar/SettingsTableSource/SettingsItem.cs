@@ -6,10 +6,23 @@ namespace ItExpert
     {
         public enum ContentType
         {
+            Slider,
             Switch,
             RadioButton,
             Tap,
             Buttons
+        }
+
+        public SettingsItem(ContentType type, string title)
+        {
+            Type = type;
+            Title = title;
+        }
+
+        public SettingsItem(ContentType type, string[] buttons)
+        {
+            Type = type;
+            Buttons = buttons;
         }
 
         public ContentType Type
@@ -19,6 +32,12 @@ namespace ItExpert
         }
 
         public string Title
+        {
+            get;
+            set;
+        }
+
+        public string[] Buttons
         {
             get;
             set;

@@ -85,6 +85,20 @@ namespace ItExpert
                     UIButton button = GetButton("NavigationBar/Settings.png", 4);
 
                     _settingsButton = new UIBarButtonItem(button);
+
+                    _settingsView = new SettingsView();
+
+                    button.TouchUpInside += (sender, e) => 
+                    {
+                        _settingsWindow = new UIWindow(UIScreen.MainScreen.Bounds);
+
+                        _oldKeyWindow = UIApplication.SharedApplication.KeyWindow;
+
+                        _settingsWindow.WindowLevel = UIWindowLevel.Alert;
+                        _settingsWindow.RootViewController = _settingsView;
+
+                        _settingsWindow.MakeKeyAndVisible();
+                    };
                 }
 
                 return _settingsButton;
@@ -138,6 +152,10 @@ namespace ItExpert
         private static UIBarButtonItem _settingsButton;
         private static UIBarButtonItem _shareButton;
         private static UIBarButtonItem _logoImage;
+
+        private static UIWindow _oldKeyWindow;
+        private static UIWindow _settingsWindow;
+        private static SettingsView _settingsView;
     }
 }
 

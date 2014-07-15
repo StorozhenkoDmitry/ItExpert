@@ -20,15 +20,17 @@ namespace ItExpert
         public BaseContentCreator()
         {
             _padding = new UIEdgeInsets (8, 12, 8, 12);
-            _previewTextFont = UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize);
-            _previewHeaderFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
-            _forecolor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
+
             _needToCreateContent = true;
         }
 
         public void UpdateContent(UITableViewCell cell, Article article)
         {
-            RemoveSubviews(cell.ContentView);
+            ItExpertHelper.RemoveSubviews(cell.ContentView);
+
+            _previewTextFont = UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize);
+            _previewHeaderFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
+            _forecolor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 
             cell.UserInteractionEnabled = true;
 
@@ -46,7 +48,11 @@ namespace ItExpert
 
         public void UpdateDoubleContent(UITableViewCell cell, DoubleArticle article)
         {
-            RemoveSubviews(cell.ContentView);
+            ItExpertHelper.RemoveSubviews(cell.ContentView);
+
+            _previewTextFont = UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize);
+            _previewHeaderFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
+            _forecolor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 
             cell.UserInteractionEnabled = true;
 
@@ -76,14 +82,6 @@ namespace ItExpert
         protected abstract void Update(UITableViewCell cell, Article article);
 
         protected virtual void UpdateDouble(UITableViewCell cell, DoubleArticle article) {}
-
-        protected void RemoveSubviews(UIView view)
-        {
-            foreach (var subView in view.Subviews)
-            {
-                subView.RemoveFromSuperview();
-            }
-        }
 
         protected bool _needToCreateContent;
 

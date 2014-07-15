@@ -220,6 +220,11 @@
     <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsItem.cs" />
     <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsTableViewCell.cs" />
     <Compile Include="Logic\NavigationBar\SettingsTableSource\BaseSettingsItemContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsButtonsContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsRadioButtonContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsSliderContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsSwitchContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsTapContentCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

@@ -46,9 +46,7 @@ namespace ItExpert
             _oldKeyWindow = UIApplication.SharedApplication.KeyWindow;
 
             _alertWindow.WindowLevel = UIWindowLevel.Alert;
-
             _alertWindow.RootViewController = this;
-
             _alertWindow.MakeKeyAndVisible();
         }
 
