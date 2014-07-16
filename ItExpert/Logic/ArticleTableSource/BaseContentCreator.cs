@@ -21,16 +21,16 @@ namespace ItExpert
         {
             _padding = new UIEdgeInsets (8, 12, 8, 12);
 
+            _previewTextFont = UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize);
+            _previewHeaderFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
+            _forecolor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
+
             _needToCreateContent = true;
         }
 
         public void UpdateContent(UITableViewCell cell, Article article)
         {
             ItExpertHelper.RemoveSubviews(cell.ContentView);
-
-            _previewTextFont = UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize);
-            _previewHeaderFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
-            _forecolor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 
             cell.UserInteractionEnabled = true;
 
@@ -49,10 +49,6 @@ namespace ItExpert
         public void UpdateDoubleContent(UITableViewCell cell, DoubleArticle article)
         {
             ItExpertHelper.RemoveSubviews(cell.ContentView);
-
-            _previewTextFont = UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize);
-            _previewHeaderFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
-            _forecolor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 
             cell.UserInteractionEnabled = true;
 

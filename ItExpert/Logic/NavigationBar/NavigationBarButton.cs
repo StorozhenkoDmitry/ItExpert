@@ -87,6 +87,22 @@ namespace ItExpert
                     _settingsButton = new UIBarButtonItem(button);
 
                     _settingsView = new SettingsView();
+                    _settingsView.TapOutsideTableView += (sender, e) => 
+                    {
+                        if (_settingsWindow != null)
+                        {
+                            _settingsWindow.ResignKeyWindow();
+                            _settingsWindow.Alpha = 0;
+
+                            if (_oldKeyWindow != null)
+                            {
+                                _oldKeyWindow.MakeKeyWindow();
+                            }
+
+                            _settingsWindow.Dispose();
+                            _settingsWindow = null;
+                        }
+                    };
 
                     button.TouchUpInside += (sender, e) => 
                     {

@@ -100,6 +100,7 @@ namespace ItExpert
 
             _isReadedButton = new UIButton(new RectangleF(cellContentView.Frame.Width - _padding.Right - 70, 2, 70, 60));
             _isReadedButton.TouchUpInside += OnReadedButtonTouchUpInside;
+            _isReadedButton.AdjustsImageWhenHighlighted = false;
 
             var buttonImage = new UIImage(GetIsReadedButtonImageData(_article.IsReaded), (float)2.5);
 

@@ -13,16 +13,9 @@ namespace ItExpert
             Buttons
         }
 
-        public SettingsItem(ContentType type, string title)
+        public SettingsItem(ContentType type)
         {
             Type = type;
-            Title = title;
-        }
-
-        public SettingsItem(ContentType type, string[] buttons)
-        {
-            Type = type;
-            Buttons = buttons;
         }
 
         public ContentType Type
@@ -38,6 +31,24 @@ namespace ItExpert
         }
 
         public string[] Buttons
+        {
+            get;
+            set;
+        }
+
+        public Func<object> GetValue
+        {
+            get;
+            set;
+        }
+
+        public Action<object> SetValue
+        {
+            get;
+            set;
+        }
+
+        public Action<int> ButtonPushed
         {
             get;
             set;

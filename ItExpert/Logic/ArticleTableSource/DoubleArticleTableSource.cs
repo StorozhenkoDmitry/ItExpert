@@ -94,7 +94,7 @@ namespace ItExpert
 				cell.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
 				cell.ContentView.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
 			}
-            if (cell == null)
+            else
             {
                 cell = CreateCell(tableView);
 
