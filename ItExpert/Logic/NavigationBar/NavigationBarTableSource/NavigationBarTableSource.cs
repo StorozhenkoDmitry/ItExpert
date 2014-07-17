@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 namespace ItExpert
 {
-    public class SettingsTableSource: UITableViewSource
+    public class NavigationBarTableSource: UITableViewSource
     {
-        public SettingsTableSource(List<SettingsItem> settingsItems)
+        public NavigationBarTableSource(List<NavigationBarItem> settingsItems)
         {
             _settingsItems = settingsItems;
             _cellIdentifier = "SettingsCell";
@@ -19,7 +19,7 @@ namespace ItExpert
 
         public override UITableViewCell GetCell(UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
         {
-            SettingsTableViewCell cell = tableView.DequeueReusableCell (_cellIdentifier) as SettingsTableViewCell;
+            NavigationBarViewCell cell = tableView.DequeueReusableCell (_cellIdentifier) as NavigationBarViewCell;
 
             if (cell != null)
             {
@@ -38,9 +38,9 @@ namespace ItExpert
             return cell;
         }
 
-        private SettingsTableViewCell CreateCell(UITableView tableView)
+        private NavigationBarViewCell CreateCell(UITableView tableView)
         {
-            var cell = new SettingsTableViewCell(UITableViewCellStyle.Default, _cellIdentifier);
+            var cell = new NavigationBarViewCell(UITableViewCellStyle.Default, _cellIdentifier);
 
             cell.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
             cell.ContentView.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
@@ -50,7 +50,7 @@ namespace ItExpert
 
         string _cellIdentifier;
 
-        private List<SettingsItem> _settingsItems;
+        private List<NavigationBarItem> _settingsItems;
     }
 }
 

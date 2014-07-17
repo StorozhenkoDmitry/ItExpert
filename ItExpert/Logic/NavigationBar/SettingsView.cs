@@ -27,7 +27,7 @@ namespace ItExpert
             _settingsTableView.Bounces = true;
             _settingsTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
 
-            _settingsTableView.Source = new SettingsTableSource(CreateSettingsItems());
+            _settingsTableView.Source = new NavigationBarTableSource(CreateSettingsItems());
 
             _tapableView = new UIView(new RectangleF(0, _settingsTableView.Frame.Bottom, View.Frame.Width, View.Frame.Height - _settingsTableView.Frame.Bottom));
 
@@ -39,72 +39,71 @@ namespace ItExpert
 
             View.Add(_settingsTableView);
             View.Add(_tapableView);
-
         }
 
         public event EventHandler TapOutsideTableView;
 
-        private List<SettingsItem> CreateSettingsItems()
+        private List<NavigationBarItem> CreateSettingsItems()
         {
-            List<SettingsItem> settingsItems = new List<SettingsItem>();
+            List<NavigationBarItem> settingsItems = new List<NavigationBarItem>();
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.Switch) 
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Switch) 
             { 
                 Title = "Оффлайн режим", 
                 GetValue = () => { return ApplicationWorker.Settings.OfflineMode; },
                 SetValue = (value) => { ApplicationWorker.Settings.OfflineMode = (bool)value; }
             });
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.RadioButton)
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.RadioButton)
             { 
                 Title = "Скрывать прочитанные статьи",  
                 GetValue = () => { return ApplicationWorker.Settings.HideReaded; },
                 SetValue = (value) => { ApplicationWorker.Settings.HideReaded = (bool)value; }
             });
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.Slider) 
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Slider) 
             { 
                 Title = "Размер шрифта", 
-                GetValue = () => { return 0; },
-                SetValue = (value) => { Console.WriteLine ("Размер шрифта - цифра {0}", (int)value); }
+                GetValue = () => { return _testSliderValue; },
+                SetValue = (value) => { _testSliderValue = (int)value; }
             });
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.Tap) 
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap) 
             { 
                 Title = "Тема", 
                 GetValue = () => { return "Светлая"; },
                 SetValue = (value) => { Console.WriteLine ("Нажатие на ячейку {0}", (string)value); }
             });
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.Tap) 
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap) 
             { 
                 Title = "Стартовый раздел", 
                 GetValue = () => { return "Новости"; },
                 SetValue = (value) => { Console.WriteLine ("Нажатие на ячейку {0}", (string)value); }
             });
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.Tap) 
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap) 
             { 
                 Title = "Подключения", 
                 GetValue = () => { return "Любое"; },
                 SetValue = (value) => { Console.WriteLine ("Нажатие на ячейку {0}", (string)value); }
             });
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.RadioButton) 
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.RadioButton) 
             { 
                 Title = "Отключить загрузку изображений", 
                 GetValue = () => { return ApplicationWorker.Settings.LoadImages; },
                 SetValue = (value) => { ApplicationWorker.Settings.LoadImages = (bool)value; }
             });
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.RadioButton) 
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.RadioButton) 
             { 
                 Title = "Сразу закачивать полные статьи", 
                 GetValue = () => { return ApplicationWorker.Settings.LoadDetails; },
                 SetValue = (value) => { ApplicationWorker.Settings.LoadDetails = (bool)value; }
             });
 
-            settingsItems.Add(new SettingsItem(SettingsItem.ContentType.Buttons) 
+            settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Buttons) 
             { 
                 Buttons = new string[] { "Очистить кэш", "Настройка" },
                 ButtonPushed = (index) =>
@@ -139,6 +138,7 @@ namespace ItExpert
 
         private UITableView _settingsTableView;
         private UIView _tapableView;
+        private int _testSliderValue = 2;
     }
 }
 

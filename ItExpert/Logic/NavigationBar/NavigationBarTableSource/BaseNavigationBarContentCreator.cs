@@ -4,9 +4,9 @@ using System.Drawing;
 
 namespace ItExpert
 {
-    public abstract class BaseSettingsItemContentCreator
+    public abstract class BaseNavigationBarContentCreator
     {
-        public BaseSettingsItemContentCreator()
+        public BaseNavigationBarContentCreator()
         {
             _needToCreateContent = true;
 
@@ -16,7 +16,7 @@ namespace ItExpert
             _padding = new UIEdgeInsets (7, 4, 7, 4);
         }
 
-        public void UpdateContent(UITableViewCell cell, SettingsItem item)
+        public void UpdateContent(UITableViewCell cell, NavigationBarItem item)
         {
             ItExpertHelper.RemoveSubviews(cell.ContentView);
 
@@ -25,7 +25,7 @@ namespace ItExpert
             cell.UserInteractionEnabled = true;
             cell.BackgroundColor = UIColor.Black;
 
-            if (item.Type != SettingsItem.ContentType.Buttons)
+            if (item.Type != NavigationBarItem.ContentType.Buttons)
             {
                 _textView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(item.Title, _textFont, _forecolor), cell.ContentView.Frame.Width,
                         new PointF(0,0));
@@ -48,9 +48,9 @@ namespace ItExpert
             }
         }
 
-        protected abstract void Create(UITableViewCell cell, SettingsItem item);
+        protected abstract void Create(UITableViewCell cell, NavigationBarItem item);
         
-        protected abstract void Update(UITableViewCell cell, SettingsItem item);
+        protected abstract void Update(UITableViewCell cell, NavigationBarItem item);
         
         protected bool _needToCreateContent;
         
@@ -58,7 +58,7 @@ namespace ItExpert
         protected UIFont _textFont;
         protected UIColor _forecolor;
         protected UITextView _textView;
-        protected SettingsItem _item;
+        protected NavigationBarItem _item;
     }
 }
 

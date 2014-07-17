@@ -5,20 +5,25 @@ using System.Drawing;
 
 namespace ItExpert
 {
-    public class SettingsRadioButtonContentCreator : BaseSettingsItemContentCreator
+    public class SettingsRadioButtonContentCreator : BaseNavigationBarContentCreator
     {
-        protected override void Create(UITableViewCell cell, SettingsItem item)
+        protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
             CreateButton(cell.ContentView.Frame.Size, item);
 
             cell.ContentView.Add(_button);
         }
 
-        protected override void Update(UITableViewCell cell, SettingsItem item)
+        protected override void Update(UITableViewCell cell, NavigationBarItem item)
         {
             if (_button == null)
             {
                 CreateButton(cell.ContentView.Frame.Size, item);
+            }
+            if (_button.ImageView.Image != null)
+            {
+                _button.ImageView.Image.Dispose();
+                _button.ImageView.Image = null;
             }
 
             var image = new UIImage(GetButtonImageData((bool)item.GetValue()), 2);
@@ -28,7 +33,7 @@ namespace ItExpert
             cell.ContentView.Add(_button);
         }
 
-        private void CreateButton(SizeF viewSize, SettingsItem item)
+        private void CreateButton(SizeF viewSize, NavigationBarItem item)
         {
             _button = new UIButton();
 
@@ -43,6 +48,9 @@ namespace ItExpert
             _button.TouchUpInside += (sender, e) => 
             {
                 bool invertValue = !(bool)_item.GetValue();
+
+                _button.ImageView.Image.Dispose();
+                _button.ImageView.Image = null;
 
                 _button.SetImage(new UIImage(GetButtonImageData(invertValue), 2), UIControlState.Normal);
 

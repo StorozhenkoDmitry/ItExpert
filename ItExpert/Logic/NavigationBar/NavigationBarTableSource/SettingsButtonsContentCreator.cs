@@ -5,9 +5,9 @@ using System.Drawing;
 
 namespace ItExpert
 {
-    public class SettingsButtonsContentCreator: BaseSettingsItemContentCreator
+    public class SettingsButtonsContentCreator: BaseNavigationBarContentCreator
     {
-        protected override void Create(UITableViewCell cell, SettingsItem item)
+        protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
             _buttons = new List<UIButton>();
 
@@ -16,7 +16,7 @@ namespace ItExpert
             AddButtons(cell.ContentView);
         }
 
-        protected override void Update(UITableViewCell cell, SettingsItem item)
+        protected override void Update(UITableViewCell cell, NavigationBarItem item)
         {
             if (_buttons == null)
             {
@@ -37,7 +37,7 @@ namespace ItExpert
             AddButtons(cell.ContentView);
         }
 
-        private void CreateButtons(SettingsItem item, SizeF viewSize)
+        private void CreateButtons(NavigationBarItem item, SizeF viewSize)
         {
             for (int i = 0; i < item.Buttons.Length; i++)
             {

@@ -216,15 +216,17 @@
     <Compile Include="Logic\NavigationBar\MenuView.cs" />
     <Compile Include="Logic\NavigationBar\SettingsView.cs" />
     <Compile Include="Logic\NavigationBar\CacheView.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsTableSource.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsItem.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsTableViewCell.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\BaseSettingsItemContentCreator.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsButtonsContentCreator.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsRadioButtonContentCreator.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsSliderContentCreator.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsSwitchContentCreator.cs" />
-    <Compile Include="Logic\NavigationBar\SettingsTableSource\SettingsTapContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\SettingsButtonsContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\SettingsRadioButtonContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\SettingsSliderContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\SettingsSwitchContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\SettingsTapContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\NavigationBarItem.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\NavigationBarTableSource.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\NavigationBarViewCell.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\MenuItemContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\MenuSearchContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\BaseNavigationBarContentCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
@@ -241,7 +243,7 @@
     <Folder Include="Logic\BlackAlertView\" />
     <Folder Include="Resources\NavigationBar\" />
     <Folder Include="Logic\NavigationBar\" />
-    <Folder Include="Logic\NavigationBar\SettingsTableSource\" />
+    <Folder Include="Logic\NavigationBar\NavigationBarTableSource\" />
   </ItemGroup>
   <ItemGroup>
     <XamarinComponentReference Include="json.net">

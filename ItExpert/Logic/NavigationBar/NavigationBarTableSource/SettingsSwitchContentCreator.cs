@@ -4,9 +4,9 @@ using System.Drawing;
 
 namespace ItExpert
 {
-    public class SettingsSwitchContentCreator : BaseSettingsItemContentCreator
+    public class SettingsSwitchContentCreator : BaseNavigationBarContentCreator
     {
-        protected override void Create(UITableViewCell cell, SettingsItem item)
+        protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
             CreateSwitch(cell.ContentView.Frame.Size, item);
 
@@ -15,7 +15,7 @@ namespace ItExpert
             cell.ContentView.Add(_switch);
         }
 
-        protected override void Update(UITableViewCell cell, SettingsItem item)
+        protected override void Update(UITableViewCell cell, NavigationBarItem item)
         {
             if (_switch == null)
             {
@@ -27,7 +27,7 @@ namespace ItExpert
             cell.ContentView.Add(_switch);
         }
 
-        private void CreateSwitch(SizeF contentSize, SettingsItem item)
+        private void CreateSwitch(SizeF contentSize, NavigationBarItem item)
         {
             _switch = new UISwitch();
 

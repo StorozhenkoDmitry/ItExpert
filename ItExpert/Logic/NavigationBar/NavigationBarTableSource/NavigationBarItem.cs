@@ -2,7 +2,7 @@
 
 namespace ItExpert
 {
-    public class SettingsItem
+    public class NavigationBarItem
     {
         public enum ContentType
         {
@@ -13,7 +13,7 @@ namespace ItExpert
             Buttons
         }
 
-        public SettingsItem(ContentType type)
+        public NavigationBarItem(ContentType type)
         {
             Type = type;
         }
