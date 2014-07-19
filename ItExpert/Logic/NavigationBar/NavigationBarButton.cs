@@ -38,7 +38,7 @@ namespace ItExpert
             {
                 if (_backButton == null)
                 {
-                    UIButton button = GetButton("NavigationBar/Back.png", 4);
+                    UIButton button = GetButton("NavigationBar/Back.png", 2);
 
                     button.TouchUpInside += (sender, e) => 
                     {
@@ -119,7 +119,7 @@ namespace ItExpert
             {
                 if (_shareButton == null)
                 {
-                    UIButton button = GetButton("NavigationBar/DumpInCache.png", 4);
+                    UIButton button = GetButton("NavigationBar/Share.png", 4.5f);
 
                     _shareButton = new UIBarButtonItem(button);
                 }

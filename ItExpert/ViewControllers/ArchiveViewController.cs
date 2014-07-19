@@ -85,6 +85,8 @@ namespace ItExpert
 			InitLoadingPdfProgress ();
 			ApplicationWorker.PdfLoader.PdfGetted += OnPdfGetted;
 
+            InitNavigationBar();
+
             _yearsView = new YearsView(new RectangleF(0, NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight,
                 View.Frame.Width, 40));
 
@@ -172,6 +174,17 @@ namespace ItExpert
 			View.Add (_loadingPdfIndicator);
 			_loadingPdfIndicator.Hidden = true;
 		}
+
+        private void InitNavigationBar()
+        {
+            NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { NavigationBarButton.Menu, NavigationBarButton.Logo };
+
+            UIBarButtonItem space = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+            space.Width = -10;
+
+            NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.Settings };
+        }
 
 		#endregion
 

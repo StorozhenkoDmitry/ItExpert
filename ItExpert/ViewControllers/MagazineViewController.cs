@@ -439,6 +439,7 @@ namespace ItExpert
 			InitBottomToolbar ();
 			InitLoadingProgress ();
 			InitAddPreviousArticleButton ();
+            InitNavigationBar();
 
 			_articlesTableView = new UITableView(new RectangleF(0, 0, 0, 
 				0), UITableViewStyle.Plain);
@@ -646,6 +647,17 @@ namespace ItExpert
 
 		}
 
+        private void InitNavigationBar()
+        {
+            NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { NavigationBarButton.Menu, NavigationBarButton.Logo };
+
+            UIBarButtonItem space = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+            space.Width = -10;
+
+            NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.Settings, NavigationBarButton.Refresh,
+                NavigationBarButton.DumpInCache };
+        }
 
 		#endregion
 

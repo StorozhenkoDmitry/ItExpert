@@ -58,6 +58,8 @@ namespace ItExpert
 
 			View.BackgroundColor = UIColor.White;
 
+            InitNavigationBar();
+
 			UISwipeGestureRecognizer leftSwipeRecognizer = new UISwipeGestureRecognizer(() => OnArticleChange(this, new SwipeEventArgs() { Direction = SwipeDirection.Next }));
 
 			leftSwipeRecognizer.Direction = UISwipeGestureRecognizerDirection.Left;
@@ -71,6 +73,25 @@ namespace ItExpert
 			View.AddGestureRecognizer(rightSwipeRecognizer);
 			GetArticleData ();
 		}
+
+        private void InitNavigationBar()
+        {
+            UIBarButtonItem spaceForBack = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+            spaceForBack.Width = -6;
+
+            UIBarButtonItem spaceForLogo = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+            spaceForLogo.Width = 20;
+
+            NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { spaceForBack, NavigationBarButton.Back, spaceForLogo, NavigationBarButton.Logo };           
+
+            UIBarButtonItem spaceForSettings = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+            spaceForSettings.Width = -10;
+
+            NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { spaceForSettings, NavigationBarButton.Settings, NavigationBarButton.Share };
+        }
 
 		#region Worked with server
 
