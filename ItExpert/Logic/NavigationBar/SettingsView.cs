@@ -2,24 +2,85 @@
 using MonoTouch.UIKit;
 using System.Collections.Generic;
 using System.Drawing;
+using MonoTouch.Foundation;
 
 namespace ItExpert
 {
     public class SettingsView: UIViewController
     {
+        public event EventHandler TapOutsideTableView;
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
 
+            _navigationController = (UIApplication.SharedApplication.KeyWindow.RootViewController as UINavigationController);
+
             View.BackgroundColor = UIColor.Clear;
+
+            AddHeaderView();
+
+            AddTableView();
+
+            AddTapView();
+        }
+
+        public override void ViewWillAppear(bool animated)
+        {
+            base.ViewWillAppear(animated);
+
+            CorrectViewsFrame();
+        }
+
+        public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+        {
+            base.DidRotate(fromInterfaceOrientation);
+
+            CorrectViewsFrame();
+
+            if (_settingsTableView != null)
+            {
+                _settingsTableView.ReloadData();
+            }
+        }
+
+        private void AddHeaderView()
+        {
+            _headerView = new UIView(_navigationController.NavigationBar.Frame);
+
+            _headerView.BackgroundColor = UIColor.FromRGB(40, 40, 40);
+
+            var image = new UIImage(NSData.FromFile("NavigationBar/Back.png"), 2);
+
+            _backButton = new UIButton(new RectangleF(new PointF(10, _headerView.Frame.Height / 2 - image.Size.Height / 2), image.Size));
+
+            _backButton.SetImage(image, UIControlState.Normal);
+
+            _backButton.TouchUpInside += (sender, e) => 
+            {
+                OnTapOutsideTableView();
+            };
+
+            _headerView.Add(_backButton);
+
+            _logoImageView = new UIImageView(new UIImage(NSData.FromFile("NavigationBar/Logo.png"), 2));
+
+            _logoImageView.Frame = new RectangleF(new PointF(_backButton.Frame.Right + 20, _headerView.Frame.Height / 2 - _logoImageView.Frame.Height / 2), 
+                _logoImageView.Frame.Size);
+
+            _headerView.Add(_logoImageView);
+
+            View.Add(_headerView);
+        }
+
+        private void AddTableView()
+        {
+            var screenSize = ItExpertHelper.GetRealScreenSize();
 
             _settingsTableView = new UITableView();
 
-            var screenSize = ItExpertHelper.GetRealScreenSize();
-
-            var navigationBarHeight = (UIApplication.SharedApplication.KeyWindow.RootViewController as UINavigationController).NavigationBar.Frame.Height;
-
-            _settingsTableView.Frame = new RectangleF(0, ItExpertHelper.StatusBarHeight + navigationBarHeight, screenSize.Width, screenSize.Height / 2);
+            _settingsTableView.Frame = new RectangleF(0, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height, screenSize.Width, 
+                screenSize.Height / 2);
             _settingsTableView.BackgroundColor = UIColor.Black;
             _settingsTableView.ScrollEnabled = true; 
             _settingsTableView.UserInteractionEnabled = true;
@@ -27,8 +88,13 @@ namespace ItExpert
             _settingsTableView.Bounces = true;
             _settingsTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
 
-            _settingsTableView.Source = new NavigationBarTableSource(CreateSettingsItems());
+            _settingsTableView.Source = new NavigationBarTableSource(GetSettingsItems());
 
+            View.Add(_settingsTableView);
+        }
+
+        private void AddTapView()
+        {
             _tapableView = new UIView(new RectangleF(0, _settingsTableView.Frame.Bottom, View.Frame.Width, View.Frame.Height - _settingsTableView.Frame.Bottom));
 
             _tapableView.BackgroundColor = UIColor.Clear;
@@ -37,13 +103,37 @@ namespace ItExpert
                 OnTapOutsideTableView();
             }));
 
-            View.Add(_settingsTableView);
             View.Add(_tapableView);
         }
 
-        public event EventHandler TapOutsideTableView;
+        private void CorrectViewsFrame()
+        {
+            if (_settingsTableView != null)
+            {
+                var screenSize = ItExpertHelper.GetRealScreenSize();
 
-        private List<NavigationBarItem> CreateSettingsItems()
+                _settingsTableView.Frame = new RectangleF(0, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height, 
+                    screenSize.Width, screenSize.Height / 2);
+            }
+
+            if (_tapableView != null && _settingsTableView != null)
+            {
+                _tapableView.Frame = new RectangleF(0, _settingsTableView.Frame.Bottom, View.Frame.Width, View.Frame.Height - _settingsTableView.Frame.Bottom);
+            }
+
+            if (_headerView != null)
+            {
+                _headerView.Frame = _navigationController.NavigationBar.Frame;
+
+                _backButton.Frame = new RectangleF(new PointF(10, _headerView.Frame.Height / 2 - _backButton.Frame.Height / 2), _backButton.Frame.Size);
+
+                _logoImageView.Frame = new RectangleF(new PointF(_backButton.Frame.Right + 20, _headerView.Frame.Height / 2 - _logoImageView.Frame.Height / 2), 
+                    _logoImageView.Frame.Size);
+
+            }
+        }
+
+        private List<NavigationBarItem> GetSettingsItems()
         {
             List<NavigationBarItem> settingsItems = new List<NavigationBarItem>();
 
@@ -139,6 +229,10 @@ namespace ItExpert
         private UITableView _settingsTableView;
         private UIView _tapableView;
         private int _testSliderValue = 2;
+        private UINavigationController _navigationController;
+        private UIView _headerView;
+        private UIButton _backButton;
+        private UIImageView _logoImageView;
     }
 }
 

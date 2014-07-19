@@ -7,10 +7,16 @@ namespace ItExpert
 {
     public class SettingsRadioButtonContentCreator : BaseNavigationBarContentCreator
     {
+        public override float GetContentHeight(UIView cellContentView, NavigationBarItem item)
+        {
+            return _height;
+        }
+
         protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
             CreateButton(cell.ContentView.Frame.Size, item);
 
+            cell.ContentView.Add(_textView);
             cell.ContentView.Add(_button);
         }
 
@@ -20,6 +26,7 @@ namespace ItExpert
             {
                 CreateButton(cell.ContentView.Frame.Size, item);
             }
+
             if (_button.ImageView.Image != null)
             {
                 _button.ImageView.Image.Dispose();
@@ -30,11 +37,14 @@ namespace ItExpert
 
             _button.SetImage(image, UIControlState.Normal);
 
+            cell.ContentView.Add(_textView);
             cell.ContentView.Add(_button);
         }
 
         private void CreateButton(SizeF viewSize, NavigationBarItem item)
         {
+            CreateTextView(viewSize, item);
+
             _button = new UIButton();
 
             var image = new UIImage(GetButtonImageData((bool)item.GetValue()), 2);

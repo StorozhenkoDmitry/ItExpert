@@ -6,12 +6,18 @@ namespace ItExpert
 {
     public class SettingsSwitchContentCreator : BaseNavigationBarContentCreator
     {
+        public override float GetContentHeight(UIView cellContentView, NavigationBarItem item)
+        {
+            return _height;
+        }
+
         protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
             CreateSwitch(cell.ContentView.Frame.Size, item);
 
             _switch.On = (bool)item.GetValue();
 
+            cell.ContentView.Add(_textView);
             cell.ContentView.Add(_switch);
         }
 
@@ -24,15 +30,18 @@ namespace ItExpert
 
             _switch.On = (bool)item.GetValue();
 
+            cell.ContentView.Add(_textView);
             cell.ContentView.Add(_switch);
         }
 
-        private void CreateSwitch(SizeF contentSize, NavigationBarItem item)
+        private void CreateSwitch(SizeF viewSize, NavigationBarItem item)
         {
+            CreateTextView(viewSize, item);
+
             _switch = new UISwitch();
 
-            _switch.Frame = new RectangleF(new PointF(contentSize.Width - _switch.Frame.Width - _padding.Right, 
-                contentSize.Height / 2 - _switch.Frame.Height / 2), _switch.Frame.Size);
+            _switch.Frame = new RectangleF(new PointF(viewSize.Width - _switch.Frame.Width - _padding.Right, 
+                viewSize.Height / 2 - _switch.Frame.Height / 2), _switch.Frame.Size);
 
             _switch.ValueChanged += (sender, e) => 
             {

@@ -6,10 +6,16 @@ namespace ItExpert
 {
     public class SettingsSliderContentCreator : BaseNavigationBarContentCreator
     {
+        public override float GetContentHeight(UIView cellContentView, NavigationBarItem item)
+        {
+            return _height;
+        }
+
         protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
-            CreateSlider(cell.ContentView.Frame.Size);
+            CreateSlider(cell.ContentView.Frame.Size, item);
 
+            cell.ContentView.Add(_textView);
             cell.ContentView.Add(_slider);
             cell.ContentView.Add(_valueLabel);
         }
@@ -18,18 +24,21 @@ namespace ItExpert
         {
             if (_slider == null)
             {
-                CreateSlider(cell.ContentView.Frame.Size);
+                CreateSlider(cell.ContentView.Frame.Size, item);
             }
 
             _slider.Value = (int)item.GetValue();
             _valueLabel.Text = _item.GetValue().ToString();
 
+            cell.ContentView.Add(_textView);
             cell.ContentView.Add(_slider);
             cell.ContentView.Add(_valueLabel);
         }
 
-        private void CreateSlider(SizeF viewSize)
+        private void CreateSlider(SizeF viewSize, NavigationBarItem item)
         {
+            CreateTextView(viewSize, item);
+
             SizeF labelSize = new SizeF(15, 20);
             float leftSliderOffset = 35;
 

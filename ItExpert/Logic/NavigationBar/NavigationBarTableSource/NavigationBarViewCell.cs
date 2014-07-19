@@ -23,7 +23,14 @@ namespace ItExpert
 
         public float GetHeightDependingOnContent(NavigationBarItem item)
         {
-            return 44;
+            if (item.Type == NavigationBarItem.ContentType.MenuItem)
+            {
+                return 35;
+            }
+            else
+            {
+                return 44;
+            }
         }
 
         private BaseNavigationBarContentCreator CreatorFactory(NavigationBarItem item)
@@ -69,6 +76,22 @@ namespace ItExpert
                     }
 
                     return _creatorsPool[NavigationBarItem.ContentType.Tap];
+
+                case NavigationBarItem.ContentType.MenuItem:
+                    if (!_creatorsPool.ContainsKey(NavigationBarItem.ContentType.MenuItem))
+                    {
+                        _creatorsPool.Add(NavigationBarItem.ContentType.MenuItem, new MenuItemContentCreator());
+                    }
+
+                    return _creatorsPool[NavigationBarItem.ContentType.MenuItem];
+
+                case NavigationBarItem.ContentType.Search:
+                    if (!_creatorsPool.ContainsKey(NavigationBarItem.ContentType.Search))
+                    {
+                        _creatorsPool.Add(NavigationBarItem.ContentType.Search, new MenuSearchContentCreator());
+                    }
+
+                    return _creatorsPool[NavigationBarItem.ContentType.Search];
 
                 default:
                     throw new NotImplementedException("Content creator type for settings view isn't implemented.");

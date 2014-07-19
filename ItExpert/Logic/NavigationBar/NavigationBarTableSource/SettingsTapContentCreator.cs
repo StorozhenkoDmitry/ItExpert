@@ -6,10 +6,16 @@ namespace ItExpert
 {
     public class SettingsTapContentCreator : BaseNavigationBarContentCreator
     {
+        public override float GetContentHeight(UIView cellContentView, NavigationBarItem item)
+        {
+            return _height;
+        }
+
         protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
-            CreateTextView(cell.ContentView.Frame.Size, item);
+            CreateRightTextView(cell.ContentView.Frame.Size, item);
 
+            cell.ContentView.Add(_textView);
             cell.ContentView.Add(_rightTextView);
             cell.ContentView.Add(_tapView);
         }
@@ -18,21 +24,22 @@ namespace ItExpert
         {
             if (_textView == null)
             {
-                CreateTextView(cell.ContentView.Frame.Size, item);
+                CreateRightTextView(cell.ContentView.Frame.Size, item);
             }
             else
             {
-                UpdateTextView(cell.ContentView.Frame.Size, item);
+                UpdateRightTextView(cell.ContentView.Frame.Size, item);
             }
 
-            CreateTextView(cell.ContentView.Frame.Size, item);
-
+            cell.ContentView.Add(_textView);
             cell.ContentView.Add(_rightTextView);
             cell.ContentView.Add(_tapView);
         }
 
-        private void CreateTextView(SizeF viewSize, NavigationBarItem item)
+        private void CreateRightTextView(SizeF viewSize, NavigationBarItem item)
         {
+            CreateTextView(viewSize, item);
+
             _rightTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(item.GetValue().ToString(), UIFont.SystemFontOfSize(12), UIColor.White),
                 viewSize.Width, new PointF());
 
@@ -48,11 +55,11 @@ namespace ItExpert
             {
                 Console.WriteLine ("Нажатие на настройку {0}", _item.Title);
 
-                UpdateTextView(viewSize, _item);
+                UpdateRightTextView(viewSize, _item);
             }));
         }
 
-        private void UpdateTextView(SizeF viewSize, NavigationBarItem item)
+        private void UpdateRightTextView(SizeF viewSize, NavigationBarItem item)
         {
             _rightTextView.AttributedText = ItExpertHelper.GetAttributedString(item.GetValue().ToString(), UIFont.SystemFontOfSize(12), UIColor.White);
 

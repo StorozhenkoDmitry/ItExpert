@@ -15,6 +15,17 @@ namespace ItExpert
                     UIButton button = GetButton("NavigationBar/Menu.png", 2);
 
                     _menuButton = new UIBarButtonItem(button);
+
+                    _menuView = new MenuView();
+                    _menuView.TapOutsideTableView += (sender, e) => 
+                    {
+                        HideWindow();
+                    };
+
+                    button.TouchUpInside += (sender, e) => 
+                    {
+                        ShowWindow(_menuView);
+                    };
                 }
 
                 return _menuButton;
@@ -65,7 +76,7 @@ namespace ItExpert
             {
                 if (_refreshButton == null)
                 {
-                    UIButton button = GetButton("NavigationBar/Refresh.png", 4);
+                    UIButton button = GetButton("NavigationBar/Refresh.png", 4.1f);
 
                     button.TouchUpInside += (sender, e) => Console.WriteLine("Refresh touch up inside.");
 
@@ -82,38 +93,19 @@ namespace ItExpert
             {
                 if (_settingsButton == null)
                 {
-                    UIButton button = GetButton("NavigationBar/Settings.png", 4);
+                    UIButton button = GetButton("NavigationBar/Settings.png", 4.1f);
 
                     _settingsButton = new UIBarButtonItem(button);
 
                     _settingsView = new SettingsView();
                     _settingsView.TapOutsideTableView += (sender, e) => 
                     {
-                        if (_settingsWindow != null)
-                        {
-                            _settingsWindow.ResignKeyWindow();
-                            _settingsWindow.Alpha = 0;
-
-                            if (_oldKeyWindow != null)
-                            {
-                                _oldKeyWindow.MakeKeyWindow();
-                            }
-
-                            _settingsWindow.Dispose();
-                            _settingsWindow = null;
-                        }
+                        HideWindow();
                     };
 
                     button.TouchUpInside += (sender, e) => 
                     {
-                        _settingsWindow = new UIWindow(UIScreen.MainScreen.Bounds);
-
-                        _oldKeyWindow = UIApplication.SharedApplication.KeyWindow;
-
-                        _settingsWindow.WindowLevel = UIWindowLevel.Alert;
-                        _settingsWindow.RootViewController = _settingsView;
-
-                        _settingsWindow.MakeKeyAndVisible();
+                        ShowWindow(_settingsView);
                     };
                 }
 
@@ -161,6 +153,35 @@ namespace ItExpert
             return button;
         }
 
+        private static void ShowWindow(UIViewController view)
+        {
+            _window = new UIWindow(UIScreen.MainScreen.Bounds);
+
+            _oldKeyWindow = UIApplication.SharedApplication.KeyWindow;
+
+            _window.WindowLevel = UIWindowLevel.Alert;
+            _window.RootViewController = view;
+
+            _window.MakeKeyAndVisible();
+        }
+
+        private static void HideWindow()
+        {
+            if (_window != null)
+            {
+                _window.ResignKeyWindow();
+                _window.Alpha = 0;
+
+                if (_oldKeyWindow != null)
+                {
+                    _oldKeyWindow.MakeKeyWindow();
+                }
+
+                _window.Dispose();
+                _window = null;
+            }
+        }
+
         private static UIBarButtonItem _menuButton;
         private static UIBarButtonItem _backButton;
         private static UIBarButtonItem _dumpInCacheButton;
@@ -170,8 +191,9 @@ namespace ItExpert
         private static UIBarButtonItem _logoImage;
 
         private static UIWindow _oldKeyWindow;
-        private static UIWindow _settingsWindow;
+        private static UIWindow _window;
         private static SettingsView _settingsView;
+        private static MenuView _menuView;
     }
 }
 

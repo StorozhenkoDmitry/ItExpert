@@ -14,6 +14,8 @@ namespace ItExpert
             _forecolor = UIColor.White;
 
             _padding = new UIEdgeInsets (7, 4, 7, 4);
+
+            _height = 44;
         }
 
         public void UpdateContent(UITableViewCell cell, NavigationBarItem item)
@@ -24,17 +26,6 @@ namespace ItExpert
 
             cell.UserInteractionEnabled = true;
             cell.BackgroundColor = UIColor.Black;
-
-            if (item.Type != NavigationBarItem.ContentType.Buttons)
-            {
-                _textView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(item.Title, _textFont, _forecolor), cell.ContentView.Frame.Width,
-                        new PointF(0,0));
-
-                _textView.Frame = new RectangleF(new PointF(_padding.Left, cell.ContentView.Frame.Height / 2 - _textView.Frame.Height / 2), _textView.Frame.Size);
-                _textView.BackgroundColor = UIColor.Clear;
-
-                cell.ContentView.Add(_textView);
-            }
 
             if (_needToCreateContent)
             {
@@ -51,6 +42,17 @@ namespace ItExpert
         protected abstract void Create(UITableViewCell cell, NavigationBarItem item);
         
         protected abstract void Update(UITableViewCell cell, NavigationBarItem item);
+
+        public abstract float GetContentHeight(UIView cellContentView, NavigationBarItem item);
+
+        protected void CreateTextView(SizeF viewSize, NavigationBarItem item)
+        {
+            _textView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(item.Title, _textFont, _forecolor), viewSize.Width,
+                new PointF(0,0));
+
+            _textView.Frame = new RectangleF(new PointF(_padding.Left, _height / 2 - _textView.Frame.Height / 2), _textView.Frame.Size);
+            _textView.BackgroundColor = UIColor.Clear;
+        }
         
         protected bool _needToCreateContent;
         
@@ -59,6 +61,7 @@ namespace ItExpert
         protected UIColor _forecolor;
         protected UITextView _textView;
         protected NavigationBarItem _item;
+        protected float _height;
     }
 }
 

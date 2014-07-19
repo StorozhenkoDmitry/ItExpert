@@ -10,7 +10,9 @@ namespace ItExpert
             Switch,
             RadioButton,
             Tap,
-            Buttons
+            Buttons,
+            Search,
+            MenuItem
         }
 
         public NavigationBarItem(ContentType type)
