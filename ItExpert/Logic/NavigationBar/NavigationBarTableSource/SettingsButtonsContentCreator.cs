@@ -58,23 +58,23 @@ namespace ItExpert
                     _height - _padding.Top - _padding.Bottom);
 
                 button.SetTitle(item.Buttons[i], UIControlState.Normal);
-                button.SetTitleColor(UIColor.Black, UIControlState.Normal);
+                button.SetTitleColor(ItExpertHelper.ButtonTextColor, UIControlState.Normal);
                 button.TitleLabel.TextAlignment = UITextAlignment.Center;
-                button.BackgroundColor = UIColor.White;
+                button.BackgroundColor = ItExpertHelper.ButtonColor;
                 button.Tag = i;
 
                 button.TouchDown += (sender, e) => 
                 {
                     var senderButton = (sender as UIButton);
 
-                    senderButton.BackgroundColor = UIColor.FromRGB(160, 160, 160);
+                    senderButton.BackgroundColor = ItExpertHelper.ButtonPushedColor;
                 };
 
                 button.TouchUpInside += (sender, e) => 
                 {
                     var senderButton = (sender as UIButton);
 
-                    senderButton.BackgroundColor = UIColor.White;
+                    senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
 
                     _item.ButtonPushed(senderButton.Tag);
                 };
@@ -83,7 +83,7 @@ namespace ItExpert
                 {
                     var senderButton = (sender as UIButton);
 
-                    senderButton.BackgroundColor = UIColor.White;
+                    senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
                 };
 
                 _buttons.Add(button);

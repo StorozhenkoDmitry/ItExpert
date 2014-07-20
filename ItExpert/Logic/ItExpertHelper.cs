@@ -21,6 +21,30 @@ namespace ItExpert
             set;
         }
 
+        public static UIColor ButtonColor
+        {
+            get
+            {
+                return UIColor.White;
+            }
+        }
+
+        public static UIColor ButtonPushedColor
+        {
+            get
+            {
+                return UIColor.FromRGB(160, 160, 160);
+            }
+        }
+
+        public static UIColor ButtonTextColor
+        {
+            get
+            {
+                return UIColor.Black;
+            }
+        }
+
         public static UITextView GetTextView(NSAttributedString attributedString, float textViewWidth, PointF textViewLocation, UIView imageView = null)
         {
 			var size = UIScreen.MainScreen.Bounds.Size;

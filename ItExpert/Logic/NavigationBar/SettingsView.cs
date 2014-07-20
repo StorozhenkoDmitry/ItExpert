@@ -8,6 +8,12 @@ namespace ItExpert
 {
     public class SettingsView: UIViewController
     {
+        enum BackButtonState
+        {
+            Settings,
+            Cache
+        }
+
         public event EventHandler TapOutsideTableView;
 
         public override void ViewDidLoad()
@@ -55,11 +61,9 @@ namespace ItExpert
             _backButton = new UIButton(new RectangleF(new PointF(10, _headerView.Frame.Height / 2 - image.Size.Height / 2), image.Size));
 
             _backButton.SetImage(image, UIControlState.Normal);
+            _backButton.TouchUpInside += OnBackButtonPushed;
 
-            _backButton.TouchUpInside += (sender, e) => 
-            {
-                OnTapOutsideTableView();
-            };
+            _backButtonState = BackButtonState.Settings;
 
             _headerView.Add(_backButton);
 
@@ -129,7 +133,6 @@ namespace ItExpert
 
                 _logoImageView.Frame = new RectangleF(new PointF(_backButton.Frame.Right + 20, _headerView.Frame.Height / 2 - _logoImageView.Frame.Height / 2), 
                     _logoImageView.Frame.Size);
-
             }
         }
 
@@ -198,15 +201,24 @@ namespace ItExpert
                 Buttons = new string[] { "Очистить кэш", "Настройка" },
                 ButtonPushed = (index) =>
                 {
-                    Console.WriteLine ("Нажата кнопка с индексом {0}", index);
-
                     if (index == 0)
                     {
-                        // действия для кнопки "Очистить кэш"
+
                     }
                     else if (index == 1)
                     {
-                        // действия для кнопки "Настройка"
+                        if (_cacheView != null)
+                        {
+                            _cacheView.Dispose();
+                            _cacheView = null;
+                        }
+
+                        _cacheView = new CacheView(new RectangleF(new PointF(0, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height),
+                            ItExpertHelper.GetRealScreenSize().Size));
+
+                        _backButtonState = BackButtonState.Cache;
+
+                        Add(_cacheView);
                     }
                     else 
                     {
@@ -226,6 +238,26 @@ namespace ItExpert
             }
         }
 
+        private void OnBackButtonPushed(object sender, EventArgs e)
+        {
+            if (_backButtonState == BackButtonState.Settings)
+            {
+                OnTapOutsideTableView();
+            }
+            else if (_backButtonState == BackButtonState.Cache)
+            {
+                InvokeOnMainThread(() =>
+                {
+                    _cacheView.RemoveFromSuperview();
+
+                    _cacheView.Dispose();
+                    _cacheView = null;
+
+                    _backButtonState = BackButtonState.Settings;
+                });
+            }
+        }
+
         private UITableView _settingsTableView;
         private UIView _tapableView;
         private int _testSliderValue = 2;
@@ -233,6 +265,8 @@ namespace ItExpert
         private UIView _headerView;
         private UIButton _backButton;
         private UIImageView _logoImageView;
+        private CacheView _cacheView;
+        private BackButtonState _backButtonState;
     }
 }
 

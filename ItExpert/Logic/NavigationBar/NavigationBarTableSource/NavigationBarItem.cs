@@ -12,7 +12,8 @@ namespace ItExpert
             Tap,
             Buttons,
             Search,
-            MenuItem
+            MenuItem,
+            CacheSlider
         }
 
         public NavigationBarItem(ContentType type)

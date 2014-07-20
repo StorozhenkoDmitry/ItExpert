@@ -227,6 +227,7 @@
     <Compile Include="Logic\NavigationBar\NavigationBarTableSource\MenuItemContentCreator.cs" />
     <Compile Include="Logic\NavigationBar\NavigationBarTableSource\MenuSearchContentCreator.cs" />
     <Compile Include="Logic\NavigationBar\NavigationBarTableSource\BaseNavigationBarContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\CacheSliderContentCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
