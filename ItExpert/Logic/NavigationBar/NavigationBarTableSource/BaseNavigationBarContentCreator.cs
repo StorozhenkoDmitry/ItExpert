@@ -62,6 +62,7 @@ namespace ItExpert
         protected UITextView _textView;
         protected NavigationBarItem _item;
         protected float _height;
+
     }
 }
 

@@ -26,9 +26,21 @@ namespace ItExpert
             {
                 CreateSlider(cell.ContentView.Frame.Size, item);
             }
+            else
+            {
+                _textView.Dispose();
+                _textView = null;
+
+                CreateTextView(cell.ContentView.Frame.Size, item);
+            }
 
             _slider.Value = (int)item.GetValue();
             _valueLabel.Text = _item.GetValue().ToString();
+
+            _slider.Frame = new RectangleF(cell.ContentView.Frame.Width / 2 - _leftSliderOffset,  cell.ContentView.Frame.Height / 2 - _slider.Frame.Height / 2, 
+                cell.ContentView.Frame.Width / 2 - _padding.Right - _labelSize.Width + _leftSliderOffset, _slider.Frame.Height);
+
+            _valueLabel.Frame = new RectangleF(new PointF(cell.ContentView.Frame.Width - _labelSize.Width, cell.ContentView.Frame.Height / 2 - _labelSize.Height / 2), _labelSize);
 
             cell.ContentView.Add(_textView);
             cell.ContentView.Add(_slider);
@@ -39,13 +51,13 @@ namespace ItExpert
         {
             CreateTextView(viewSize, item);
 
-            SizeF labelSize = new SizeF(15, 20);
-            float leftSliderOffset = 35;
+            _labelSize = new SizeF(15, 20);
+            _leftSliderOffset = 35;
 
             _slider = new UISlider();
 
-            _slider.Frame = new RectangleF(viewSize.Width / 2 - leftSliderOffset,  viewSize.Height / 2 - _slider.Frame.Height / 2, 
-                viewSize.Width / 2 - _padding.Right - labelSize.Width + leftSliderOffset, _slider.Frame.Height);
+            _slider.Frame = new RectangleF(viewSize.Width / 2 - _leftSliderOffset,  viewSize.Height / 2 - _slider.Frame.Height / 2, 
+                viewSize.Width / 2 - _padding.Right - _labelSize.Width + _leftSliderOffset, _slider.Frame.Height);
 
             _slider.MinValue = 0;
             _slider.MaxValue = 5;
@@ -54,7 +66,7 @@ namespace ItExpert
 
             _valueLabel = new UILabel();
 
-            _valueLabel.Frame = new RectangleF(new PointF(viewSize.Width - labelSize.Width, viewSize.Height / 2 - labelSize.Height / 2), labelSize);
+            _valueLabel.Frame = new RectangleF(new PointF(viewSize.Width - _labelSize.Width, viewSize.Height / 2 - _labelSize.Height / 2), _labelSize);
             _valueLabel.BackgroundColor = UIColor.Clear;
             _valueLabel.TextColor = UIColor.White;
             _valueLabel.Text = _item.GetValue().ToString();
@@ -68,6 +80,10 @@ namespace ItExpert
                 _item.SetValue(value);
             };
         }
+
+        private float _leftSliderOffset;
+
+        private SizeF _labelSize;
 
         private UISlider _slider;
         private UILabel _valueLabel;

@@ -112,17 +112,19 @@ namespace ItExpert
 
         private void CorrectViewsFrame()
         {
+            var screenSize = ItExpertHelper.GetRealScreenSize();
+
             if (_settingsTableView != null)
             {
-                var screenSize = ItExpertHelper.GetRealScreenSize();
-
                 _settingsTableView.Frame = new RectangleF(0, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height, 
                     screenSize.Width, screenSize.Height / 2);
+
+                _settingsTableView.ReloadData();
             }
 
             if (_tapableView != null && _settingsTableView != null)
             {
-                _tapableView.Frame = new RectangleF(0, _settingsTableView.Frame.Bottom, View.Frame.Width, View.Frame.Height - _settingsTableView.Frame.Bottom);
+                _tapableView.Frame = new RectangleF(0, screenSize.Bottom, screenSize.Width, screenSize.Height - _settingsTableView.Frame.Bottom);
             }
 
             if (_headerView != null)

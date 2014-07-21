@@ -18,31 +18,26 @@ namespace ItExpert
 
         protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
-            //CreateMenuItem(cell.ContentView.Frame.Size, item);
             CreateButton(cell.ContentView.Frame.Size, item);
 
             cell.ContentView.Add(_button);
-
-//            cell.ContentView.Add(_textView);
-//            cell.ContentView.Add(_tappableView);
         }
 
         protected override void Update(UITableViewCell cell, NavigationBarItem item)
         {
-//            if (_tappableView == null)
-//            {
-//                CreateMenuItem(cell.ContentView.Frame.Size, item);
-//            }
-
             if (_button == null)
             {
                 CreateButton(cell.ContentView.Frame.Size, item);
             }
+            else
+            {
+                _textView.Dispose();
+                _textView = null;
+
+                CreateTextView(cell.ContentView.Frame.Size, item);
+            }
 
             cell.ContentView.Add(_button);
-
-//            cell.ContentView.Add(_textView);
-//            cell.ContentView.Add(_tappableView);
         }
 
         private void CreateMenuItem(SizeF viewSize, NavigationBarItem item)

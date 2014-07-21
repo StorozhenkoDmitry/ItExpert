@@ -122,6 +122,17 @@ namespace ItExpert
                     UIButton button = GetButton("NavigationBar/Share.png", 4.5f);
 
                     _shareButton = new UIBarButtonItem(button);
+
+                    _shareView = new ShareView();
+                    _shareView.TapOutsideTableView += (sender, e) => 
+                    {
+                        HideWindow();
+                    };
+
+                    button.TouchUpInside += (sender, e) => 
+                    {
+                        ShowWindow(_shareView);
+                    };
                 }
 
                 return _shareButton;
@@ -194,6 +205,7 @@ namespace ItExpert
         private static UIWindow _window;
         private static SettingsView _settingsView;
         private static MenuView _menuView;
+        private static ShareView _shareView;
     }
 }
 

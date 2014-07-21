@@ -228,6 +228,7 @@
     <Compile Include="Logic\NavigationBar\NavigationBarTableSource\MenuSearchContentCreator.cs" />
     <Compile Include="Logic\NavigationBar\NavigationBarTableSource\BaseNavigationBarContentCreator.cs" />
     <Compile Include="Logic\NavigationBar\NavigationBarTableSource\CacheSliderContentCreator.cs" />
+    <Compile Include="Logic\NavigationBar\ShareView.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />

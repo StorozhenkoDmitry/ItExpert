@@ -27,6 +27,16 @@ namespace ItExpert
             {
                 CreateSwitch(cell.ContentView.Frame.Size, item);
             }
+            else
+            {
+                _textView.Dispose();
+                _textView = null;
+
+                CreateTextView(cell.ContentView.Frame.Size, item);
+            }
+
+            _switch.Frame = new RectangleF(new PointF(cell.ContentView.Frame.Width - _switch.Frame.Width - _padding.Right, 
+                cell.ContentView.Frame.Height / 2 - _switch.Frame.Height / 2), _switch.Frame.Size);
 
             _switch.On = (bool)item.GetValue();
 

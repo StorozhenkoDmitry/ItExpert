@@ -26,6 +26,13 @@ namespace ItExpert
             {
                 CreateButton(cell.ContentView.Frame.Size, item);
             }
+            else
+            {
+                _textView.Dispose();
+                _textView = null;
+
+                CreateTextView(cell.ContentView.Frame.Size, item);
+            }
 
             if (_button.ImageView.Image != null)
             {
@@ -36,6 +43,9 @@ namespace ItExpert
             var image = new UIImage(GetButtonImageData((bool)item.GetValue()), 2);
 
             _button.SetImage(image, UIControlState.Normal);
+
+            _button.Frame = new RectangleF(cell.ContentView.Frame.Width - image.Size.Width - _padding.Right, 
+                cell.ContentView.Frame.Height / 2 - image.Size.Height / 2, image.Size.Width, image.Size.Height);
 
             cell.ContentView.Add(_textView);
             cell.ContentView.Add(_button);

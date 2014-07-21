@@ -41,6 +41,13 @@ namespace ItExpert
             {
                 CreateSlider(cell.ContentView.Frame.Size, item);
             }
+            else
+            {
+                _textView.Dispose();
+                _textView = null;
+
+                CreateTextView(cell.ContentView.Frame.Size, item);
+            }
 
             cell.ContentView.Add(_textView);
             cell.ContentView.Add(_rightTextView);
