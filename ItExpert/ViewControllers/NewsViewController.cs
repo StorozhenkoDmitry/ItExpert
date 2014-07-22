@@ -51,6 +51,14 @@ namespace ItExpert
 			_currentPage = page;
 		}
 
+		public override void WillRotate(UIInterfaceOrientation toInterfaceOrientation, double duration)
+		{
+			base.WillRotate(toInterfaceOrientation, duration);
+
+			_bottomBar.Hidden = true;
+			_articlesTableView.Hidden = true;
+		}
+
         public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
         {
             base.DidRotate(fromInterfaceOrientation);
@@ -126,7 +134,22 @@ namespace ItExpert
 					}
 				}
 			}
+
 			UpdateViewsLayout ();
+
+			if (_currentPage == Page.News)
+			{
+				_bottomBar.TrendsButton.SetActiveState (false);
+				_bottomBar.NewsButton.SetActiveState (true);
+			}
+			else if (_currentPage == Page.Trends)
+			{
+				_bottomBar.TrendsButton.SetActiveState (true);
+				_bottomBar.NewsButton.SetActiveState (false);
+			}
+
+			_bottomBar.Hidden = false;
+			_articlesTableView.Hidden = false;
         }
 
 		static bool UserInterfaceIdiomIsPhone {
@@ -456,6 +479,7 @@ namespace ItExpert
 						ExtendedObject = _addPreviousArticleButton
 					});
 				}
+
 				if (_articlesTableView != null && _articlesTableView.Source != null)
 				{
 					if (_articlesTableView.Source is DoubleArticleTableSource)
@@ -571,6 +595,8 @@ namespace ItExpert
 			_articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
 			_articlesTableView.Bounces = true;
             _articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
+			_articlesTableView.TableFooterView = new UIView();
+
 			View.Add (_articlesTableView);
 
 			if (!_fromAnother)
@@ -634,6 +660,17 @@ namespace ItExpert
 			button.TitleLabel.TextAlignment = UITextAlignment.Center;
 			button.TitleLabel.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			button.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+
+			button.TouchDown += (sender, e) => 
+			{
+				(sender as UIButton).SetTitleColor(UIColor.FromRGB(180, 180, 180), UIControlState.Normal);
+			};
+
+			button.TouchUpOutside += (sender, e) => 
+			{
+				(sender as UIButton).SetTitleColor(UIColor.FromRGB(140, 140, 140), UIControlState.Normal);
+			};
+
 			button.TouchUpInside += AddPreviousArticleOnClick;
 			_addPreviousArticleButton = button;
 		}
@@ -795,6 +832,8 @@ namespace ItExpert
 		//Загрузка предыдущих статей
 		private void AddPreviousArticleOnClick(object sender, EventArgs eventArgs)
 		{
+			(sender as UIButton).SetTitleColor(UIColor.FromRGB(140, 140, 140), UIControlState.Normal);
+
 			if (_isLoadingData)return;
 			Action addLoadingProgress = () =>
 			{
@@ -1038,6 +1077,14 @@ namespace ItExpert
             }
 
             InitBottomToolbar();
+
+			if (_loadingIndicator != null)
+			{
+				var height = 50;
+				var bottomBarHeight = _bottomBar.Frame.Height;
+
+				_loadingIndicator.Frame = new RectangleF(0, View.Bounds.Height - (height + bottomBarHeight), View.Bounds.Width, height);
+			}
         }
 
 		#endregion

@@ -14,15 +14,24 @@ namespace ItExpert
             _spaceBetweenButtons = 5;
             _magazine = magazine;
 
-            UIImage image = ItExpertHelper.GetImageFromBase64String(magazine.PreviewPicture.Data);
+			UIImage image = null;
 
-            AddHeader(magazine.Name, image.Size.Width);
+			if (magazine.PreviewPicture != null && !String.IsNullOrWhiteSpace(magazine.PreviewPicture.Data))
+			{
+				image = ItExpertHelper.GetImageFromBase64String(magazine.PreviewPicture.Data);
+			}
+			else
+			{
+				image = UIImage.FromFile("MagazineSplash.png");
+			}
+
+			AddHeader(magazine.Name, Math.Max(120, image.Size.Width));
             AddImage(image);
             AddButtons(magazine.Exists);
 
             float totalHeight = magazine.Exists ? _deleteButton.Frame.Bottom : _downloadButton.Frame.Bottom + _downloadButton.Frame.Height + _spaceBetweenButtons;
 
-            Frame = new RectangleF(0, 0, _imageView.Frame.Width, totalHeight);
+			Frame = new RectangleF(0, 0, Math.Max(_headerTextView.Frame.Width, _imageView.Frame.Width), totalHeight);
         }
 
         public event EventHandler MagazineImagePushed;

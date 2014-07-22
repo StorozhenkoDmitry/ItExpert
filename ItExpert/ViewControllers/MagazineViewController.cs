@@ -313,6 +313,14 @@ namespace ItExpert
 			}
 		}
 
+		public override void WillRotate(UIInterfaceOrientation toInterfaceOrientation, double duration)
+		{
+			base.WillRotate(toInterfaceOrientation, duration);
+
+			_articlesTableView.Hidden = true;
+			_bottomBar.Hidden = true;
+		}
+
         public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
         {
             base.DidRotate(fromInterfaceOrientation);
@@ -402,6 +410,9 @@ namespace ItExpert
 				}
 			}
 			UpdateViewsLayout ();
+
+			_articlesTableView.Hidden = false;
+			_bottomBar.Hidden = false;
         }
 
 		#endregion
@@ -452,6 +463,8 @@ namespace ItExpert
             _articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
             _articlesTableView.Bounces = true;
             _articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
+			_articlesTableView.TableFooterView = new UIView();
+
             View.Add(_articlesTableView);
 
 			var screenWidth =

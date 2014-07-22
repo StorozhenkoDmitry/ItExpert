@@ -57,7 +57,16 @@ namespace ItExpert
 
         private void AddImageView(UITableViewCell cell)
         {
-            UIImage image = ItExpertHelper.GetImageFromBase64String(ApplicationWorker.Magazine.PreviewPicture.Data);
+			UIImage image = null;
+
+			if (ApplicationWorker.Magazine.PreviewPicture != null && !String.IsNullOrWhiteSpace(ApplicationWorker.Magazine.PreviewPicture.Data))
+			{
+				image = ItExpertHelper.GetImageFromBase64String(ApplicationWorker.Magazine.PreviewPicture.Data);
+			}
+			else
+			{
+				image = UIImage.FromFile("MagazineSplash.png");
+			}
 
             if (_imageView == null)
             {
@@ -75,6 +84,12 @@ namespace ItExpert
             _leftHeaderOffset = 30;
 
             float headerX = (_imageView != null ? _imageView.Frame.Right : _padding.Left) + _leftHeaderOffset;
+
+			if (_headerTextView != null)
+			{
+				_headerTextView.Dispose();
+				_headerTextView = null;
+			}
 
             _headerTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(ApplicationWorker.Magazine.Name, UIFont.BoldSystemFontOfSize(16), 
                 UIColor.FromRGB(160, 160, 160)), cell.ContentView.Frame.Width, new PointF(headerX, _padding.Top * 2));

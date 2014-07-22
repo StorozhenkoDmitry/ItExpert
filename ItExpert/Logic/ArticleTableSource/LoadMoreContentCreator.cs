@@ -46,8 +46,8 @@ namespace ItExpert
             button.Frame = new RectangleF(0, 0, cell.ContentView.Frame.Width, textHeight + _padding.Top + _padding.Bottom);
 
             button.SetTitle(button.TitleLabel.Text, UIControlState.Normal);
-            button.TitleLabel.Font = UIFont.SystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
-            button.TitleLabel.TextColor = UIColor.FromRGB(140, 140, 140);
+            button.Font = UIFont.SystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
+			button.SetTitleColor(UIColor.FromRGB(140, 140, 140), UIControlState.Normal);
 
             cell.ContentView.Add(button);
 

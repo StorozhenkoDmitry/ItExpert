@@ -134,6 +134,7 @@
     <BundleResource Include="Resources\AboutUs.png" />
     <BundleResource Include="Resources\ZoomIn48.png" />
     <BundleResource Include="Resources\ZoomOut48.png" />
+    <BundleResource Include="Resources\MagazineSplash.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
