@@ -61,8 +61,9 @@ namespace ItExpert
 
             _isReadedButton.Frame =new RectangleF(cell.ContentView.Frame.Width - _padding.Right - 70, 2, 70, 60);
 
+			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
             UpdateTextView (_headerTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width,
-                _previewHeaderFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
+				headerFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
 
             if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
             {
@@ -87,8 +88,9 @@ namespace ItExpert
                 }
             }
 
+			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
             UpdateTextView (_previewTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left, 
-                _previewTextFont, _forecolor, article.PreviewText, 
+                previewFont, _forecolor, article.PreviewText, 
                 new PointF (_padding.Left, _headerTextView.Frame.Bottom + _padding.Top), _imageViewContainer);
 
             AddCellElements(cell.ContentView);
@@ -109,7 +111,8 @@ namespace ItExpert
     
             _isReadedButton.Add(_isReadedButtonImageView);
 
-            _headerTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, _previewHeaderFont, _forecolor), 
+			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
+			_headerTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, headerFont, _forecolor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
 
             if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
@@ -117,7 +120,8 @@ namespace ItExpert
                 CreateImageView(article, largestImageWidth, cellContentView);
             }
 
-            _previewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText,_previewTextFont, _forecolor), 
+			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
+			_previewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, _forecolor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, _headerTextView.Frame.Bottom + _padding.Top), _imageViewContainer);
 		}
 

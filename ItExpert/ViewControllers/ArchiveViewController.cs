@@ -9,6 +9,8 @@ using System.Drawing;
 using System.IO;
 using MonoTouch.QuickLook;
 using ItExpert.Enum;
+using MonoTouch.Foundation;
+using mTouchPDFReader.Library.Views.Core;
 
 namespace ItExpert
 {
@@ -86,6 +88,15 @@ namespace ItExpert
 			ApplicationWorker.PdfLoader.PdfGetted += OnPdfGetted;
 
             InitNavigationBar();
+
+			if (_yearsView != null)
+			{
+				_yearsView.RemoveFromSuperview ();
+			}
+			if (_archiveView != null)
+			{
+				_archiveView.RemoveFromSuperview ();
+			}
 
             _yearsView = new YearsView(new RectangleF(0, NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight,
                 View.Frame.Width, 40));
@@ -403,7 +414,7 @@ namespace ItExpert
 				}
 				else
 				{
-//					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
+					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
 				}
 				SetLoadingProgressVisible(false);
 				_downloadMagazineView = null;
@@ -437,27 +448,10 @@ namespace ItExpert
 				Toast.MakeText(this, "Файл не найден", ToastLength.Long).Show();
 				return;
 			}
-			PdfViewController showController = null;
-			var controllers = NavigationController.ViewControllers;
-			foreach (var controller in controllers)
-			{
-				showController = controller as PdfViewController;
-				if (showController != null)
-				{
-					break;
-				}
-			}
 			DestroyPdfLoader ();
-			if (showController != null)
-			{
-				NavigationController.PopToViewController (showController, true);
-				showController.ShowPdf (path);
-			}
-			else
-			{
-				showController = new PdfViewController (path);
-				NavigationController.PushViewController (showController, true);
-			}
+			var file = new FileInfo (path);
+			var docViewController = new DocumentViewController(file.Name, file.FullName);
+			NavigationController.PushViewController(docViewController, true);
 		}
 
 		private void UpdateMagazinesPdfExists(List<Magazine> magazines, int year)

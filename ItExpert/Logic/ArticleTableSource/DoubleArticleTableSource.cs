@@ -11,6 +11,8 @@ namespace ItExpert
 {
 	public class DoubleArticleTableSource: UITableViewSource
 	{
+		private static DoubleArticleTableSource Instance;
+
 		public DoubleArticleTableSource (List<Article> articles, bool fromFavorite, MagazineAction magazineAction)
 		{
             _cellIdentifier = "ArticleCell";
@@ -18,6 +20,7 @@ namespace ItExpert
 			_magazineAction = magazineAction;
             _doubleArticles = new List<DoubleArticle>();
             _articles = articles;
+			Instance = this;
 
             ItExpertHelper.LargestImageSizeInArticlesPreview = 0;
             if (articles.Any()) 
@@ -97,16 +100,14 @@ namespace ItExpert
             else
             {
                 cell = CreateCell(tableView);
-
-                cell.CellPushed += (sender, e) => 
-                {
-                    ArticleDetailsViewController articleDetailsView = OpenArticle(e.Article);
-
-                    if (articleDetailsView != null)
-                    {
-                        OnCellPushed (articleDetailsView);
-                    }
-                };
+				cell.CellPushed += (sender, e) => 
+				{
+					var articleDetailsView = OpenArticle(e.Article);
+					if (articleDetailsView != null)
+					{
+						OnCellPushed (articleDetailsView);
+					}
+				};
             }           
 
             cell.ContentView.Bounds = cell.Bounds;
@@ -124,9 +125,13 @@ namespace ItExpert
 
         private void OnCellPushed(ArticleDetailsViewController articlesDetails)
 		{
-			if (PushDetailsView != null)
+			if (Instance != null)
 			{
-				PushDetailsView (this, new PushDetailsEventArgs (articlesDetails));
+				var handler = Interlocked.CompareExchange(ref Instance.PushDetailsView, null, null);
+				if (handler != null)
+				{
+					handler(this, new PushDetailsEventArgs (articlesDetails));
+				}
 			}
 		}
 
@@ -178,18 +183,18 @@ namespace ItExpert
             ArticleDetailsViewController controller = null;
             if (article != null)
             {
-                if (article.ArticleType == ArticleType.Header || article.ArticleType == ArticleType.ExtendedObject ||
-                    article.ArticleType == ArticleType.Placeholder || article.ArticleType == ArticleType.Banner || 
-                    article.ArticleType == ArticleType.PreviousArticlesButton || article.ArticleType == ArticleType.MagazinePreview) return null;
-                _selectItemId = article.Id;
-                article.IsReaded = true;
-				ThreadPool.QueueUserWorkItem(state => ArticlesTableSource.SaveArticle(article));
-                ApplicationWorker.ClearNews();
-                ApplicationWorker.AppendToNewsList(
-                    _articles.Where(x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal));
-                var articlesId = _articles.Where(x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal)
-                    .Select(x => x.Id).ToList();
-                controller = new ArticleDetailsViewController (article, articlesId, _fromFavorite, _magazineAction);
+				if (article.ArticleType == ArticleType.Magazine || article.ArticleType == ArticleType.Portal)
+				{
+					_selectItemId = article.Id;
+					article.IsReaded = true;
+					ThreadPool.QueueUserWorkItem (state => ArticlesTableSource.SaveArticle (article));
+					ApplicationWorker.ClearNews ();
+					ApplicationWorker.AppendToNewsList (
+						_articles.Where (x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal));
+					var articlesId = _articles.Where (x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal)
+                    .Select (x => x.Id).ToList ();
+					controller = new ArticleDetailsViewController (article, articlesId, _fromFavorite, _magazineAction);
+				}
             }
             return controller;
         }

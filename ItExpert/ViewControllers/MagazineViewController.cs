@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using System.IO;
 using MonoTouch.Foundation;
+using mTouchPDFReader.Library.Views.Core;
 
 namespace ItExpert
 {
@@ -119,6 +120,7 @@ namespace ItExpert
 					}
 					_headerAdded = true;
 					_header = rubric.Name;
+					//Пустой список
 					_articles.Clear();
 					_allArticles.Clear();
 					if (_articlesTableView != null && _articlesTableView.Source != null)
@@ -415,6 +417,7 @@ namespace ItExpert
 			_headerAdded = false;
 			_header = null;
 			_prevArticlesExists = true;
+			//Пустой список
 			if (_articles != null)
 			{
 				_articles.Clear();
@@ -441,6 +444,7 @@ namespace ItExpert
 			InitAddPreviousArticleButton ();
             InitNavigationBar();
 
+			//Пустой список
 			_articlesTableView = new UITableView(new RectangleF(0, 0, 0, 
 				0), UITableViewStyle.Plain);
             _articlesTableView.ScrollEnabled = true; 
@@ -983,6 +987,85 @@ namespace ItExpert
 			NavigationController.PushViewController (e.NewsDetailsView, true);
 		}
 
+		private void ButInCacheOnClick(object sender, EventArgs eventArgs)
+		{
+			if (_allArticles == null || !_allArticles.Any() || _magazine == null) return;
+			if (_isRubricSearch)
+			{
+				Toast.MakeText(this, "Результаты по рубрикам нельзя сбросит в кэш", ToastLength.Short).Show();
+				return;
+			}
+			Toast.MakeText(this, "Cброc в кэш стартовал", ToastLength.Short).Show();
+			//отобразить модальный индикатор прогресса;
+			Action inCache = () =>
+			{
+				_magazine.InCache = true;
+				ApplicationWorker.Db.InsertMagazine(_magazine);
+				var pictures = ApplicationWorker.Db.GetPicturesForParent(_magazine.Id);
+				if (pictures != null && pictures.Any())
+				{
+					var magazinePicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Magazine);
+					if (magazinePicture != null)
+					{
+						ApplicationWorker.Db.DeletePicture(magazinePicture.Id);
+					}
+				}
+				if (_magazine.PreviewPicture != null)
+				{
+					ApplicationWorker.Db.InsertPicture(_magazine.PreviewPicture);
+				}
+				ApplicationWorker.Db.SaveInCache(_allArticles.ToList());
+				InvokeOnMainThread(() =>
+				{
+					//скрыть модальный индикатор прогресса;
+					Toast.MakeText(this, "Данные сброшены в кэш", ToastLength.Short).Show();
+				});
+			};
+			ThreadPool.QueueUserWorkItem(state => inCache());
+		}
+
+		private void ButRefreshOnClick(object sender, EventArgs eventArgs)
+		{
+			if (!_isLoadingData && !ApplicationWorker.Settings.OfflineMode)
+			{
+				var connectAccept = IsConnectionAccept();
+				if (!connectAccept)
+				{
+					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long).Show();
+					return;
+				}
+				_prevArticlesExists = true;
+				//Пустой список
+				_articles.Clear();
+				_allArticles.Clear();
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+					}
+				}
+				if (_articlesTableView != null)
+				{
+					_articlesTableView.ReloadData ();
+				}
+				if (_searchRubric != null && _isRubricSearch)
+				{
+					ApplicationWorker.RemoteWorker.MagazineArticlesGetted += SearchRubricOnMagazineArticlesGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetMagazinesArticlesByRubric(
+							ApplicationWorker.Settings, _searchRubric, Magazine.BlockId, -1));
+				}
+				else
+				{
+					_searchRubric = null;
+					_isRubricSearch = false;
+					LoadMagazineArticles();   
+				}
+			}
+		}
+
 		private void ButTrendsOnClick(object sender, EventArgs eventArgs)
 		{
 			NewsViewController showController = null;
@@ -1234,27 +1317,10 @@ namespace ItExpert
 				Toast.MakeText(this, "Файл не найден", ToastLength.Long).Show();
 				return;
 			}
-			PdfViewController showController = null;
-			var controllers = NavigationController.ViewControllers;
-			foreach (var controller in controllers)
-			{
-				showController = controller as PdfViewController;
-				if (showController != null)
-				{
-					break;
-				}
-			}
 			DestroyPdfLoader ();
-			if (showController != null)
-			{
-				NavigationController.PopToViewController (showController, true);
-				showController.ShowPdf (path);
-			}
-			else
-			{
-				showController = new PdfViewController (path);
-				NavigationController.PushViewController (showController, true);
-			}
+			var file = new FileInfo (path);
+			var docViewController = new DocumentViewController(file.Name, file.FullName);
+			NavigationController.PushViewController(docViewController, true);
 		}
 
 		public void DownloadMagazinePdf()

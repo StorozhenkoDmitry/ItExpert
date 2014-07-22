@@ -4,7 +4,9 @@
 	{
 		Author = 1,
 		Section = 2,
-		None = 3
+		Page = 3,
+		Search = 4,
+		None = 5
 	}
 }
 

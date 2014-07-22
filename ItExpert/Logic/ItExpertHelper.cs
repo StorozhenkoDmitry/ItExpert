@@ -107,6 +107,7 @@ namespace ItExpert
 			stringAttributes.ForegroundColor = foregroundColor;
 			stringAttributes.Font = font;
 
+
 			if (isUnderlined)
 			{
 				stringAttributes.UnderlineStyle = NSUnderlineStyle.Single;

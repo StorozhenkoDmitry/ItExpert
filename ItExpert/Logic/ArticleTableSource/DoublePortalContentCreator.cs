@@ -69,7 +69,7 @@ namespace ItExpert
                     MainContainer = null;
                 }
 
-                GC.SuppressFinalize(this);
+				GC.Collect ();
             }
         }
 
@@ -216,7 +216,9 @@ namespace ItExpert
 
             content.IsReadedButton.Add(content.IsReadedButtonImageView);
 
-            content.HeaderTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, _previewHeaderFont, _forecolor), 
+			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
+
+			content.HeaderTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, headerFont, _forecolor), 
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
 
             content.HeaderTextView.UserInteractionEnabled = true;
@@ -226,7 +228,9 @@ namespace ItExpert
                 CreateImageView(content, article, largestImageWidth, mainContainer);
             }
 
-            content.PreviewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText,_previewTextFont, _forecolor), 
+			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
+
+			content.PreviewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, _forecolor), 
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
 
             content.PreviewTextView.UserInteractionEnabled = true;
@@ -246,8 +250,9 @@ namespace ItExpert
 
             content.IsReadedButton.Frame = new RectangleF(mainContainer.Frame.Width - _padding.Right - 70, 2, 70, 60);
 
+			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
             UpdateTextView (content.HeaderTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width,
-                _previewHeaderFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
+				headerFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
 
             if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
             {
@@ -283,8 +288,9 @@ namespace ItExpert
                 content.ImageViewContainer = null;
             }
 
+			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
             UpdateTextView (content.PreviewTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left, 
-                _previewTextFont, _forecolor, article.PreviewText, 
+                previewFont, _forecolor, article.PreviewText, 
                 new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
         }
 

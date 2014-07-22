@@ -45,7 +45,8 @@ namespace ItExpert
 				var duration = properties.Dictionary["{GIF}"];
 				var delayTime = duration.ValueForKey(new NSString("DelayTime"));
 				duration.Dispose ();
-				var realDuration = double.Parse(delayTime.ToString());
+				//var realDuration = double.Parse(delayTime.ToString());
+				var realDuration = 0.1;
 				frameDurations.Add(realDuration);
 				totalFrameDuration += realDuration;
 			}

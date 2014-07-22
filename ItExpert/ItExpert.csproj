@@ -130,6 +130,10 @@
     <BundleResource Include="Resources\NavigationBar\Share.png" />
     <BundleResource Include="Resources\NavigationBar\Twitter.png" />
     <BundleResource Include="Resources\NavigationBar\Vk.png" />
+    <BundleResource Include="Resources\InstapaperLogo.png" />
+    <BundleResource Include="Resources\AboutUs.png" />
+    <BundleResource Include="Resources\ZoomIn48.png" />
+    <BundleResource Include="Resources\ZoomOut48.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -199,7 +203,6 @@
     <Compile Include="Logic\BlackAlertView\RadioButton.cs" />
     <Compile Include="Logic\BlackAlertView\RadioButtonGroup.cs" />
     <Compile Include="Logic\ArticleTableSource\PortalContentCreator.cs" />
-    <Compile Include="ViewControllers\PdfViewController.cs" />
     <Compile Include="Logic\BannerImageView.cs" />
     <Compile Include="Logic\BannerGifView.cs" />
     <Compile Include="ViewControllers\SplashViewController.cs" />
@@ -229,6 +232,16 @@
     <Compile Include="Logic\NavigationBar\NavigationBarTableSource\BaseNavigationBarContentCreator.cs" />
     <Compile Include="Logic\NavigationBar\NavigationBarTableSource\CacheSliderContentCreator.cs" />
     <Compile Include="Logic\NavigationBar\ShareView.cs" />
+    <Compile Include="ViewControllers\InstapaperLoginViewController.cs" />
+    <Compile Include="ViewControllers\AboutUsViewController.cs" />
+    <Compile Include="PdfReader\Data\Enums\AutoScaleModes.cs" />
+    <Compile Include="PdfReader\Data\Objects\Options.cs" />
+    <Compile Include="PdfReader\Views\Core\DocumentViewController.cs" />
+    <Compile Include="PdfReader\Views\Core\PDFDocument.cs" />
+    <Compile Include="PdfReader\Views\Core\PageContentTile.cs" />
+    <Compile Include="PdfReader\Views\Core\PageContentView.cs" />
+    <Compile Include="PdfReader\Views\Core\PageView.cs" />
+    <Compile Include="PdfReader\Views\Core\PageViewController.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
@@ -246,6 +259,9 @@
     <Folder Include="Resources\NavigationBar\" />
     <Folder Include="Logic\NavigationBar\" />
     <Folder Include="Logic\NavigationBar\NavigationBarTableSource\" />
+    <Folder Include="PdfReader\" />
+    <Folder Include="PdfReader\Data\" />
+    <Folder Include="PdfReader\Views\" />
   </ItemGroup>
   <ItemGroup>
     <XamarinComponentReference Include="json.net">

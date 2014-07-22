@@ -203,6 +203,7 @@ namespace ItExpert
 					}
 					_prevArticlesExists = true;
 					_isLoadingData = true;
+					//Пустой список
 					if (_articles != null)
 					{
 						_articles.Clear ();
@@ -252,6 +253,7 @@ namespace ItExpert
 					}
 					_prevArticlesExists = true;
 					_isLoadingData = true;
+					//Пустой список
 					if (_articles != null)
 					{
 						_articles.Clear();
@@ -279,6 +281,80 @@ namespace ItExpert
                         ToastLength.Long).Show();
 					return;
 				}
+			}
+			if (Filter == Filter.Page)
+			{
+				_search = null;
+				if (_articles != null)
+				{
+					_articles.Clear();
+					_allArticles.Clear();
+				}
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+					}
+				}
+				//Пустой список
+				_articlesTableView.ReloadData ();
+				_prevArticlesExists = true;
+				Filter = Filter.None;
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					_isLoadingData = true;
+					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1,
+							_blockId,
+							_sectionId, -1, _search));
+					SetLoadingImageVisible(true);
+				}
+				else
+				{
+					Action getList = () =>
+					{
+						InvokeOnMainThread(() =>
+						{
+							//Пустой список
+							UpdateTableView(new List<Article>());
+						});
+						var isTrends = _blockId == 30;
+						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, isTrends);
+						if (lst.Count() < 20)
+						{
+							_prevArticlesExists = false;
+						}
+						InvokeOnMainThread(() => AddNewArticles(lst));
+					};
+					ThreadPool.QueueUserWorkItem(state => getList());
+				}
+				return;
+			}
+			if (Filter == Filter.Search)
+			{
+				//Пустой список
+				if (_articles != null)
+				{
+					_articles.Clear();
+				}
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+					}
+				}
+				_articlesTableView.ReloadData ();
+				ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+				ThreadPool.QueueUserWorkItem(
+					state =>
+					ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+						_sectionId, -1, _search));
+				SetLoadingImageVisible(true);
+				return;
 			}
 			if (!_firstLoad && !_isLoadingData)
 			{
@@ -380,6 +456,13 @@ namespace ItExpert
 						ExtendedObject = _addPreviousArticleButton
 					});
 				}
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+					}
+				}
 				UpdateViewsLayout ();
 				if (ApplicationWorker.Settings.HideReaded && position > 0)
 				{
@@ -468,7 +551,7 @@ namespace ItExpert
             InitAddPreviousArticleButton ();
             InitBottomToolbar();
 			InitLoadingProgress ();
-
+			//Пустой список
             _articlesTableView = new UITableView(new RectangleF(0, 0, 0, 
                 0), UITableViewStyle.Plain);
 			_articlesTableView.ScrollEnabled = true; 
@@ -751,6 +834,85 @@ namespace ItExpert
 					});
 				};
 				ThreadPool.QueueUserWorkItem(state => getList());
+			}
+		}
+
+		private void ButInCacheOnClick(object sender, EventArgs eventArgs)
+		{
+			if (_allArticles == null || !_allArticles.Any()) return;
+			Toast.MakeText(this, "Cброc в кэш стартовал", ToastLength.Short).Show();
+			Action inCache = () =>
+			{
+
+				//InvokeOnMainThread(() => отобразить модальный индикатор прогресса);
+				ApplicationWorker.Db.SaveInCache(_allArticles.ToList());
+				InvokeOnMainThread(() =>
+				{
+					//скрыть модальный индикатор прогресса;
+					Toast.MakeText(this, "Данные сброшены в кэш", ToastLength.Short).Show();
+				});
+			};
+			ThreadPool.QueueUserWorkItem(state => inCache());
+		}
+
+		private void ButRefreshOnClick(object sender, EventArgs eventArgs)
+		{
+			if (!_isLoadingData)
+			{
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					var connectAccept = IsConnectionAccept();
+					if (!connectAccept)
+					{
+						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
+							.Show();
+						return;
+					}
+				}
+				_prevArticlesExists = true;
+				_allArticles.Clear();
+				//Пустой список
+				if (_articles != null)
+				{
+					_articles.Clear ();
+				}
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+					}
+				}
+				_articlesTableView.ReloadData ();
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					_isLoadingData = true;
+					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1, _blockId,
+							_sectionId, _authorId, _search));
+					SetLoadingImageVisible(true);
+				}
+				else
+				{
+					SetLoadingImageVisible(true);
+					Action getList = () =>
+					{
+						var isTrends = _blockId == 30;
+						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, isTrends);
+						if (lst.Count() < 20)
+						{
+							_prevArticlesExists = false;
+						}
+						InvokeOnMainThread(() =>
+						{
+							AddNewArticles(lst);
+							SetLoadingImageVisible(false);
+						});
+					};
+					ThreadPool.QueueUserWorkItem(state => getList());
+				}
 			}
 		}
 
@@ -1065,56 +1227,39 @@ namespace ItExpert
 			}
 			if (sectionChange || blockChange || _search != null || _currentPage == Page.None || Filter != Filter.None)
 			{
-				Filter = Filter.None;
-				_search = null;
-				if (_articles != null)
-				{
-					_articles.Clear();
-					_allArticles.Clear();
-				}
-				if (_articlesTableView != null && _articlesTableView.Source != null)
-				{
-					if (_articlesTableView.Source is DoubleArticleTableSource)
-					{
-						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
-					}
-				}
-				_articlesTableView.ReloadData ();
-				_prevArticlesExists = true;
+				Filter = Filter.Page;
+			}
+		}
+
+		private void Search(string search)
+		{
+			if (!_isLoadingData && !string.IsNullOrWhiteSpace(search))
+			{
+				_bottomBar.NewsButton.SetActiveState (true);
+				_bottomBar.TrendsButton.SetActiveState (false);
 				if (!ApplicationWorker.Settings.OfflineMode)
 				{
+					var connectAccept = IsConnectionAccept();
+					if (!connectAccept)
+					{
+						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
+							ToastLength.Long).Show();
+						return;
+					}
+					_prevArticlesExists = true;
 					_isLoadingData = true;
-					ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
-					ThreadPool.QueueUserWorkItem(
-						state =>
-						ApplicationWorker.RemoteWorker.BeginGetNews(ApplicationWorker.Settings, -1, -1,
-							_blockId,
-							_sectionId, -1, _search));
-					SetLoadingImageVisible(true);
+					_search = search;
+					_blockId = -1;
+					_sectionId = -1;
+					Filter = Filter.Search;
+					return;
 				}
 				else
 				{
-					Action getList = () =>
-					{
-						InvokeOnMainThread(() =>
-						{
-                            UpdateTableView(new List<Article>());
-						});
-						var isTrends = _blockId == 30;
-						var lst = ApplicationWorker.Db.GetArticlesFromDb(0, 20, isTrends);
-						if (lst.Count() < 20)
-						{
-							_prevArticlesExists = false;
-						}
-						InvokeOnMainThread(() => AddNewArticles(lst));
-					};
-					ThreadPool.QueueUserWorkItem(state => getList());
+					Toast.MakeText(this, "Поиск не доступен в оффлайн режиме",
+						ToastLength.Long).Show();
+					return;
 				}
-				return;
-			}
-			if (_articles != null && _articles.Any())
-			{
-                UpdateTableView(_articles);
 			}
 		}
 
@@ -1197,6 +1342,7 @@ namespace ItExpert
 				_sectionId = -1;
 				_authorId = -1;
 				_search = null;
+				//Пустой список
 				if (_articles != null)
 				{
 					_articles.Clear();
@@ -1225,6 +1371,7 @@ namespace ItExpert
 					{
 						InvokeOnMainThread(() =>
 						{
+							//Пустой список
 							SetLoadingImageVisible(true);
                             UpdateTableView(new List<Article>());
 						});
@@ -1273,6 +1420,7 @@ namespace ItExpert
 				_sectionId = -1;
 				_authorId = -1;
 				_search = null;
+				//Пустой список
 				if (_articles != null)
 				{
 					_articles.Clear();
@@ -1302,6 +1450,7 @@ namespace ItExpert
 					{
 						InvokeOnMainThread(() =>
 						{
+							//Пустой список
 							SetLoadingImageVisible(true);
                             UpdateTableView(new List<Article>());
 						});
@@ -1452,11 +1601,11 @@ namespace ItExpert
             {
 				if (_articlesTableView.Source is ArticlesTableSource)
 				{
-					(_articlesTableView.Source as ArticlesTableSource).PushDetailsView -= OnPushArticleDetails;
+					((ArticlesTableSource)_articlesTableView.Source).PushDetailsView -= OnPushArticleDetails;
 				}
 				else if (_articlesTableView.Source is DoubleArticleTableSource)
 				{
-					(_articlesTableView.Source as DoubleArticleTableSource).PushDetailsView -= OnPushArticleDetails;
+					((DoubleArticleTableSource)_articlesTableView.Source).PushDetailsView -= OnPushArticleDetails;
 				}
                 _articlesTableView.Source.Dispose();
                 _articlesTableView.Source = null;
@@ -1468,13 +1617,13 @@ namespace ItExpert
             {
                 source = new ArticlesTableSource(articles, false, MagazineAction.NoAction);
 
-                (source as ArticlesTableSource).PushDetailsView += OnPushArticleDetails;
+				((ArticlesTableSource)source).PushDetailsView += OnPushArticleDetails;
             }
             else
             {
                 source = new DoubleArticleTableSource(articles, false, MagazineAction.NoAction);
 
-                (source as DoubleArticleTableSource).PushDetailsView += OnPushArticleDetails;
+				((DoubleArticleTableSource)source).PushDetailsView += OnPushArticleDetails;
             }
 
             var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
