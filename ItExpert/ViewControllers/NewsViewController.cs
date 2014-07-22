@@ -480,6 +480,18 @@ namespace ItExpert
 					//Прокрутить список к position
 				}
 			}
+
+			if (_currentPage == Page.News)
+			{
+				_bottomBar.TrendsButton.SetActiveState (false);
+				_bottomBar.NewsButton.SetActiveState (true);
+			}
+			else if (_currentPage == Page.Trends)
+			{
+				_bottomBar.TrendsButton.SetActiveState (true);
+				_bottomBar.NewsButton.SetActiveState (false);
+			}
+
 			if (_firstLoad)
 			{
 				_currentOrientation = InterfaceOrientation;

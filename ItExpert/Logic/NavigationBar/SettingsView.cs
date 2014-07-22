@@ -54,7 +54,7 @@ namespace ItExpert
         {
             _headerView = new UIView(_navigationController.NavigationBar.Frame);
 
-            _headerView.BackgroundColor = UIColor.FromRGB(40, 40, 40);
+			_headerView.BackgroundColor = UIColor.Black;
 
             var image = new UIImage(NSData.FromFile("NavigationBar/Back.png"), 2);
 
@@ -84,7 +84,7 @@ namespace ItExpert
             _settingsTableView = new UITableView();
 
             _settingsTableView.Frame = new RectangleF(0, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height, screenSize.Width, 
-                screenSize.Height / 2);
+				Math.Min(screenSize.Height / 2, _maxTableViewHeight));
             _settingsTableView.BackgroundColor = UIColor.Black;
             _settingsTableView.ScrollEnabled = true; 
             _settingsTableView.UserInteractionEnabled = true;
@@ -117,7 +117,7 @@ namespace ItExpert
             if (_settingsTableView != null)
             {
                 _settingsTableView.Frame = new RectangleF(0, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height, 
-                    screenSize.Width, screenSize.Height / 2);
+					screenSize.Width, Math.Min(screenSize.Height / 2, _maxTableViewHeight));
 
                 _settingsTableView.ReloadData();
             }
@@ -136,6 +136,15 @@ namespace ItExpert
                 _logoImageView.Frame = new RectangleF(new PointF(_backButton.Frame.Right + 20, _headerView.Frame.Height / 2 - _logoImageView.Frame.Height / 2), 
                     _logoImageView.Frame.Size);
             }
+
+			if (_cacheView != null)
+			{
+				float cacheY = ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height;
+
+				_cacheView.Frame = new RectangleF(new PointF(0, cacheY), new SizeF(screenSize.Width, screenSize.Height - cacheY));
+
+				_cacheView.CorrectSubviewsFrames();
+			}
         }
 
         private List<NavigationBarItem> GetSettingsItems()
@@ -215,8 +224,11 @@ namespace ItExpert
                             _cacheView = null;
                         }
 
-                        _cacheView = new CacheView(new RectangleF(new PointF(0, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height),
-                            ItExpertHelper.GetRealScreenSize().Size));
+						float cacheY = ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height;
+
+						SizeF screenSize = ItExpertHelper.GetRealScreenSize().Size;
+
+						_cacheView = new CacheView(new RectangleF(new PointF(0, cacheY), new SizeF(screenSize.Width, screenSize.Height - cacheY)));
 
                         _backButtonState = BackButtonState.Cache;
 
@@ -260,6 +272,7 @@ namespace ItExpert
             }
         }
 
+		private float _maxTableViewHeight = 396;
         private UITableView _settingsTableView;
         private UIView _tapableView;
         private int _testSliderValue = 2;

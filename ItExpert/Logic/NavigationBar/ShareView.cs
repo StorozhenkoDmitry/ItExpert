@@ -343,7 +343,7 @@ namespace ItExpert
         {
             _headerView = new UIView(_navigationController.NavigationBar.Frame);
 
-            _headerView.BackgroundColor = UIColor.FromRGB(40, 40, 40);
+			_headerView.BackgroundColor = UIColor.Black;
 
             var image = new UIImage(NSData.FromFile("NavigationBar/Back.png"), 2);
 

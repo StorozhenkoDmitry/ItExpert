@@ -92,23 +92,21 @@ namespace ItExpert
 		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 		{
             DoubleArticleTableViewCell cell = tableView.DequeueReusableCell (_cellIdentifier) as DoubleArticleTableViewCell;
+
 			if (cell != null)
 			{
+				cell.RemoveAllEvents();
+
 				cell.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
 				cell.ContentView.Frame = new System.Drawing.RectangleF(0, 0, tableView.Frame.Width, cell.Frame.Height);
+
+				cell.CellPushed += OnCellPushed;
 			}
             else
             {
                 cell = CreateCell(tableView);
-				cell.CellPushed += (sender, e) => 
-				{
-					var articleDetailsView = OpenArticle(e.Article);
-					if (articleDetailsView != null)
-					{
-						OnCellPushed (articleDetailsView);
-					}
-				};
-            }           
+				cell.CellPushed += OnCellPushed;
+            }
 
             cell.ContentView.Bounds = cell.Bounds;
             cell.UpdateContent(_doubleArticles[indexPath.Row]);
@@ -123,16 +121,21 @@ namespace ItExpert
             return cell.GetHeightDependingOnContent(_doubleArticles[indexPath.Row]);
 		}
 
-        private void OnCellPushed(ArticleDetailsViewController articlesDetails)
+		private void OnCellPushed(object sender, DoubleCellPushedEventArgs e)
 		{
-			if (Instance != null)
+			var articleDetailsView = OpenArticle(e.Article);
+			if (articleDetailsView != null)
 			{
-				var handler = Interlocked.CompareExchange(ref Instance.PushDetailsView, null, null);
-				if (handler != null)
+				if (Instance != null)
 				{
-					handler(this, new PushDetailsEventArgs (articlesDetails));
+					var handler = Interlocked.CompareExchange(ref Instance.PushDetailsView, null, null);
+					if (handler != null)
+					{
+						handler(this, new PushDetailsEventArgs (articleDetailsView));
+					}
 				}
 			}
+
 		}
 
 		public void SetMagazineAction(MagazineAction magazineAction)

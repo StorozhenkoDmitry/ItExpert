@@ -49,6 +49,19 @@ namespace ItExpert
                 CreateTextView(cell.ContentView.Frame.Size, item);
             }
 
+			float sliderHorizontalOffset = 10;
+			float sliderVerticalOffset = 5;
+
+			_rightTextView.Frame = new RectangleF(
+				new PointF(cell.ContentView.Frame.Width - _rightTextView.Frame.Width - _padding.Right, 
+				cell.ContentView.Frame.Height / 2 - _rightTextView.Frame.Height / 2), 
+				_rightTextView.Frame.Size);
+
+			_slider.Frame = new RectangleF(sliderHorizontalOffset + _padding.Left,  
+				_textView.Frame.Bottom + _padding.Bottom + sliderVerticalOffset, 
+				cell.ContentView.Frame.Width - _padding.Right - _padding.Left - sliderHorizontalOffset * 2, 
+				_slider.Frame.Height);
+
             cell.ContentView.Add(_textView);
             cell.ContentView.Add(_rightTextView);
             cell.ContentView.Add(_slider);

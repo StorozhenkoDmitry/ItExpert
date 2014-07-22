@@ -7,11 +7,16 @@ namespace ItExpert
 {
     public class CacheView: UIView
     {
-        public CacheView(RectangleF frame)
+        public CacheView (RectangleF frame)
+			: base (frame)
         {
-            Frame = frame;
+			UserInteractionEnabled = true;
 
             BackgroundColor = UIColor.Black;
+
+			_scrollView = new UIScrollView (Bounds);
+			_scrollView.UserInteractionEnabled = true;
+			_scrollView.ScrollEnabled = true;
 
             _tableView = new UITableView();
 
@@ -25,8 +30,6 @@ namespace ItExpert
 
             _tableView.Source = new NavigationBarTableSource(GetCahceSettingsItems());
 
-            Add(_tableView);
-
             float offsetBetweenButtons = 10;
 
             _clearCacheButton = GetButton("Очистить кэш", new PointF(0, _tableView.Frame.Bottom + offsetBetweenButtons));
@@ -37,10 +40,51 @@ namespace ItExpert
             _deletePdfButton.TouchUpInside += OnDeletePdfButtonPushed;
             _deleteAllFavoritesButton.TouchUpInside += OnDeleteAllFavoritesButtonPushed;
 
-            Add(_clearCacheButton);
-            Add(_deletePdfButton);
-            Add(_deleteAllFavoritesButton);
+			_scrollView.Add(_tableView);
+			_scrollView.Add(_clearCacheButton);
+			_scrollView.Add(_deletePdfButton);
+			_scrollView.Add(_deleteAllFavoritesButton);
+
+			Add(_scrollView);
+
+			_scrollView.ContentSize = new SizeF (Frame.Width, _deleteAllFavoritesButton.Frame.Bottom + offsetBetweenButtons);
         }
+
+		public void CorrectSubviewsFrames()
+		{
+			var screenSize = ItExpertHelper.GetRealScreenSize ();
+
+			if (_tableView != null)
+			{
+				_tableView.Frame = new RectangleF(0, 0, screenSize.Width, 172);
+
+				_tableView.ReloadData ();
+
+				if (_clearCacheButton != null)
+				{
+					_clearCacheButton.Frame = new RectangleF(
+						new PointF(screenSize.Width / 2 - _clearCacheButton.Frame.Width / 2, _clearCacheButton.Frame.Y), 
+						_clearCacheButton.Frame.Size);
+				}
+
+				if (_deletePdfButton != null)
+				{
+					_deletePdfButton.Frame = new RectangleF(
+						new PointF(screenSize.Width / 2 - _deletePdfButton.Frame.Width / 2, _deletePdfButton.Frame.Y), 
+						_deletePdfButton.Frame.Size);
+				}
+
+				if (_deleteAllFavoritesButton != null)
+				{
+					_deleteAllFavoritesButton.Frame = new RectangleF(
+						new PointF(screenSize.Width / 2 - _deleteAllFavoritesButton.Frame.Width / 2, _deleteAllFavoritesButton.Frame.Y), 
+						_deleteAllFavoritesButton.Frame.Size);
+				}
+
+				_scrollView.Frame = Bounds;
+				_scrollView.ContentSize = new SizeF (screenSize.Width, _deleteAllFavoritesButton.Frame.Bottom + 10);
+			}
+		}
 
         private List<NavigationBarItem> GetCahceSettingsItems()
         {
@@ -125,6 +169,7 @@ namespace ItExpert
         private UIButton _clearCacheButton;
         private UIButton _deletePdfButton;
         private UIButton _deleteAllFavoritesButton;
+		private UIScrollView _scrollView;
     }
 }
 

@@ -14,9 +14,34 @@ namespace ItExpert
             BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 
             _creatorsPool = new Dictionary<BaseContentCreator.CreatorType, BaseContentCreator>();
+
+			delegates = new List<EventHandler<DoubleCellPushedEventArgs>>();
         }
 
-        public event EventHandler<DoubleCellPushedEventArgs> CellPushed;
+        public event EventHandler<DoubleCellPushedEventArgs> CellPushed
+		{
+			add
+			{
+				CellPushedReal += value;
+				delegates.Add(value);
+			}
+			remove
+			{
+				CellPushedReal -= value;
+				delegates.Remove(value);
+			}
+		}
+
+		private event EventHandler<DoubleCellPushedEventArgs> CellPushedReal;
+
+		public void RemoveAllEvents()
+		{
+			foreach(EventHandler<DoubleCellPushedEventArgs> eh in delegates)
+			{
+				CellPushedReal -= eh;
+			}
+			delegates.Clear();
+		}
 
         public void UpdateContent(DoubleArticle article)
         {
@@ -79,10 +104,7 @@ namespace ItExpert
 
                         contentCreator.CellPushed += (sender, e) => 
                         {
-                            if (CellPushed != null)
-                            {
-                                CellPushed(sender, e);
-                            }
+							CellPushedReal (sender, e);
                         };
 
                         _creatorsPool.Add(BaseContentCreator.CreatorType.Portal, contentCreator);
@@ -140,6 +162,8 @@ namespace ItExpert
         private bool _isDoubleContent;
 
         private Dictionary<BaseContentCreator.CreatorType, BaseContentCreator> _creatorsPool;
+
+		private List<EventHandler<DoubleCellPushedEventArgs>> delegates;
     }
 }
 
