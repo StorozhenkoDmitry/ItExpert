@@ -217,23 +217,25 @@ namespace ItExpert
             content.IsReadedButton.Add(content.IsReadedButtonImageView);
 
 			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
-
-			content.HeaderTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, headerFont, _forecolor), 
+			var foreColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
+			content.HeaderTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, headerFont, foreColor), 
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
 
             content.HeaderTextView.UserInteractionEnabled = true;
-
-            if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
+			content.HeaderTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+            
+			if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
             {
                 CreateImageView(content, article, largestImageWidth, mainContainer);
             }
 
 			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
 
-			content.PreviewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, _forecolor), 
+			content.PreviewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, foreColor), 
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
 
             content.PreviewTextView.UserInteractionEnabled = true;
+			content.PreviewTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
         }
 
         private void UpdateContentElements(UIView mainContainer, Article article, float largestImageWidth, Content content)
@@ -250,9 +252,10 @@ namespace ItExpert
 
             content.IsReadedButton.Frame = new RectangleF(mainContainer.Frame.Width - _padding.Right - 70, 2, 70, 60);
 
+			var foreColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
             UpdateTextView (content.HeaderTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width,
-				headerFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
+				headerFont, foreColor, article.Name, new PointF (_padding.Left, _padding.Top));
 
             if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
             {
@@ -290,7 +293,7 @@ namespace ItExpert
 
 			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
             UpdateTextView (content.PreviewTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left, 
-                previewFont, _forecolor, article.PreviewText, 
+				previewFont, foreColor, article.PreviewText, 
                 new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
         }
 
@@ -308,6 +311,8 @@ namespace ItExpert
 
         private void UpdateTextView(UITextView textViewToUpdate, float updatedTextViewWidth, UIFont font, UIColor foregroundColor, string updatedText, PointF updatedTextViewLocation, UIView imageView = null)
         {
+			textViewToUpdate.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+
             var attributedString = ItExpertHelper.GetAttributedString (updatedText, font, foregroundColor);
 
             textViewToUpdate.TextStorage.SetString (attributedString);

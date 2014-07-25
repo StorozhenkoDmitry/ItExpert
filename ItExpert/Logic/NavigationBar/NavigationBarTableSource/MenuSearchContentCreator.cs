@@ -57,6 +57,8 @@ namespace ItExpert
             _searchButton.TouchUpInside += (sender, e) => 
             {
                 _item.SetValue(_searchTextField.Text);
+				_searchTextField.Text = string.Empty;
+				_searchTextField.ResignFirstResponder();
             };
         }
 

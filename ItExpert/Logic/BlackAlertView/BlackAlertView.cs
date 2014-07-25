@@ -37,6 +37,12 @@ namespace ItExpert
             _alertView.SetButtons(cancelButton, confirmButton);
         }
 
+
+		public void SetRadionButtonActive(int index)
+		{
+			_alertView.SetRadioButtonActive(index);
+		}
+
         public event EventHandler<BlackAlertViewButtonEventArgs> ButtonPushed;
 
         public void Show()

@@ -53,16 +53,21 @@ namespace ItExpert
 
 		private void InitSplash()
 		{
+			var fileName = "Splash.png";
+			if (InterfaceOrientation == UIInterfaceOrientation.LandscapeLeft || InterfaceOrientation == UIInterfaceOrientation.LandscapeRight)
+			{
+				fileName = "SplashLand.png";
+			}
 			if (_splashImage == null)
 			{
 				_splashImage = new UIImageView (new RectangleF (0, 0, View.Bounds.Width, View.Bounds.Height));
-				_splashImage.Image = new UIImage (NSData.FromFile ("Splash.png"), 1);
+				_splashImage.Image = new UIImage (NSData.FromFile (fileName), 1);
 				Add (_splashImage);
 			}
 			else
 			{
 				_splashImage.Frame = new RectangleF (0, 0, View.Bounds.Width, View.Bounds.Height);
-				_splashImage.Image = new UIImage (NSData.FromFile ("Splash.png"), 1);
+				_splashImage.Image = new UIImage (NSData.FromFile (fileName), 1);
 			}
 			if (_indicator == null)
 			{
@@ -86,7 +91,7 @@ namespace ItExpert
 			if (!connectAccept)
 			{
 				OnStop ();
-				NavigationController.PushViewController (new NewsViewController (), true);
+				NavigationController.PushViewController (new NewsViewController (), false);
 				return;
 			}
 			var screenWidth =
@@ -146,7 +151,7 @@ namespace ItExpert
 			{
 				ApplicationWorker.StartArticlesEventArgs = e;
 				OnStop ();
-				NavigationController.PushViewController (new NewsViewController (), true);
+				NavigationController.PushViewController (new NewsViewController (), false);
 			});
 		}
 
@@ -216,7 +221,7 @@ namespace ItExpert
 				if (!connectAccept)
 				{
 					OnStop ();
-					NavigationController.PushViewController (new NewsViewController (), true);
+					NavigationController.PushViewController (new NewsViewController (), false);
 					return;
 				}
 				ApplicationWorker.RemoteWorker.NewsGetted += NewNewsGetted;
@@ -233,7 +238,7 @@ namespace ItExpert
 				else
 				{
 					OnStop ();
-					NavigationController.PushViewController (new NewsViewController (), true);
+					NavigationController.PushViewController (new NewsViewController (), false);
 				}
 			});
 		}

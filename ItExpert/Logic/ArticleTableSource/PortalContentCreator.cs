@@ -62,8 +62,9 @@ namespace ItExpert
             _isReadedButton.Frame =new RectangleF(cell.ContentView.Frame.Width - _padding.Right - 70, 2, 70, 60);
 
 			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
+			var foreColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
             UpdateTextView (_headerTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width,
-				headerFont, _forecolor, article.Name, new PointF (_padding.Left, _padding.Top));
+				headerFont, foreColor, article.Name, new PointF (_padding.Left, _padding.Top));
 
             if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
             {
@@ -90,7 +91,7 @@ namespace ItExpert
 
 			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
             UpdateTextView (_previewTextView, cell.ContentView.Bounds.Width - _padding.Right - _padding.Left, 
-                previewFont, _forecolor, article.PreviewText, 
+				previewFont, foreColor, article.PreviewText, 
                 new PointF (_padding.Left, _headerTextView.Frame.Bottom + _padding.Top), _imageViewContainer);
 
             AddCellElements(cell.ContentView);
@@ -111,18 +112,20 @@ namespace ItExpert
     
             _isReadedButton.Add(_isReadedButtonImageView);
 
+			var foreColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
-			_headerTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, headerFont, _forecolor), 
+			_headerTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, headerFont, foreColor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left - _isReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
-
+			_headerTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
             if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
             {
                 CreateImageView(article, largestImageWidth, cellContentView);
             }
 
 			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
-			_previewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, _forecolor), 
+			_previewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, foreColor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, _headerTextView.Frame.Bottom + _padding.Top), _imageViewContainer);
+			_previewTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 		}
 
         private void AddCellElements(UIView cellContentView)
@@ -143,6 +146,8 @@ namespace ItExpert
 			textViewToUpdate.AttributedText = attributedString;
 
 			textViewToUpdate.TextContainer.Size = new Size ((int)updatedTextViewWidth, int.MaxValue);
+
+			textViewToUpdate.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 
            if (imageView != null)
            {

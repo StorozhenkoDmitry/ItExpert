@@ -928,11 +928,11 @@ namespace ItExpert.DataAccessLayer
                 var cacheLimit = ApplicationWorker.Settings.GetDbLimitSizeInMb();
                 var favIds = _db.Table<Article>().Where(x => x.IsFavorite).ToList();
                 var favIdsString = string.Join(",", favIds.Select(x => x.Id));
-                _db.Execute("DELETE FROM ItemSection WHERE IdArticle NOT IN(" + favIdsString + ")");
-                _db.Execute("DELETE FROM Picture WHERE Type != 3 AND Type != 4 AND IdParent NOT IN(" +
+				_db.Execute("DELETE FROM ItemSection WHERE IdArticle NOT IN(" + favIdsString + ")");
+				_db.Execute("DELETE FROM Picture WHERE Type != 3 AND Type != 4 AND IdParent NOT IN(" +
                             favIdsString + ")");
-                _db.Execute("DELETE FROM Article WHERE IsReaded = 0 AND IsFavorite = 0");
-                _db.Execute(
+				_db.Execute("DELETE FROM Article WHERE IsReaded = 0 AND IsFavorite = 0");
+				_db.Execute(
                     "UPDATE Article SET Video = NULL, RubricsId = NULL, AuthorsId = NULL, PreviewText = NULL, DetailText = NULL, SectionsId = NULL, Name = NULL, Url = NULL, Timespan = 0 WHERE IsReaded = 1 AND IsFavorite = 0");
                 var magazines = _db.Table<Magazine>().Where(x => x.Exists).ToList();
                 var magIds = string.Join(",", magazines.Select(x => x.Id));
@@ -1033,7 +1033,7 @@ namespace ItExpert.DataAccessLayer
 
         public long GetDbSize()
         {
-            var folder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
+            var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
             var file = new FileInfo(Path.Combine(folder, DbName));
             var size = file.Length;
             return size;

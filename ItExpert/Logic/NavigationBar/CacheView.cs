@@ -2,6 +2,10 @@
 using MonoTouch.UIKit;
 using System.Drawing;
 using System.Collections.Generic;
+using System.IO;
+using ItExpert.Model;
+using BigTed;
+using System.Threading;
 
 namespace ItExpert
 {
@@ -93,20 +97,45 @@ namespace ItExpert
             cacheSettingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap) 
             { 
                 Title = "Объем данных", 
-                GetValue = () => { return "1,45 Мб"; }
+                GetValue = () => { 
+					var dbSize = ApplicationWorker.Db.GetDbSize();
+					var dbSizeMb = Math.Round((double)dbSize/(1024*1024), 2);
+					return dbSizeMb + " Мб";
+				}
             });
 
             cacheSettingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap)
             { 
                 Title = "Объем всех Pdf",  
-                GetValue = () => { return "20,15 Мб"; }
+                GetValue = () => { 
+					var value = string.Empty;
+					var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+					var dirExts = Directory.Exists(folder + Settings.PdfFolder);
+					if (!dirExts)
+					{
+						value = "0 Мб";
+					}
+					else
+					{
+						long sizePdfs = 0;
+						var fileNames = Directory.GetFiles(folder + Settings.PdfFolder);
+						foreach (var name in fileNames)
+						{
+							var file = new FileInfo(name);
+							sizePdfs += file.Length;
+						}
+						var sizePdfsMb = Math.Round((double)sizePdfs / (1024 * 1024), 2);
+						value = sizePdfsMb + " Мб";
+					}
+					return value; 
+				}
             });
 
             cacheSettingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.CacheSlider) 
             { 
                 Title = "Предел размера данных", 
-                GetValue = () => { return 2; },
-                SetValue = (value) => { Console.WriteLine ("Slider value: {0}", value); }
+				GetValue = () => { return ApplicationWorker.Settings.DbSizeLimit; },
+                SetValue = (value) => {  }
             });
 
             return cacheSettingsItems;
@@ -147,22 +176,48 @@ namespace ItExpert
         private void OnClearCacheButtonPushed(object sender, EventArgs e)
         {
             var senderButton = (sender as UIButton);
-
             senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
+
+			Action clearCache = () =>
+			{
+				ApplicationWorker.Db.ClearCache();
+				InvokeOnMainThread(() =>
+				{
+					_tableView.ReloadData();
+				});
+			};
+			ThreadPool.QueueUserWorkItem(state => clearCache());
         }
 
         private void OnDeletePdfButtonPushed(object sender, EventArgs e)
         {
             var senderButton = (sender as UIButton);
-
             senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
+
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			var dirExts = Directory.Exists(folder + Settings.PdfFolder);
+			if (dirExts)
+			{
+				Directory.Delete(folder + Settings.PdfFolder, true);
+			}
+			_tableView.ReloadData();
+			ApplicationWorker.Db.SetAllMagazinePdfNotLoaded();
         }
 
         private void OnDeleteAllFavoritesButtonPushed(object sender, EventArgs e)
         {
             var senderButton = (sender as UIButton);
-
             senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
+
+			Action clearCache = () =>
+			{
+				ApplicationWorker.Db.DeleteFavorite();
+				InvokeOnMainThread(() =>
+				{
+					_tableView.ReloadData();
+				});
+			};
+			ThreadPool.QueueUserWorkItem(state => clearCache());
         }
 
         private UITableView _tableView;

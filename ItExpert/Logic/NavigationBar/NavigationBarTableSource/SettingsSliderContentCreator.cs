@@ -59,10 +59,10 @@ namespace ItExpert
             _slider.Frame = new RectangleF(viewSize.Width / 2 - _leftSliderOffset,  viewSize.Height / 2 - _slider.Frame.Height / 2, 
                 viewSize.Width / 2 - _padding.Right - _labelSize.Width + _leftSliderOffset, _slider.Frame.Height);
 
-            _slider.MinValue = 0;
-            _slider.MaxValue = 5;
+			_slider.MinValue = 1;
+			_slider.MaxValue = 6;
             _slider.Value = (int)_item.GetValue();;
-            _slider.Continuous = false;
+			_slider.Continuous = false;
 
             _valueLabel = new UILabel();
 

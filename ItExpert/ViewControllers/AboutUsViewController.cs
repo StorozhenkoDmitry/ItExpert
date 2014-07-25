@@ -2,11 +2,14 @@
 using MonoTouch.UIKit;
 using System.Drawing;
 using MonoTouch.Foundation;
+using MonoTouch.MessageUI;
 
 namespace ItExpert
 {
 	public class AboutUsViewController : UIViewController
 	{
+		private bool _isInit = false;
+
 		public AboutUsViewController ()
 		{
 		}
@@ -23,7 +26,6 @@ namespace ItExpert
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
-			NavigationController.NavigationBarHidden = true;
 			AutomaticallyAdjustsScrollViewInsets = false;
 
 			// Perform any additional setup after loading the view, typically from a nib.
@@ -31,15 +33,34 @@ namespace ItExpert
 
 		public override void ViewWillAppear (bool animated)
 		{
-			base.ViewWillAppear (animated);
-			Initialize ();
+			base.ViewWillAppear(animated);
+			if (!_isInit)
+			{
+				Initialize();
+				_isInit = true;
+			}
+		}
+
+		private void InitNavigationBar()
+		{
+			UIBarButtonItem spaceForBack = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+			spaceForBack.Width = -6;
+
+			UIBarButtonItem spaceForLogo = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+			spaceForLogo.Width = 20;
+
+			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { spaceForBack, NavigationBarButton.Back, spaceForLogo, NavigationBarButton.Logo };           
 		}
 
 		void Initialize()
 		{
+			InitNavigationBar();
+
 			View.BackgroundColor = UIColor.FromRGB(240, 240, 240);
 			_padding = new UIEdgeInsets (8, 8, 8, 8);
-			_scrollView = new UIScrollView(new RectangleF(0, 0, View.Frame.Width, View.Frame.Height));
+			_scrollView = new UIScrollView(new RectangleF(0, NavigationController.NavigationBar.Frame.Bottom, View.Frame.Width, View.Frame.Height - NavigationController.NavigationBar.Frame.Bottom));
 			_scrollView.UserInteractionEnabled = true;
 			_scrollView.ScrollEnabled = true;
 
@@ -170,7 +191,7 @@ namespace ItExpert
 			label13.Frame = new RectangleF(_padding.Left + label12.Frame.Width + 4, label11.Frame.Bottom + 8, label13.Frame.Width, label13.Frame.Height);
 			tap = new UITapGestureRecognizer (() =>
 			{
-				OpenUrl("www.it-world.ru");
+				OpenUrl("http://www.it-world.ru");
 			});
 			label13.AddGestureRecognizer (tap);
 			_scrollView.Add (label13);
@@ -182,7 +203,7 @@ namespace ItExpert
 			label14.Frame = new RectangleF(_padding.Left + label12.Frame.Width + 4, label13.Frame.Bottom + 6, label14.Frame.Width, label14.Frame.Height);
 			tap = new UITapGestureRecognizer (() =>
 			{
-				OpenUrl("www.allcio.ru");
+				OpenUrl("http://www.allcio.ru");
 			});
 			label14.AddGestureRecognizer (tap);
 			_scrollView.Add (label14);
@@ -194,7 +215,7 @@ namespace ItExpert
 			label15.Frame = new RectangleF(_padding.Left + label12.Frame.Width + 4, label14.Frame.Bottom + 6, label15.Frame.Width, label15.Frame.Height);
 			tap = new UITapGestureRecognizer (() =>
 			{
-				OpenUrl("www.it-weekly.ru");
+				OpenUrl("http://www.it-weekly.ru");
 			});
 			label15.AddGestureRecognizer (tap);
 			_scrollView.Add (label15);
@@ -235,7 +256,7 @@ namespace ItExpert
 
 		void UpdateViews()
 		{
-			_scrollView.Frame = new RectangleF(0, 0, View.Frame.Width, View.Frame.Height);
+			_scrollView.Frame = new RectangleF(0, NavigationController.NavigationBar.Frame.Bottom, View.Frame.Width, View.Frame.Height - NavigationController.NavigationBar.Frame.Bottom);
 			var point = new PointF (_publishersTxt.Frame.X, _publishersTxt.Frame.Y);
 			_publishersTxt.RemoveFromSuperview ();
 			_aboutUsLbl.RemoveFromSuperview ();
@@ -268,13 +289,17 @@ namespace ItExpert
 
 		void OpenMail(string address)
 		{
-			Toast.MakeText (this, address, 1500).Show ();
-
+			var mailController = new MFMailComposeViewController ();
+			mailController.SetToRecipients (new[]{address});
+			mailController.Finished += ( object s, MFComposeResultEventArgs args) => {
+				args.Controller.DismissViewController (true, null);
+			};
+			NavigationController.PresentViewController(mailController, true, null);
 		}
 
 		void OpenUrl(string address)
 		{
-			Toast.MakeText (this, address, 1500).Show ();
+			UIApplication.SharedApplication.OpenUrl (new NSUrl (address));
 		}
 
 		private UIEdgeInsets _padding;

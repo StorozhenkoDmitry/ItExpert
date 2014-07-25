@@ -8,6 +8,25 @@ namespace ItExpert
     public class MenuView: UIViewController
     {
         public event EventHandler TapOutsideTableView;
+		private Action<object,EventArgs> _newsClick;
+		private Action<object,EventArgs> _trendsClick;
+		private Action<object,EventArgs> _magazineClick;
+		private Action<object,EventArgs> _archiveClick;
+		private Action<object,EventArgs> _favoriteClick;
+		private Action<object,EventArgs> _aboutUsClick;
+		private Action<string> _searchClick;
+
+		public MenuView(Action<object,EventArgs> newsClick, Action<object,EventArgs> trendsClick, Action<object,EventArgs> magazineClick,
+			Action<object,EventArgs> archiveClick, Action<object,EventArgs> favoriteClick, Action<object,EventArgs> aboutUsClick, Action<string> searchClick)
+		{
+			_newsClick = newsClick;
+			_trendsClick = trendsClick;
+			_magazineClick = magazineClick;
+			_archiveClick = archiveClick;
+			_favoriteClick = favoriteClick;
+			_aboutUsClick = aboutUsClick;
+			_searchClick = searchClick;
+		}
 
         public override void ViewDidLoad()
         {
@@ -19,7 +38,7 @@ namespace ItExpert
 
             _menuTableView = new UITableView();
 
-            _menuTableView.Frame = new RectangleF(4, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height / 2, 160, 254);
+			_menuTableView.Frame = new RectangleF(4, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height / 2, 200, 254);
             _menuTableView.BackgroundColor = UIColor.Black;
             _menuTableView.ScrollEnabled = true; 
             _menuTableView.UserInteractionEnabled = true;
@@ -69,7 +88,7 @@ namespace ItExpert
 
             if (_menuTableView != null)
             {
-                _menuTableView.Frame = new RectangleF(4, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height / 2, 160, 254);
+				_menuTableView.Frame = new RectangleF(4, ItExpertHelper.StatusBarHeight + _navigationController.NavigationBar.Frame.Height / 2, 200, 254);
             }
 
             if (_tapableViewHorizontal != null && _menuTableView != null)
@@ -87,20 +106,30 @@ namespace ItExpert
         {
             List<NavigationBarItem> menuItems = new List<NavigationBarItem>();
 
-            menuItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Search) 
-            { 
-                SetValue = (value) =>
-                {
-                    Console.WriteLine ("Поиск со значением {0}", value.ToString());
-                }
-            });
+			menuItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Search) 
+			{ 
+				SetValue = (value) =>
+				{
+					var search = value as string;
+					if (search != null)
+					{
+						search = search.Trim();
+						if (!string.IsNullOrWhiteSpace(search))
+						{
+							_searchClick(search);
+						}
+					}
+					OnTapOutsideTableView();
+				}
+			});
 
             menuItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.MenuItem)
             { 
                 Title = "Новости", 
                 ButtonPushed = (value) =>
                 {
-                    Console.WriteLine ("Новости");
+					_newsClick(null, new EventArgs());
+					OnTapOutsideTableView();
                 }
             });
 
@@ -109,7 +138,8 @@ namespace ItExpert
                 Title = "Журнал", 
                 ButtonPushed = (value) =>
                 {
-                    Console.WriteLine ("Журнал");
+					_magazineClick(null, new EventArgs());
+					OnTapOutsideTableView();
                 }
             });
 
@@ -118,7 +148,8 @@ namespace ItExpert
                 Title = "Архив журнала", 
                 ButtonPushed = (value) =>
                 {
-                    Console.WriteLine ("Архив журнала");
+					_archiveClick(null, new EventArgs());
+					OnTapOutsideTableView();
                 }
             });
 
@@ -127,7 +158,8 @@ namespace ItExpert
                 Title = "Тренды", 
                 ButtonPushed = (value) =>
                 {
-                    Console.WriteLine ("Тренды");
+					_trendsClick(null, new EventArgs());
+					OnTapOutsideTableView();
                 }
             });
 
@@ -136,7 +168,8 @@ namespace ItExpert
                 Title = "Избранное", 
                 ButtonPushed = (value) =>
                 {
-                    Console.WriteLine ("Избранное");
+					_favoriteClick(null, new EventArgs());
+					OnTapOutsideTableView();
                 }
             });
 
@@ -145,7 +178,8 @@ namespace ItExpert
                 Title = "О нас", 
                 ButtonPushed = (value) =>
                 {
-                    Console.WriteLine ("О нас");
+					_aboutUsClick(null, new EventArgs());
+					OnTapOutsideTableView();
                 }
             });
 

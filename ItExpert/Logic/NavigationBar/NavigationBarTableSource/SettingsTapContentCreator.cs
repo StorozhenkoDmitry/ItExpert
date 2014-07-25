@@ -53,7 +53,7 @@ namespace ItExpert
 
             _tapGestureRecognizer = new UITapGestureRecognizer(() =>
             {
-                Console.WriteLine("Нажатие на настройку {0}", _item.Title);
+				item.SetValue(null);
 
                 UpdateRightTextView(viewSize, _item);
             });

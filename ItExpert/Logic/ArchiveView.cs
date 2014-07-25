@@ -56,6 +56,7 @@ namespace ItExpert
 
         public void AddMagazineViews(List<Magazine> magazines)
         {
+			BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
             ItExpertHelper.RemoveSubviews(_scrollView);
 			_items = magazines;
             _nextViewPosition = new PointF(_padding.Left, _padding.Top);

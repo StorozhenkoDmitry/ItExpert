@@ -21,9 +21,6 @@ namespace ItExpert
         {
             _padding = new UIEdgeInsets (8, 12, 8, 12);
 
-            _previewTextFont = UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize);
-            _previewHeaderFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
-            _forecolor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 
             _needToCreateContent = true;
         }
@@ -83,9 +80,6 @@ namespace ItExpert
 
         protected Article _article;
         protected UIEdgeInsets _padding;
-        protected UIFont _previewHeaderFont;
-        protected UIFont _previewTextFont;
-        protected UIColor _forecolor;
     }
 }
 

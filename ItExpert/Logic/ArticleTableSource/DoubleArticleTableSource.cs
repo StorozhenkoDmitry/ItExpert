@@ -11,7 +11,6 @@ namespace ItExpert
 {
 	public class DoubleArticleTableSource: UITableViewSource
 	{
-		private static DoubleArticleTableSource Instance;
 
 		public DoubleArticleTableSource (List<Article> articles, bool fromFavorite, MagazineAction magazineAction)
 		{
@@ -20,7 +19,6 @@ namespace ItExpert
 			_magazineAction = magazineAction;
             _doubleArticles = new List<DoubleArticle>();
             _articles = articles;
-			Instance = this;
 
             ItExpertHelper.LargestImageSizeInArticlesPreview = 0;
             if (articles.Any()) 
@@ -126,14 +124,11 @@ namespace ItExpert
 			var articleDetailsView = OpenArticle(e.Article);
 			if (articleDetailsView != null)
 			{
-				if (Instance != null)
-				{
-					var handler = Interlocked.CompareExchange(ref Instance.PushDetailsView, null, null);
+					var handler = Interlocked.CompareExchange(ref PushDetailsView, null, null);
 					if (handler != null)
 					{
 						handler(this, new PushDetailsEventArgs (articleDetailsView));
 					}
-				}
 			}
 
 		}

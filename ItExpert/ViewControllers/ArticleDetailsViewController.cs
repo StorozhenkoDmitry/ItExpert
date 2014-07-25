@@ -9,6 +9,8 @@ using MonoTouch.UIKit;
 using ItExpert.Enum;
 using ItExpert.Model;
 using ItExpert.ServiceLayer;
+using BigTed;
+using System.Text;
 
 namespace ItExpert
 {
@@ -21,6 +23,7 @@ namespace ItExpert
 			_magazineAction = magazineAction;
 			_articlesId = articlesId;
 			ArticleChange += OnArticleChange;
+			ApplicationWorker.SettingsChanged += OnSettingsChanged;
 		}
 
 		static bool UserInterfaceIdiomIsPhone {
@@ -46,6 +49,27 @@ namespace ItExpert
 			Initialize ();
 		}
 
+		public override void ViewDidDisappear(bool animated)
+		{
+			base.ViewDidDisappear(animated);
+			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+			ArticleChange -= OnArticleChange;
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+			ArticleChange -= OnArticleChange;
+		}
+
+		void OnSettingsChanged (object sender, EventArgs e)
+		{
+			ItExpertHelper.RemoveSubviews(View);
+			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+			UpdateScreen();
+		}
+
 		void Initialize()
 		{
 			AutomaticallyAdjustsScrollViewInsets = false;
@@ -56,7 +80,7 @@ namespace ItExpert
 
 			_maxWidth = View.Frame.Width - _padding.Left - _padding.Right;
 
-			View.BackgroundColor = UIColor.White;
+			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 
             InitNavigationBar();
 
@@ -90,7 +114,7 @@ namespace ItExpert
 
             spaceForSettings.Width = -10;
 
-            NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { spaceForSettings, NavigationBarButton.Settings, NavigationBarButton.Share };
+			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { spaceForSettings, NavigationBarButton.GetSettingsButton(true), NavigationBarButton.Share };
         }
 
 		#region Worked with server
@@ -137,8 +161,7 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-						Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-							ToastLength.Long).Show();
+						BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
 						return;
 					}
 					_article = article;
@@ -173,7 +196,7 @@ namespace ItExpert
 						ShowLoadPdfDialog ();
 						return;
 					}
-					Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
+					BTProgressHUD.ShowToast ("Не найдена детальная статья в кэше", ProgressHUD.MaskType.None, false);
 					DismissViewController (true, null);
 				}
 			}
@@ -223,7 +246,7 @@ namespace ItExpert
 				}
 				else
 				{
-					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false);
 					_isLoading = false;
 				}
 			});
@@ -273,7 +296,7 @@ namespace ItExpert
 				}
 				else
 				{
-					Toast.MakeText(this, "Ошибка при загрузке", ToastLength.Short).Show();
+					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false);
 					_isLoading = false;
 				}
 			});
@@ -344,8 +367,7 @@ namespace ItExpert
 							var connectAccept = IsConnectionAccept();
 							if (!connectAccept)
 							{
-								Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-									ToastLength.Long).Show();
+								BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
 								return;
 							}
 							_article = article;
@@ -380,7 +402,7 @@ namespace ItExpert
 									ShowLoadPdfDialog ();
 									return;
 								}
-								Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
+								BTProgressHUD.ShowToast ("Не найдена детальная статья в кэше", ProgressHUD.MaskType.None, false);
 								DismissViewController(true, null);
 							});
 						}
@@ -624,6 +646,7 @@ namespace ItExpert
 
 		private void UpdateScreen()
 		{
+			ApplicationWorker.SharedArticle = _article;
 			var article = _article;
 			if (string.IsNullOrWhiteSpace(article.DetailText))
 			{
@@ -638,7 +661,7 @@ namespace ItExpert
 					ShowLoadPdfDialog ();
 					return;
 				}
-				Toast.MakeText(this, "Не найдена детальная статья в кэше", ToastLength.Short).Show();
+				BTProgressHUD.ShowToast ("Не найдена детальная статья в кэше", ProgressHUD.MaskType.None, false);
 				DismissViewController(true, null);
 				return;
 			}
@@ -682,7 +705,11 @@ namespace ItExpert
 				css = "<style>" + ApplicationWorker.Css + "</style>";
 			}
 			//В style я передаю строку стиля HTML с цветом и размером текста и цветом фона
-			var style = string.Empty;
+			var foreColor = ColorToCssRgb(ApplicationWorker.Settings.GetForeColor());
+			var backgroundColor = ColorToCssRgb(ApplicationWorker.Settings.GetBackgroundColor());
+			var fontSize = ApplicationWorker.Settings.DetailTextSize.ToString("G");
+			var style = "background-color: " + backgroundColor + "; color: " + foreColor + "; font-size: " + fontSize +
+				"px;";
 			//sectionString - раздел , articleAuthors-авторы, если пустые строки то не отображать
 			var html = "<html><head>" + css + "</head><body style='" + style + "'>" + text + video + "</body></html>";
 
@@ -922,9 +949,22 @@ namespace ItExpert
 		{
 			ArticleChange -= OnArticleChange;
 			ArticleChange = null;
-//			ApplicationWorker.SettingsChanged -= ApplicationOnSettingsChanged;
+			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
 			_articlesId = null;
 			_authors = null;
+		}
+
+		private string ColorToCssRgb(Color color)
+		{
+			var sb = new StringBuilder();
+			sb.Append("rgb(");
+			sb.Append(color.R.ToString("G"));
+			sb.Append(", ");
+			sb.Append(color.G.ToString("G"));
+			sb.Append(", ");
+			sb.Append(color.B.ToString("G"));
+			sb.Append(")");
+			return sb.ToString();
 		}
 
         private void OnWebViewLoaded(object sender, EventArgs e)

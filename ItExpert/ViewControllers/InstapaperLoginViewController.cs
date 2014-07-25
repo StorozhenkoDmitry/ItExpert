@@ -2,13 +2,22 @@
 using MonoTouch.UIKit;
 using System.Drawing;
 using MonoTouch.Foundation;
+using Xamarin.Auth;
+using BigTed;
 
 namespace ItExpert
 {
 	public class InstapaperLoginViewController : UIViewController
 	{
-		public InstapaperLoginViewController ()
+		private UIImageView _logoImageView;
+		private UIView _headerView;
+		private UIButton _backButton;
+		private ItExpert.ShareView.ViewWithButtons _shareView;
+		private UIView _root;
+
+		public InstapaperLoginViewController (ItExpert.ShareView.ViewWithButtons shareView)
 		{
+			_shareView = shareView;
 		}
 
 		public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
@@ -24,9 +33,7 @@ namespace ItExpert
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
-			AutomaticallyAdjustsScrollViewInsets = false;
-			NavigationController.NavigationBarHidden = true;
-			View.BackgroundColor = UIColor.White;
+
 			// Perform any additional setup after loading the view, typically from a nib.
 		}
 
@@ -36,20 +43,52 @@ namespace ItExpert
 			Initialize ();
 		}
 
+		void Finish()
+		{
+			DismissViewController(true, null);
+			_shareView.FinishAuth();
+		}
+
 		void Initialize()
 		{
+			AutomaticallyAdjustsScrollViewInsets = false;
+			var frame = new RectangleF(0, 20, View.Bounds.Width, 44);
+			_headerView = new UIView(frame);
+			_headerView.BackgroundColor = UIColor.Black;
+
+			var image = new UIImage(NSData.FromFile("NavigationBar/Back.png"), 2);
+			_backButton = new UIButton(new RectangleF(new PointF(10, _headerView.Frame.Height / 2 - image.Size.Height / 2), image.Size));
+			_backButton.SetImage(image, UIControlState.Normal);
+			_backButton.TouchUpInside += (sender, e) =>
+			{
+				_shareView.OAuthResult = null;
+				Finish();
+			};
+			_headerView.Add(_backButton);
+
+			_logoImageView = new UIImageView(new UIImage(NSData.FromFile("NavigationBar/Logo.png"), 2));
+			_logoImageView.Frame = new RectangleF(new PointF(_backButton.Frame.Right + 20, _headerView.Frame.Height / 2 - _logoImageView.Frame.Height / 2), 
+				_logoImageView.Frame.Size);
+			_headerView.Add(_logoImageView);
+
+			View.Add(_headerView);
+
+			_root = new UIView(new RectangleF(0, _headerView.Frame.Bottom, View.Bounds.Width, View.Bounds.Height - _headerView.Frame.Bottom));
+			_root.BackgroundColor = UIColor.White;
+			View.Add(_root);
+
 			var logoWidth = 280;
 			var txtWidth = 200;
 			_logo = new UIImageView (new RectangleF ((View.Bounds.Width - logoWidth) / 2, 30, logoWidth, 60));
 			_logo.Image = new UIImage (NSData.FromFile ("InstapaperLogo.png"), 1f);
-			Add (_logo);
+			_root.Add (_logo);
 			_labelName = new UILabel();
 			_labelName.Text = "Имя пользователя или email";
 			_labelName.TextColor = UIColor.Black;
 			_labelName.Font = UIFont.BoldSystemFontOfSize(18);
 			_labelName.SizeToFit();
 			_labelName.Frame = new RectangleF(View.Bounds.Width / 2 - _labelName.Frame.Width / 2, _logo.Frame.Bottom + 10, _labelName.Frame.Width, _labelName.Frame.Height);
-			Add (_labelName);
+			_root.Add (_labelName);
 			_txtName = new UITextField (new RectangleF ((View.Bounds.Width - txtWidth) / 2, _labelName.Frame.Bottom + 4, txtWidth, 30));
 			_txtName.BackgroundColor = UIColor.FromRGB(220, 220, 220);
 			_txtName.ReturnKeyType = UIReturnKeyType.Done;
@@ -58,14 +97,14 @@ namespace ItExpert
 				textField.ResignFirstResponder();
 				return true; 
 			};
-			Add (_txtName);
+			_root.Add (_txtName);
 			_labelPassword = new UILabel();
 			_labelPassword.Text = "Пароль, если есть";
 			_labelPassword.TextColor = UIColor.Black;
 			_labelPassword.Font = UIFont.BoldSystemFontOfSize(18);
 			_labelPassword.SizeToFit();
 			_labelPassword.Frame = new RectangleF(View.Bounds.Width / 2 - _labelPassword.Frame.Width / 2, _txtName.Frame.Bottom + 10, _labelPassword.Frame.Width, _labelPassword.Frame.Height);
-			Add (_labelPassword);
+			_root.Add (_labelPassword);
 			_txtPassword = new UITextField (new RectangleF ((View.Bounds.Width - txtWidth) / 2, _labelPassword.Frame.Bottom + 4, txtWidth, 30));
 			_txtPassword.BackgroundColor = UIColor.FromRGB(220, 220, 220);
 			_txtPassword.SecureTextEntry = true;
@@ -75,21 +114,43 @@ namespace ItExpert
 				textField.ResignFirstResponder();
 				return true; 
 			};
-			Add (_txtPassword);
+			_root.Add (_txtPassword);
 			_button = new UIButton (UIButtonType.RoundedRect);
 			_button.SetTitle ("Вход", UIControlState.Normal);
 			_button.Frame = new RectangleF ((View.Bounds.Width - 100) / 2, _txtPassword.Frame.Bottom + 10, 100, 40);
 			_button.TouchUpInside += Login;
-			Add (_button);
+			_root.Add (_button);
 		}
 
 		void Login(object sender, EventArgs e)
 		{
-			Toast.MakeText (this, "Login to Instapaper", 1500).Show ();
+			var username = _txtName.Text;
+			var password = _txtPassword.Text;
+			if (string.IsNullOrWhiteSpace(username))
+			{
+				BTProgressHUD.ShowToast("Введите имя пользователя", ProgressHUD.MaskType.None, false);
+				return;
+			}
+			var account = new Account();
+			account.Properties.Add("username", username);
+			account.Properties.Add("password", password);
+			var result = new OAuthResult() { Account = account, IsAuthenticated = true };
+			_shareView.OAuthResult = result;
+			Finish();
 		}
 
 		void UpdateViews()
 		{
+			_root.Frame = new RectangleF(0, _headerView.Frame.Bottom, View.Bounds.Width, View.Bounds.Height - _headerView.Frame.Bottom);
+			if (_headerView != null)
+			{
+				_headerView.Frame = new RectangleF(0, 20, View.Bounds.Width, 44);
+
+				_backButton.Frame = new RectangleF(new PointF(10, _headerView.Frame.Height / 2 - _backButton.Frame.Height / 2), _backButton.Frame.Size);
+
+				_logoImageView.Frame = new RectangleF(new PointF(_backButton.Frame.Right + 20, _headerView.Frame.Height / 2 - _logoImageView.Frame.Height / 2), 
+					_logoImageView.Frame.Size);
+			}
 			var logoWidth = 280;
 			var txtWidth = 200;
 			if (_logo != null)

@@ -3,11 +3,17 @@ using MonoTouch.UIKit;
 using System.Collections.Generic;
 using System.Drawing;
 using MonoTouch.Foundation;
+using ItExpert.Enum;
+using System.Linq;
+using BigTed;
+using System.Threading;
 
 namespace ItExpert
 {
     public class SettingsView: UIViewController
     {
+		private bool _forDetail = false;
+
         enum BackButtonState
         {
             Settings,
@@ -15,6 +21,19 @@ namespace ItExpert
         }
 
         public event EventHandler TapOutsideTableView;
+
+		public SettingsView(bool forDetail)
+		{
+			_forDetail = forDetail;
+			if (_forDetail)
+			{
+				_testSliderValue = ApplicationWorker.Settings.GetDetailFontSize();
+			}
+			else
+			{
+				_testSliderValue = ApplicationWorker.Settings.GetFontSize();
+			}
+		}
 
         public override void ViewDidLoad()
         {
@@ -124,7 +143,7 @@ namespace ItExpert
 
             if (_tapableView != null && _settingsTableView != null)
             {
-                _tapableView.Frame = new RectangleF(0, screenSize.Bottom, screenSize.Width, screenSize.Height - _settingsTableView.Frame.Bottom);
+				_tapableView.Frame = new RectangleF(0, _settingsTableView.Frame.Bottom, screenSize.Width, screenSize.Height - _settingsTableView.Frame.Bottom);
             }
 
             if (_headerView != null)
@@ -162,42 +181,120 @@ namespace ItExpert
             { 
                 Title = "Скрывать прочитанные статьи",  
                 GetValue = () => { return ApplicationWorker.Settings.HideReaded; },
-                SetValue = (value) => { ApplicationWorker.Settings.HideReaded = (bool)value; }
+                SetValue = (value) => { ApplicationWorker.Settings.HideReaded = (bool)value; 
+					ApplicationWorker.OnSettingsChanged();
+				}
             });
 
             settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Slider) 
             { 
                 Title = "Размер шрифта", 
                 GetValue = () => { return _testSliderValue; },
-                SetValue = (value) => { _testSliderValue = (int)value; }
+                SetValue = (value) => {
+					var size = (int)value;
+					_testSliderValue = size;
+					if (!_forDetail)
+					{
+						ApplicationWorker.Settings.SetFontSize(size);
+					}
+					else
+					{
+						ApplicationWorker.Settings.SetDetailFontSize(size);
+					}
+					ApplicationWorker.OnSettingsChanged();
+				}
             });
 
             settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap) 
             { 
                 Title = "Тема", 
-                GetValue = () => { return "Светлая"; },
-                SetValue = (value) => { Console.WriteLine ("Нажатие на ячейку {0}", (string)value); }
+                GetValue = () => { 
+					return ApplicationWorker.Settings.GetStringTheme(ApplicationWorker.Settings.GetTheme()); 
+				},
+                SetValue = (value) => { 
+					var themes = new []{ "Светлая", "Темная" };
+					var themeAlert = new BlackAlertView ("Выбор темы", "Отмена", themes, "Ok");
+
+					themeAlert.ButtonPushed += (sender, e) =>
+					{
+						if (e.ButtonIndex == 1)
+						{
+							var theme = new [] {Theme.Light, Theme.Dark } [e.SelectedRadioButton];
+							ApplicationWorker.Settings.SetTheme(theme);
+							ApplicationWorker.OnSettingsChanged();
+							_settingsTableView.ReloadData();
+						}
+					};
+					var currentTheme = ApplicationWorker.Settings.GetTheme();
+					if (currentTheme == ItExpert.Enum.Theme.Light)
+					{
+						themeAlert.SetRadionButtonActive(0);
+					}
+					if (currentTheme == ItExpert.Enum.Theme.Dark)
+					{
+						themeAlert.SetRadionButtonActive(1);
+					}
+					themeAlert.Show();
+				}
             });
 
             settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap) 
             { 
                 Title = "Стартовый раздел", 
-                GetValue = () => { return "Новости"; },
-                SetValue = (value) => { Console.WriteLine ("Нажатие на ячейку {0}", (string)value); }
+				GetValue = () => { return ApplicationWorker.Settings.GetStringStartSection(ApplicationWorker.Settings.Page); },
+                SetValue = (value) => { 
+					var pagesStr = new []{ "Новости", "Тренды", "Журнал", "Архив", "Избранное" };
+					var pageAlert = new BlackAlertView ("Выбор стартового раздела", "Отмена", pagesStr, "Ok");
+
+					pageAlert.ButtonPushed += (sender, e) =>
+					{
+						if (e.ButtonIndex == 1)
+						{
+							var page = new [] {Page.News, Page.Trends, Page.Magazine, Page.Archive, Page.Favorite } [e.SelectedRadioButton];
+							ApplicationWorker.Settings.Page = page;
+							_settingsTableView.ReloadData();
+						}
+					};
+					var currentPage = ApplicationWorker.Settings.Page;
+					var pages = new [] {Page.News, Page.Trends, Page.Magazine, Page.Archive, Page.Favorite } ;
+					var index = pages.ToList().BinarySearch(currentPage);
+					pageAlert.SetRadionButtonActive(index);
+					pageAlert.Show(); 
+				}
             });
 
             settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap) 
             { 
                 Title = "Подключения", 
-                GetValue = () => { return "Любое"; },
-                SetValue = (value) => { Console.WriteLine ("Нажатие на ячейку {0}", (string)value); }
+				GetValue = () => { return ApplicationWorker.Settings.GetStringNetworkMode(ApplicationWorker.Settings.NetworkMode); },
+                SetValue = (value) => { 
+					var networkModesStr = new []{ "Wi-Fi", "Любое" };
+					var pageAlert = new BlackAlertView ("Выбор типа подключения", "Отмена", networkModesStr, "Ok");
+
+					pageAlert.ButtonPushed += (sender, e) =>
+					{
+						if (e.ButtonIndex == 1)
+						{
+							var networkMode = new [] {NetworkMode.WiFi, NetworkMode.All } [e.SelectedRadioButton];
+							ApplicationWorker.Settings.NetworkMode = networkMode;
+							_settingsTableView.ReloadData();
+						}
+					};
+					var currentNetworkMode = ApplicationWorker.Settings.NetworkMode;
+					var networkModes = new []{ NetworkMode.WiFi, NetworkMode.All };
+					var index = networkModes.ToList().BinarySearch(currentNetworkMode);
+					pageAlert.SetRadionButtonActive(index);
+					pageAlert.Show(); 
+				}
             });
 
             settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.RadioButton) 
             { 
                 Title = "Отключить загрузку изображений", 
-                GetValue = () => { return ApplicationWorker.Settings.LoadImages; },
-                SetValue = (value) => { ApplicationWorker.Settings.LoadImages = (bool)value; }
+				GetValue = () => { return !ApplicationWorker.Settings.LoadImages; },
+                SetValue = (value) => {
+					ApplicationWorker.Settings.LoadImages = !((bool)value); 
+				}
             });
 
             settingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.RadioButton) 
@@ -214,7 +311,7 @@ namespace ItExpert
                 {
                     if (index == 0)
                     {
-
+						ClearCache();
                     }
                     else if (index == 1)
                     {
@@ -244,8 +341,32 @@ namespace ItExpert
             return settingsItems;
         }
 
+		void ClearCache()
+		{
+			BTProgressHUD.ShowToast("Очистка кэша...", ProgressHUD.MaskType.None, false);
+			Action clearCache = () =>
+			{
+				var result = ApplicationWorker.Db.ClearCache();
+				var message = string.Empty;
+				if (result.IsCacheClear)
+				{
+					message = "Кэш очищен";
+				}
+				if (result.IsCacheClear && result.IsFavoriteDelete)
+				{
+					message += ", были также удалены некоторые избранные статьи";
+				}
+				InvokeOnMainThread(() =>
+				{
+					BTProgressHUD.ShowToast(message, ProgressHUD.MaskType.None, false);
+				});
+			};
+			ThreadPool.QueueUserWorkItem(state => clearCache());
+		}
+
         private void OnTapOutsideTableView()
         {
+			ApplicationWorker.Settings.SaveSettings();
             if (TapOutsideTableView != null)
             {
                 TapOutsideTableView(this, EventArgs.Empty);
@@ -275,7 +396,7 @@ namespace ItExpert
 		private float _maxTableViewHeight = 396;
         private UITableView _settingsTableView;
         private UIView _tapableView;
-        private int _testSliderValue = 2;
+		private int _testSliderValue = 0;
         private UINavigationController _navigationController;
         private UIView _headerView;
         private UIButton _backButton;

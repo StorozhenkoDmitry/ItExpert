@@ -7,6 +7,8 @@ using ItExpert.Model;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using BigTed;
+using MonoTouch.Foundation;
 
 namespace ItExpert
 {
@@ -133,15 +135,25 @@ namespace ItExpert
 					{
 						position = (int)Math.Floor((double)position / 2);
 					}
-					//Прокрутить список к position
+					var indexPath = NSIndexPath.FromItemSection(position, 0);
+					_articlesTableView.ScrollToRow(indexPath, UITableViewScrollPosition.Middle, false);
 				}
 			}
+		}
+
+		public override void ViewDidAppear(bool animated)
+		{
+			base.ViewDidAppear(animated);
 			if (_firstLoad)
 			{
 				_currentOrientation = InterfaceOrientation;
-				Initialize ();
 				_firstLoad = false;
-				UpdateViewsLayout ();
+				Initialize ();
+				Action action = () =>
+				{
+					InvokeOnMainThread(()=>LoadDataFromDb ());
+				};
+				ThreadPool.QueueUserWorkItem(state => action());
 			}
 		}
 
@@ -163,6 +175,12 @@ namespace ItExpert
 			_bottomBar.Hidden = false;
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+		}
+
 		#endregion
 
 		#region Init
@@ -173,9 +191,11 @@ namespace ItExpert
 			View.AutosizesSubviews = true;
 			AutomaticallyAdjustsScrollViewInsets = false;
 
+			ApplicationWorker.SettingsChanged += OnSettingsChanged;
+
 			InitBottomToolbar ();
 			InitLoadingProgress ();
-
+			InitNavigationBar();
 			//Пустой список
 			_articlesTableView = new UITableView(new RectangleF(0, 0, 0, 
 				0), UITableViewStyle.Plain);
@@ -188,7 +208,7 @@ namespace ItExpert
 
 			View.Add(_articlesTableView);
 
-			LoadDataFromDb ();
+			_articlesTableView.Hidden = true;
 		}
 
 		private void InitBottomToolbar()
@@ -232,9 +252,83 @@ namespace ItExpert
 			_addPreviousArticleButton = button;
 		}
 
+		private void InitNavigationBar()
+		{
+			var menu = new MenuView(ButNewsOnClick, ButTrendsOnClick, ButMagazineOnClick, ButArchiveOnClick, ButFavoriteOnClick, AboutUsShow, Search);
+			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { NavigationBarButton.GetMenu(menu), NavigationBarButton.Logo };
+
+			UIBarButtonItem space = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
+
+			space.Width = -10;
+			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.GetSettingsButton(false) };
+		}
+
+		private void Search(string search)
+		{
+			NewsViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as NewsViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, false);
+				showController.SearchFromAnother (search);
+			}
+			else
+			{
+				showController = new NewsViewController (Page.None, search);
+				NavigationController.PushViewController (showController, false);
+			}
+		}
+
 		#endregion
 
 		#region Event handlers
+
+		void OnSettingsChanged (object sender, EventArgs e)
+		{
+			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+			_loadingIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			var button = _addPreviousArticleButton as UIButton;
+			if (button != null)
+			{
+				button.TitleLabel.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+				button.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			}
+			if (_articlesTableView != null)
+			{
+				_articlesTableView.ReloadData();
+			}
+		}
+
+		void AboutUsShow (object sender, EventArgs e)
+		{
+			AboutUsViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as AboutUsViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, false);
+			}
+			else
+			{
+				showController = new AboutUsViewController ();
+				NavigationController.PushViewController (showController, false);
+			}
+		}
 
 		private void AddPreviousArticleOnClick(object sender, EventArgs eventArgs)
 		{
@@ -246,7 +340,7 @@ namespace ItExpert
 				{
 					if (!lst.Any())
 					{
-						Toast.MakeText(this, "Больше нет избранных статей", ToastLength.Short).Show();
+						BTProgressHUD.ShowToast ("Больше нет избранных статей", ProgressHUD.MaskType.None, false);	
 						_prevArticlesExists = false;
 						_articles.RemoveAt(_articles.Count() - 1);
 						if (_articlesTableView != null && _articlesTableView.Source != null)
@@ -296,13 +390,13 @@ namespace ItExpert
 			}
 			if (showController != null)
 			{
-				NavigationController.PopToViewController (showController, true);
+				NavigationController.PopToViewController (showController, false);
 				showController.ShowFromAnotherScreen (Page.Trends);
 			}
 			else
 			{
-				showController = new NewsViewController (Page.Trends);
-				NavigationController.PushViewController (showController, true);
+				showController = new NewsViewController (Page.Trends, null);
+				NavigationController.PushViewController (showController, false);
 			}
 		}
 
@@ -320,13 +414,13 @@ namespace ItExpert
 			}
 			if (showController != null)
 			{
-				NavigationController.PopToViewController (showController, true);
+				NavigationController.PopToViewController (showController, false);
 				showController.ShowFromAnotherScreen (Page.News);
 			}
 			else
 			{
-				showController = new NewsViewController (Page.News);
-				NavigationController.PushViewController (showController, true);
+				showController = new NewsViewController (Page.News, null);
+				NavigationController.PushViewController (showController, false);
 			}
 		}
 
@@ -344,12 +438,12 @@ namespace ItExpert
 			}
 			if (showController != null)
 			{
-				NavigationController.PopToViewController (showController, true);
+				NavigationController.PopToViewController (showController, false);
 			}
 			else
 			{
 				showController = new ArchiveViewController ();
-				NavigationController.PushViewController (showController, true);
+				NavigationController.PushViewController (showController, false);
 			}
 		}
 
@@ -367,13 +461,13 @@ namespace ItExpert
 			}
 			if (showController != null)
 			{
-				NavigationController.PopToViewController (showController, true);
+				NavigationController.PopToViewController (showController, false);
 				showController.SetMagazineId (-1);
 			}
 			else
 			{
 				showController = new MagazineViewController (-1);
-				NavigationController.PushViewController (showController, true);
+				NavigationController.PushViewController (showController, false);
 			}
 		}
 
@@ -410,6 +504,13 @@ namespace ItExpert
 			}
 
 			InitBottomToolbar();
+			if (_loadingIndicator != null)
+			{
+				var height = 50;
+				var bottomBarHeight = _bottomBar.Frame.Height;
+
+				_loadingIndicator.Frame = new RectangleF(0, View.Bounds.Height - (height + bottomBarHeight), View.Bounds.Width, height);
+			}
 		}
 
 		private void UpdateTableView(List<Article> articles)
@@ -464,10 +565,11 @@ namespace ItExpert
 			_articles = lst;
 			if (!_articles.Any())
 			{
-				Toast.MakeText(this, "Нет избранных статей", ToastLength.Short).Show();
+				BTProgressHUD.ShowToast ("Нет избранных статей", ProgressHUD.MaskType.None, false);
 				_prevArticlesExists = false;
 				//Пустой список
 				UpdateTableView(new List<Article>());
+				_articlesTableView.Hidden = true;
 				return;
 			}
 			if (_addPreviousArticleButton != null && _prevArticlesExists)
@@ -479,6 +581,7 @@ namespace ItExpert
 				});
 			}
 			UpdateTableView(_articles);
+			_articlesTableView.Hidden = false;
 		}
 
 		#endregion

@@ -19,7 +19,7 @@ namespace ItExpert
         {
             _headerTextView = ItExpertHelper.GetTextView (
                 ItExpertHelper.GetAttributedString(article.Name, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize), 
-                    ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor())), 
+					UIColor.Black), 
                 cell.ContentView.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, _padding.Top));
 
             _headerTextView.BackgroundColor = UIColor.Clear;
@@ -38,7 +38,7 @@ namespace ItExpert
         protected override void Update(UITableViewCell cell, Article article)
         {
             var attributedString = ItExpertHelper.GetAttributedString (article.Name, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize), 
-                ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor()));
+				UIColor.Black);
 
             _headerTextView.TextStorage.SetString (attributedString);
             _headerTextView.AttributedText = attributedString;

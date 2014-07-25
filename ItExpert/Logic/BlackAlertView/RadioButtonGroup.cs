@@ -63,7 +63,7 @@ namespace ItExpert
             }
         }
 
-        private void OnButtonChecked(int index)
+		public void OnButtonChecked(int index)
         {
             if (_checkedButton != null)
             {

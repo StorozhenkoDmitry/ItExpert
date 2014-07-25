@@ -96,6 +96,18 @@
     </Reference>
     <Reference Include="OpenTK" />
     <Reference Include="System.Web.Services" />
+    <Reference Include="BTProgressHUD">
+      <HintPath>..\..\Downloads\btprogresshud-1.10\lib\ios\BTProgressHUD.dll</HintPath>
+    </Reference>
+    <Reference Include="Xamarin.Auth.iOS">
+      <HintPath>..\Components\xamarin.auth-1.2.2\lib\ios\Xamarin.Auth.iOS.dll</HintPath>
+    </Reference>
+    <Reference Include="Evernote">
+      <HintPath>..\..\Downloads\Evernote.dll</HintPath>
+    </Reference>
+    <Reference Include="Thrift">
+      <HintPath>..\..\Downloads\Thrift.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="Resources\Default-568h%402x.png" />
@@ -135,6 +147,7 @@
     <BundleResource Include="Resources\ZoomIn48.png" />
     <BundleResource Include="Resources\ZoomOut48.png" />
     <BundleResource Include="Resources\MagazineSplash.png" />
+    <BundleResource Include="Resources\SplashLand.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
@@ -214,8 +227,6 @@
     <Compile Include="Logic\ArticleTableSource\DoubleArticle.cs" />
     <Compile Include="Logic\ArticleTableSource\DoubleCellPushedEventArgs.cs" />
     <Compile Include="Enum\Filter.cs" />
-    <Compile Include="Logic\Toast.cs" />
-    <Compile Include="Logic\BlackAlertView\ToastLength.cs" />
     <Compile Include="Logic\NavigationBar\NavigationBarButton.cs" />
     <Compile Include="Logic\NavigationBar\MenuView.cs" />
     <Compile Include="Logic\NavigationBar\SettingsView.cs" />
@@ -243,6 +254,7 @@
     <Compile Include="PdfReader\Views\Core\PageContentView.cs" />
     <Compile Include="PdfReader\Views\Core\PageView.cs" />
     <Compile Include="PdfReader\Views\Core\PageViewController.cs" />
+    <Compile Include="ViewControllers\AuthViewController.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
@@ -271,6 +283,10 @@
     </XamarinComponentReference>
     <XamarinComponentReference Include="sqlite-net">
       <Version>1.0.1</Version>
+      <Visible>False</Visible>
+    </XamarinComponentReference>
+    <XamarinComponentReference Include="xamarin.auth">
+      <Version>1.2.2</Version>
       <Visible>False</Visible>
     </XamarinComponentReference>
   </ItemGroup>

@@ -267,6 +267,11 @@ namespace ItExpert
             }
         }
 
+		public void SetRadioButtonActive(int index)
+		{
+			_radioButtonsGroup.OnButtonChecked(index);
+		}
+
         #endregion
 
         #region private methods

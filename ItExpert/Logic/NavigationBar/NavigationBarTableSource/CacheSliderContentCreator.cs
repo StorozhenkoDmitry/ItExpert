@@ -71,7 +71,7 @@ namespace ItExpert
         {
             CreateTextView(viewSize, item);
 
-            _rightTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(item.GetValue().ToString(), UIFont.SystemFontOfSize(12), UIColor.White),
+			_rightTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(ApplicationWorker.Settings.GetDbLimitSizeInMb().ToString() + " Мб", UIFont.SystemFontOfSize(12), UIColor.White),
                 viewSize.Width, new PointF());
 
             _rightTextView.Frame = new RectangleF(new PointF(viewSize.Width - _rightTextView.Frame.Width - _padding.Right, viewSize.Height / 2 - _rightTextView.Frame.Height / 2), 
@@ -86,21 +86,29 @@ namespace ItExpert
             _slider.Frame = new RectangleF(sliderHorizontalOffset + _padding.Left,  _textView.Frame.Bottom + _padding.Bottom + sliderVerticalOffset, 
                 viewSize.Width - _padding.Right - _padding.Left - sliderHorizontalOffset * 2, _slider.Frame.Height);
 
-            _slider.MinValue = 0;
-            _slider.MaxValue = 7;
+			_slider.MinValue = 1;
+			_slider.MaxValue = 8;
             _slider.Value = (int)_item.GetValue();
-            _slider.Continuous = false;
+			_slider.Continuous = true;
 
             _slider.ValueChanged += (sender, e) => 
             {
                 var value = Convert.ToInt32(_slider.Value);
-
+				ApplicationWorker.Settings.SetDbLimitSize(value);
+				var dbLimit = ApplicationWorker.Settings.GetDbLimitSizeInMb();
+				var dbLimitString = ItExpertHelper.GetAttributedString(dbLimit + " Мб", UIFont.SystemFontOfSize(12), UIColor.White);
+				_rightTextView.AttributedText = dbLimitString;
                 _item.SetValue(value);
             };
         }
 
         private UITextView _rightTextView;
         private UISlider _slider;
+
+		void GetDbSizeLimitInMb(int limit)
+		{
+
+		}
     }
 }
 

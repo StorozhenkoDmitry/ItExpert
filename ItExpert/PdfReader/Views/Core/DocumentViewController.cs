@@ -56,6 +56,10 @@ namespace mTouchPDFReader.Library.Views.Core
 		private UISlider _slider;
 		private UILabel _PageNumberLabel;
 		private AutoScaleModes _AutoScaleMode;
+		private UIButton _zoomInBut;
+		private UIButton _zoomOutBut;
+		private int _pageNumber = -1;
+
 		#endregion
 			
 		#region Initialization
@@ -70,10 +74,15 @@ namespace mTouchPDFReader.Library.Views.Core
 		public override void ViewDidLoad()
 		{
 			base.ViewDidLoad();
-
 			// Load document
+
+		}
+
+		public override void ViewWillAppear(bool animated)
+		{
+			base.ViewWillAppear(animated);
 			PDFDocument.OpenDocument(_DocumentName, _DocumentPath);
-			
+
 			// Init View	
 			Title = _DocumentName;
 			View.BackgroundColor = UIColor.LightGray;
@@ -85,7 +94,7 @@ namespace mTouchPDFReader.Library.Views.Core
 			_bottomBar = _CreateBottomBar();
 			View.AddSubview(_bottomBar);
 			_UpdateSliderMaxValue();
-
+			_pageNumber = 1;
 			// Create the book PageView controller
 			_BookPageViewController = new UIPageViewController(
 				Options.Instance.PageTransitionStyle,
@@ -109,6 +118,7 @@ namespace mTouchPDFReader.Library.Views.Core
 			AddChildViewController(_BookPageViewController);
 			_BookPageViewController.DidMoveToParentViewController(this);
 			View.Add(_BookPageViewController.View);
+
 		}
 
 		public override void ViewDidLayoutSubviews()
@@ -129,7 +139,7 @@ namespace mTouchPDFReader.Library.Views.Core
 		
 		#region UIPageViewController	
 		private UIViewController GetPreviousPageViewController(UIPageViewController pageController, UIViewController referenceViewController)
-		{			
+		{		
 			var curPageCntr = referenceViewController as PageViewController;
 			if (curPageCntr.PageNumber == 0) {
 				return null;				
@@ -139,7 +149,7 @@ namespace mTouchPDFReader.Library.Views.Core
 		}
 
 		private UIViewController GetNextPageViewController(UIPageViewController pageController, UIViewController referenceViewController)
-		{			
+		{	
 			var curPageCntr = referenceViewController as PageViewController;
 			if (curPageCntr.PageNumber == (PDFDocument.PageCount)) {				
 				return _BookPageViewController.SpineLocation == UIPageViewControllerSpineLocation.Mid
@@ -150,7 +160,7 @@ namespace mTouchPDFReader.Library.Views.Core
 			}
 			int pageNumber = curPageCntr.PageNumber + 1;
 			return GetPageViewController(pageNumber);
-		}	
+		}
 
 		private UIPageViewControllerSpineLocation GetSpineLocation(UIPageViewController pageViewController, UIInterfaceOrientation orientation)
 		{
@@ -166,6 +176,27 @@ namespace mTouchPDFReader.Library.Views.Core
 				ExecAfterOpenPageActions();
 			}
 		}
+
+		public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+		{
+			base.DidRotate(fromInterfaceOrientation);
+			RedrawBars();
+		}
+
+		void RedrawBars()
+		{
+			var statusBarHeight = 20;
+			_toolbar.Frame = new RectangleF (0, statusBarHeight, View.Bounds.Width, 40);
+
+			var x = View.Bounds.Width - 10 - (30 * 2 + 10);
+			_zoomOutBut.Frame = new RectangleF(x, 5, 30, 30);
+
+			x = x + 10 + 30;
+			_zoomInBut.Frame = new RectangleF(x, 5, 30, 30);
+
+			_bottomBar.Frame = new RectangleF (0, View.Bounds.Height - 46, View.Bounds.Width, 46);
+		}
+
 		#endregion
 				
 		#region UI Logic			
@@ -196,22 +227,41 @@ namespace mTouchPDFReader.Library.Views.Core
 		{
 			var statusBarHeight = 20;
 			var toolBar = new UIView ();
-			toolBar.Frame = new RectangleF (0, statusBarHeight, View.Bounds.Width, 28);
+			toolBar.Frame = new RectangleF (0, statusBarHeight, View.Bounds.Width, 40);
 			toolBar.BackgroundColor = UIColor.Black;
 
-			var x = View.Bounds.Width - 10 - (24 * 2 + 10);
-			var btn = new UIButton(new RectangleF(x, 2, 24, 24));
+			var image = new UIImage(NSData.FromFile("NavigationBar/Back.png"), 2);
+			var backButton = new UIButton(new RectangleF(new PointF(10, toolBar.Frame.Height / 2 - image.Size.Height / 2), image.Size));
+			backButton.SetImage(image, UIControlState.Normal);
+			backButton.TouchUpInside += OnBackButtonPushed;
+			toolBar.Add(backButton);
+
+			var logoImageView = new UIImageView(new UIImage(NSData.FromFile("NavigationBar/Logo.png"), 2));
+			logoImageView.Frame = new RectangleF(new PointF(backButton.Frame.Right + 20, toolBar.Frame.Height / 2 - logoImageView.Frame.Height / 2), 
+							logoImageView.Frame.Size);
+			toolBar.Add(logoImageView);
+
+			var x = View.Bounds.Width - 10 - (30 * 2 + 10);
+			var btn = new UIButton(new RectangleF(x, 5, 30, 30));
 			btn.SetImage(new UIImage (NSData.FromFile ("ZoomOut48.png"), 1f), UIControlState.Normal);
 			btn.TouchUpInside += (sender, e) => ZoomOut();
 			toolBar.Add(btn);
+			_zoomOutBut = btn;
 
-			x = x + 10 + 24;
-			btn = new UIButton(new RectangleF(x, 2, 24, 24));
+			x = x + 10 + 30;
+			btn = new UIButton(new RectangleF(x, 5, 30, 30));
 			btn.SetImage(new UIImage (NSData.FromFile ("ZoomIn48.png"), 1f), UIControlState.Normal);
 			btn.TouchUpInside += (sender, e) =>  ZoomIn();
 			toolBar.Add(btn);
+			_zoomInBut = btn;
 
 			return toolBar;
+		}
+
+		void OnBackButtonPushed(object sender, EventArgs e)
+		{
+			DismissViewController(true, null);
+			Dispose();
 		}
 
 		protected virtual UIView _CreateBottomBar()
@@ -317,6 +367,7 @@ namespace mTouchPDFReader.Library.Views.Core
 
 			// Create single PageView
 			var pageVC = GetPageViewController(pageNumber);
+
 			if (pageVC == null) {
 				return;
 			}
@@ -332,8 +383,7 @@ namespace mTouchPDFReader.Library.Views.Core
 		private void ExecAfterOpenPageActions()
 		{
 			// Set current page
-			PDFDocument.CurrentPageNumber = _GetCurrentPageContentVC().PageNumber;	
-			
+			PDFDocument.CurrentPageNumber = _GetCurrentPageContentVC().PageNumber;		
 			// Update PageNumber label
 			if (_PageNumberLabel != null) {
 				_PageNumberLabel.Text = string.Format(@"{0}/{1}", PDFDocument.CurrentPageNumber, PDFDocument.PageCount);

@@ -11,6 +11,7 @@ using MonoTouch.QuickLook;
 using ItExpert.Enum;
 using MonoTouch.Foundation;
 using mTouchPDFReader.Library.Views.Core;
+using BigTed;
 
 namespace ItExpert
 {
@@ -25,6 +26,7 @@ namespace ItExpert
         private ArchiveView _archiveView;
 		private UIActivityIndicatorView _loadingIndicator;
 		private UIActivityIndicatorView _loadingPdfIndicator;
+		private bool _dataLoaded = false;
 		#endregion
 
 		#region UIViewController members
@@ -65,7 +67,20 @@ namespace ItExpert
 		public override void ViewWillAppear (bool animated)
 		{
 			base.ViewWillAppear (animated);
-			Initialize ();
+		}
+
+		public override void ViewDidAppear(bool animated)
+		{
+			base.ViewDidAppear(animated);
+			if (!_dataLoaded)
+			{
+				_dataLoaded = true;
+				Action action = () =>
+				{
+					InvokeOnMainThread(() => Initialize());
+				};
+				ThreadPool.QueueUserWorkItem(state => action());
+			}
 		}
 
 		public override void ViewWillDisappear (bool animated)
@@ -73,7 +88,15 @@ namespace ItExpert
 			base.ViewWillDisappear (animated);
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesPriviewGetted;
-//			ApplicationWorker.SettingsChanged -= ApplicationOnSettingsChanged;
+			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
+			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesPriviewGetted;
+			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
 		}
 
 		#endregion
@@ -86,6 +109,7 @@ namespace ItExpert
 			InitLoadingProgress ();
 			InitLoadingPdfProgress ();
 			ApplicationWorker.PdfLoader.PdfGetted += OnPdfGetted;
+			ApplicationWorker.SettingsChanged += OnSettingsChanged;
 
             InitNavigationBar();
 
@@ -122,8 +146,7 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long)
-						.Show();
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
 					return;
 				}
 				SetLoadingImageVisible (true);
@@ -188,18 +211,176 @@ namespace ItExpert
 
         private void InitNavigationBar()
         {
-            NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { NavigationBarButton.Menu, NavigationBarButton.Logo };
+			var menu = new MenuView(ButNewsOnClick, ButTrendsOnClick, ButMagazineOnClick, ButArchiveOnClick, ButFavoriteOnClick, AboutUsShow, Search);
+			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { NavigationBarButton.GetMenu(menu), NavigationBarButton.Logo };
 
             UIBarButtonItem space = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
 
             space.Width = -10;
-
-            NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.Settings };
+			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.GetSettingsButton(false) };
         }
+
+		private void Search(string search)
+		{
+			NewsViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as NewsViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, false);
+				showController.SearchFromAnother (search);
+			}
+			else
+			{
+				showController = new NewsViewController (Page.None, search);
+				NavigationController.PushViewController (showController, false);
+			}
+		}
 
 		#endregion
 
 		#region Event handlers
+
+		void OnSettingsChanged (object sender, EventArgs e)
+		{
+			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+			_loadingIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			_archiveView.AddMagazineViews(_magazines);
+		}
+
+		void AboutUsShow (object sender, EventArgs e)
+		{
+			AboutUsViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as AboutUsViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, false);
+			}
+			else
+			{
+				showController = new AboutUsViewController ();
+				NavigationController.PushViewController (showController, false);
+			}
+		}
+
+		private void ButTrendsOnClick(object sender, EventArgs eventArgs)
+		{
+			NewsViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as NewsViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			DestroyPdfLoader ();
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, false);
+				showController.ShowFromAnotherScreen (Page.Trends);
+			}
+			else
+			{
+				showController = new NewsViewController (Page.Trends, null);
+				NavigationController.PushViewController (showController, false);
+			}
+		}
+
+		private void ButNewsOnClick(object sender, EventArgs eventArgs)
+		{
+			NewsViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as NewsViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			DestroyPdfLoader ();
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, false);
+				showController.ShowFromAnotherScreen (Page.News);
+			}
+			else
+			{
+				showController = new NewsViewController (Page.News, null);
+				NavigationController.PushViewController (showController, false);
+			}
+		}
+
+		private void ButArchiveOnClick(object sender, EventArgs eventArgs)
+		{
+
+		}
+
+		private void ButMagazineOnClick(object sender, EventArgs eventArgs)
+		{
+			MagazineViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as MagazineViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			DestroyPdfLoader ();
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, false);
+				showController.SetMagazineId (-1);
+			}
+			else
+			{
+				showController = new MagazineViewController(-1);
+				NavigationController.PushViewController(showController, false);
+			}
+		}
+
+		private void ButFavoriteOnClick(object sender, EventArgs eventArgs)
+		{
+			FavoritesViewController showController = null;
+			var controllers = NavigationController.ViewControllers;
+			foreach (var controller in controllers)
+			{
+				showController = controller as FavoritesViewController;
+				if (showController != null)
+				{
+					break;
+				}
+			}
+			DestroyPdfLoader ();
+			if (showController != null)
+			{
+				NavigationController.PopToViewController (showController, false);
+			}
+			else
+			{
+				showController = new FavoritesViewController ();
+				NavigationController.PushViewController (showController, false);
+			}
+		}
 
 		private void OnMagazinesYearsGetted(object sender, MagazinesPreviewEventArgs e)
 		{
@@ -247,7 +428,7 @@ namespace ItExpert
 				}
 				else
 				{
-					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
+					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false);
 				}
 				SetLoadingImageVisible (false);
 			});
@@ -275,8 +456,7 @@ namespace ItExpert
 						var connectAccept = IsConnectionAccept();
 						if (!connectAccept)
 						{
-							Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках",
-								ToastLength.Long).Show();
+							BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
 							return;
 						}
 						SetLoadingImageVisible (true);
@@ -317,7 +497,7 @@ namespace ItExpert
 				}
 				else
 				{
-					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
+					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false);
 					_currentYear = -1;
 				}
 				SetLoadingImageVisible (false);
@@ -414,7 +594,7 @@ namespace ItExpert
 				}
 				else
 				{
-					Toast.MakeText(this, "Ошибка при запросе", ToastLength.Short).Show();
+					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false);
 				}
 				SetLoadingProgressVisible(false);
 				_downloadMagazineView = null;
@@ -435,7 +615,7 @@ namespace ItExpert
 			magazineView.Magazine.Exists = false;
 			ApplicationWorker.Db.UpdateMagazine(magazineView.Magazine);
 			magazineView.UpdateMagazineExists(false);
-			Toast.MakeText(this, "Файл удален", ToastLength.Short).Show();
+			BTProgressHUD.ShowToast ("Файл удален", ProgressHUD.MaskType.None, false);
 		}
 
 		private void OpenPdf(Magazine magazine)
@@ -445,13 +625,12 @@ namespace ItExpert
 			var path = Path.Combine(folder + Settings.PdfFolder, fileName);
 			if (!File.Exists(path))
 			{
-				Toast.MakeText(this, "Файл не найден", ToastLength.Long).Show();
+				BTProgressHUD.ShowToast ("Файл не найден", ProgressHUD.MaskType.None, false);
 				return;
 			}
-			DestroyPdfLoader ();
 			var file = new FileInfo (path);
 			var docViewController = new DocumentViewController(file.Name, file.FullName);
-			NavigationController.PushViewController(docViewController, true);
+			PresentViewController(docViewController, true, null);
 		}
 
 		private void UpdateMagazinesPdfExists(List<Magazine> magazines, int year)
@@ -509,12 +688,12 @@ namespace ItExpert
 		{
 			if (ApplicationWorker.Settings.OfflineMode)
 			{
-				Toast.MakeText(this, "Загрузка Pdf невозможна в оффлайн режиме", ToastLength.Long).Show();
+				BTProgressHUD.ShowToast ("Загрузка Pdf невозможна в оффлайн режиме", ProgressHUD.MaskType.None, false);
 				return;   
 			}
 			if (string.IsNullOrWhiteSpace(magazineView.Magazine.PdfFileSrc))
 			{
-				Toast.MakeText(this, "Pdf файл недоступен", ToastLength.Long).Show();
+				BTProgressHUD.ShowToast ("Pdf файл недоступен", ProgressHUD.MaskType.None, false);
 				return;
 			}
 			if (!ApplicationWorker.PdfLoader.IsOperation())
@@ -522,7 +701,7 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					Toast.MakeText(this, "Нет доступных подключений, для указанных в настройках", ToastLength.Long).Show();
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
 					return;
 				}
 				_downloadMagazineView = magazineView;
@@ -532,7 +711,7 @@ namespace ItExpert
 			}
 			else
 			{
-				Toast.MakeText(this, "Идет загрузка... Дождитесь завершения", ToastLength.Short).Show();
+				BTProgressHUD.ShowToast ("Идет загрузка... Дождитесь завершения", ProgressHUD.MaskType.None, false);
 			}
 		}
 

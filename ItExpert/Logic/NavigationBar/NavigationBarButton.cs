@@ -6,31 +6,24 @@ namespace ItExpert
 {
     public static class NavigationBarButton
     {
-        public static UIBarButtonItem Menu
-        {
-            get
-            {
-                if (_menuButton == null)
-                {
-                    UIButton button = GetButton("NavigationBar/Menu.png", 2);
+		public static UIBarButtonItem GetMenu(MenuView menu)
+		{
+			UIButton button = GetButton("NavigationBar/Menu.png", 2);
 
-                    _menuButton = new UIBarButtonItem(button);
+			var menuButton = new UIBarButtonItem(button);
 
-                    _menuView = new MenuView();
-                    _menuView.TapOutsideTableView += (sender, e) => 
-                    {
-                        HideWindow();
-                    };
+			menu.TapOutsideTableView += (sender, e) =>
+			{
+				HideWindow();
+			};
 
-                    button.TouchUpInside += (sender, e) => 
-                    {
-                        ShowWindow(_menuView);
-                    };
-                }
+			button.TouchUpInside += (sender, e) =>
+			{
+				ShowWindow(menu);
+			};
 
-                return _menuButton;
-            }
-        }
+			return menuButton;
+		}
 
         public static UIBarButtonItem Back
         {
@@ -55,63 +48,41 @@ namespace ItExpert
             }
         }
 
-        public static UIBarButtonItem DumpInCache
-        {
-            get
-            {
-                if (_dumpInCacheButton == null)
-                {
-                    UIButton button = GetButton("NavigationBar/DumpInCache.png", 4);
+		public static UIBarButtonItem GetDumpInCacheButton(Action clickAction)
+		{
+			UIButton button = GetButton("NavigationBar/DumpInCache.png", 4);
+			button.TouchUpInside += (sender, e) => clickAction();
+			var dumpInCacheButton = new UIBarButtonItem(button);
+			return dumpInCacheButton;
+		}
 
-                    _dumpInCacheButton = new UIBarButtonItem(button);
-                }
+		public static UIBarButtonItem GetRefreshButton(Action clickAction)
+		{
+			UIButton button = GetButton("NavigationBar/Refresh.png", 4.1f);
+			button.TouchUpInside += (sender, e) => clickAction();
+			var refreshButton = new UIBarButtonItem(button);
+			return refreshButton;
+		}
 
-                return _dumpInCacheButton;
-            }
-        }
+		public static UIBarButtonItem GetSettingsButton(bool forDetail)
+		{
+			UIButton button = GetButton("NavigationBar/Settings.png", 4.1f);
 
-        public static UIBarButtonItem Refresh
-        {
-            get
-            {
-                if (_refreshButton == null)
-                {
-                    UIButton button = GetButton("NavigationBar/Refresh.png", 4.1f);
+			var settingsButton = new UIBarButtonItem(button);
 
-                    button.TouchUpInside += (sender, e) => Console.WriteLine("Refresh touch up inside.");
+			var settingsView = new SettingsView(forDetail);
+			settingsView.TapOutsideTableView += (sender, e) =>
+			{
+				HideWindow();
+			};
 
-                    _refreshButton = new UIBarButtonItem(button);
-                }
+			button.TouchUpInside += (sender, e) =>
+			{
+				ShowWindow(settingsView);
+			};
 
-                return _refreshButton;
-            }
-        }
-
-        public static UIBarButtonItem Settings
-        {
-            get
-            {
-                if (_settingsButton == null)
-                {
-                    UIButton button = GetButton("NavigationBar/Settings.png", 4.1f);
-
-                    _settingsButton = new UIBarButtonItem(button);
-
-                    _settingsView = new SettingsView();
-                    _settingsView.TapOutsideTableView += (sender, e) => 
-                    {
-                        HideWindow();
-                    };
-
-                    button.TouchUpInside += (sender, e) => 
-                    {
-                        ShowWindow(_settingsView);
-                    };
-                }
-
-                return _settingsButton;
-            }
-        }
+			return settingsButton;
+		}
 
         public static UIBarButtonItem Share
         {
@@ -132,6 +103,7 @@ namespace ItExpert
                     button.TouchUpInside += (sender, e) => 
                     {
                         ShowWindow(_shareView);
+						_shareView.Update();
                     };
                 }
 
@@ -193,18 +165,12 @@ namespace ItExpert
             }
         }
 
-        private static UIBarButtonItem _menuButton;
         private static UIBarButtonItem _backButton;
-        private static UIBarButtonItem _dumpInCacheButton;
-        private static UIBarButtonItem _refreshButton;
-        private static UIBarButtonItem _settingsButton;
         private static UIBarButtonItem _shareButton;
         private static UIBarButtonItem _logoImage;
 
         private static UIWindow _oldKeyWindow;
         private static UIWindow _window;
-        private static SettingsView _settingsView;
-        private static MenuView _menuView;
         private static ShareView _shareView;
     }
 }
