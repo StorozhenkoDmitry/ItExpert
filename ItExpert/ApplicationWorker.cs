@@ -22,6 +22,7 @@ namespace ItExpert
         private static List<Article> _workedArticles = new List<Article>(); 
         public static Magazine Magazine = null;
         public static event EventHandler<EventArgs> SettingsChanged;
+		public static event EventHandler<EventArgs> AllPdfFilesDeleted;
         public const int WidthForDoubleRow = 1000;
 
         #endregion
@@ -77,6 +78,7 @@ namespace ItExpert
             _remoteDataWorker = null;
             _pdfLoaderWorker = null;
             _dbEngine = null;
+			_applicationSettings.Dispose();
             _applicationSettings = null;
             _lockObj = null;
             _workedArticles = null;
@@ -84,7 +86,12 @@ namespace ItExpert
             Magazine = null;
             LastMagazine = null;
             LastMagazineArticles = null;
+			if (SharedArticle != null)
+			{
+				SharedArticle.Dispose();
+			}
             SharedArticle = null;
+			AllPdfFilesDeleted = null;
         }
 
         #region News
@@ -153,6 +160,15 @@ namespace ItExpert
                 handler(null, new EventArgs());
             }
         }
+
+		public static void OnAllPdfFilesDeleted()
+		{
+			var handler = Interlocked.CompareExchange(ref AllPdfFilesDeleted, null, null);
+			if (handler != null)
+			{
+				handler(null, new EventArgs());
+			}
+		}
 
         public static void NormalizePreviewText(IEnumerable<Article> lst)
         {

@@ -132,30 +132,10 @@ namespace ItExpert
                 _rightContent.MainContainer.Frame = new RectangleF(cell.ContentView.Frame.Width / 2, 0, cell.ContentView.Frame.Width / 2, maxHeight);
                 _rightContent.IsReadedButton.Tag = (int)Content.Position.Right;
 
-                UITapGestureRecognizer rightTap = new UITapGestureRecognizer(() =>
-                {
-                    if (CellPushed != null)
-                    {
-                        CellPushed(_rightContent.MainContainer, new DoubleCellPushedEventArgs(_rightContent.Article));
-                    }
-                });
-
-                _rightContent.MainContainer.AddGestureRecognizer(rightTap);
-
                 AddCellElements(cell.ContentView, _rightContent);
             }
 
             _leftContent.MainContainer.Frame = new RectangleF(0, 0, cell.ContentView.Frame.Width / 2, maxHeight);
-
-            UITapGestureRecognizer leftTap = new UITapGestureRecognizer(() =>
-            {
-                if (CellPushed != null)
-                {
-                    CellPushed(_leftContent.MainContainer, new DoubleCellPushedEventArgs(_leftContent.Article));
-                }
-            });
-
-            _leftContent.MainContainer.AddGestureRecognizer(leftTap);
         }
 
         protected override void UpdateDouble(UITableViewCell cell, DoubleArticle article)
@@ -179,7 +159,6 @@ namespace ItExpert
 
                     UpdateContentElements(_leftContent.MainContainer, article.LeftContent, ItExpertHelper.LargestImageSizeInArticlesPreview, _leftContent);
                 }
-
                 AddCellElements(cell.ContentView, _leftContent);
             }
 
@@ -197,7 +176,6 @@ namespace ItExpert
 
                     UpdateContentElements(_rightContent.MainContainer, article.RightContent, ItExpertHelper.LargestImageSizeInArticlesPreview, _rightContent);
                 }
-
                 AddCellElements(cell.ContentView, _rightContent);
             }
         }
@@ -206,7 +184,7 @@ namespace ItExpert
         {
             content.Article = article;
 
-            content.IsReadedButton = new UIButton(new RectangleF(mainContainer.Frame.Width - _padding.Right - 70, 2, 70, 60));
+            content.IsReadedButton = new UIButton(new RectangleF(mainContainer.Frame.Width - _padding.Right - 70, 2, 70, 70));
             content.IsReadedButton.TouchUpInside += OnReadedButtonTouchUpInside;
 
             var buttonImage = new UIImage(GetIsReadedButtonImageData(content.Article.IsReaded), (float)2.5);
@@ -224,11 +202,23 @@ namespace ItExpert
             content.HeaderTextView.UserInteractionEnabled = true;
 			content.HeaderTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
             
-			if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
-            {
-                CreateImageView(content, article, largestImageWidth, mainContainer);
-            }
-
+			if (ApplicationWorker.Settings.LoadImages && article.PreviewPicture != null && article.PreviewPicture.Data != null)
+			{
+				CreateImageView(content, article, largestImageWidth, mainContainer);
+			}
+			else
+			{
+				if (content.ImageView != null)
+				{
+					content.ImageView.Dispose();
+					content.ImageView = null;
+				}
+				if (content.ImageViewContainer != null)
+				{
+					content.ImageViewContainer.Dispose();
+					content.ImageViewContainer = null;
+				}
+			}
 			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
 
 			content.PreviewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, foreColor), 
@@ -250,46 +240,48 @@ namespace ItExpert
 
             content.IsReadedButtonImageView.Image = new UIImage(GetIsReadedButtonImageData(content.Article.IsReaded), (float)2.5);
 
-            content.IsReadedButton.Frame = new RectangleF(mainContainer.Frame.Width - _padding.Right - 70, 2, 70, 60);
+            content.IsReadedButton.Frame = new RectangleF(mainContainer.Frame.Width - _padding.Right - 70, 2, 70, 70);
 
 			var foreColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
             UpdateTextView (content.HeaderTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width,
 				headerFont, foreColor, article.Name, new PointF (_padding.Left, _padding.Top));
 
-            if (article.PreviewPicture != null && article.PreviewPicture.Data != null)
-            {
-                if (content.ImageView != null && content.ImageView.Image != null)
-                {
-                    if (content.ImageView.Image != null)
-                    {
-                        content.ImageView.Image.Dispose();
-                        content.ImageView.Image = null;
-                    }
+			if (ApplicationWorker.Settings.LoadImages && article.PreviewPicture != null && article.PreviewPicture.Data != null)
+			{
+				if (content.ImageView != null)
+				{
+					if (content.ImageView.Image != null)
+					{
+						content.ImageView.Image.Dispose();
+						content.ImageView.Image = null;
+					}
 
-                    content.ImageView.Image = ItExpertHelper.GetImageFromBase64String(article.PreviewPicture.Data);
-                    content.ImageView.Frame = new RectangleF(ItExpertHelper.LargestImageSizeInArticlesPreview / 2 - article.PreviewPicture.Width / 2, 
-                        0, article.PreviewPicture.Width, article.PreviewPicture.Height);
+					content.ImageView.Image = ItExpertHelper.GetImageFromBase64String(article.PreviewPicture.Data);
+					content.ImageView.Frame = new RectangleF(ItExpertHelper.LargestImageSizeInArticlesPreview / 2 - article.PreviewPicture.Width / 2, 
+						0, article.PreviewPicture.Width, article.PreviewPicture.Height);
 
-                    content.ImageViewContainer.Frame = new RectangleF(mainContainer.Bounds.Width - largestImageWidth - _padding.Right, 
-                        content.HeaderTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height);
-                }
-                else
-                {
-                    CreateImageView(content, article, largestImageWidth, mainContainer);
-                }
-            }
-            else
-            {
-                content.ImageView.Image.Dispose();
-                content.ImageView.Image = null;
-
-                content.ImageView.Dispose();
-                content.ImageView = null;
-
-                content.ImageViewContainer.Dispose();
-                content.ImageViewContainer = null;
-            }
+					content.ImageViewContainer.Frame = new RectangleF(mainContainer.Bounds.Width - largestImageWidth - _padding.Right, 
+						content.HeaderTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height);
+				}
+				else
+				{
+					CreateImageView(content, article, largestImageWidth, mainContainer);
+				}
+			}
+			else
+			{
+				if (content.ImageView != null)
+				{
+					content.ImageView.Dispose();
+					content.ImageView = null;
+				}
+				if (content.ImageViewContainer != null)
+				{
+					content.ImageViewContainer.Dispose();
+					content.ImageViewContainer = null;
+				}
+			}
 
 			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
             UpdateTextView (content.PreviewTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left, 
@@ -299,13 +291,49 @@ namespace ItExpert
 
         private void AddCellElements(UIView cellContentView, Content content)
         {
+			ItExpertHelper.RemoveSubviews(content.MainContainer);
+			content.PreviewTextView.UserInteractionEnabled = true;
+			content.HeaderTextView.UserInteractionEnabled = true;
+			if (content.PreviewTextView.GestureRecognizers != null)
+			{
+				foreach (var gr in content.PreviewTextView.GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+			}
+			content.PreviewTextView.GestureRecognizers = new UIGestureRecognizer[0];
+			if (content.HeaderTextView.GestureRecognizers != null)
+			{
+				foreach (var gr in content.HeaderTextView.GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+			}
+			content.HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
+			var previewTap = new UITapGestureRecognizer(() =>
+			{
+				if (CellPushed != null)
+				{
+					CellPushed(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
+				}
+			});
+			var headerTap = new UITapGestureRecognizer(() =>
+			{
+				if (CellPushed != null)
+				{
+					CellPushed(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
+				}
+			});
+			content.PreviewTextView.AddGestureRecognizer(previewTap);
+			content.HeaderTextView.AddGestureRecognizer(headerTap);
             content.MainContainer.Add (content.IsReadedButton);
             content.MainContainer.Add (content.HeaderTextView);
             content.MainContainer.Add (content.PreviewTextView);
-            content.MainContainer.Add (content.ImageViewContainer);
-
+			if (content.ImageViewContainer != null)
+			{
+				content.MainContainer.Add(content.ImageViewContainer);
+			}
             content.IsReadedButton.BringSubviewToFront(content.MainContainer);
-
             cellContentView.Add(content.MainContainer);
         }
 
@@ -320,13 +348,16 @@ namespace ItExpert
 
             textViewToUpdate.TextContainer.Size = new Size ((int)updatedTextViewWidth, int.MaxValue);
 
-            if (imageView != null)
-            {
-                var imageRectangle = ItExpertHelper.ConvertRectangleToSubviewCoordinates (imageView.Frame, updatedTextViewLocation);
+			if (imageView != null)
+			{
+				var imageRectangle = ItExpertHelper.ConvertRectangleToSubviewCoordinates(imageView.Frame, updatedTextViewLocation);
 
-                textViewToUpdate.TextContainer.ExclusionPaths = new UIBezierPath[] { UIBezierPath.FromRect (imageRectangle) };
-            }
-
+				textViewToUpdate.TextContainer.ExclusionPaths = new UIBezierPath[] { UIBezierPath.FromRect(imageRectangle) };
+			}
+			else
+			{
+				textViewToUpdate.TextContainer.ExclusionPaths = new UIBezierPath[0];
+			}
             var range = textViewToUpdate.LayoutManager.GetGlyphRange (textViewToUpdate.TextContainer);
             var containerSize = textViewToUpdate.LayoutManager.BoundingRectForGlyphRange (range, textViewToUpdate.TextContainer);
 

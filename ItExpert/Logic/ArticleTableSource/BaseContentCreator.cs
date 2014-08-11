@@ -1,6 +1,7 @@
 ﻿using System;
 using ItExpert.Model;
 using MonoTouch.UIKit;
+using System.Linq;
 
 namespace ItExpert
 {
@@ -28,6 +29,7 @@ namespace ItExpert
         public void UpdateContent(UITableViewCell cell, Article article)
         {
             ItExpertHelper.RemoveSubviews(cell.ContentView);
+			cell.GestureRecognizers = new UIGestureRecognizer[0];
 
             cell.UserInteractionEnabled = true;
 
@@ -46,6 +48,7 @@ namespace ItExpert
         public void UpdateDoubleContent(UITableViewCell cell, DoubleArticle article)
         {
             ItExpertHelper.RemoveSubviews(cell.ContentView);
+			cell.GestureRecognizers = new UIGestureRecognizer[0];
 
             cell.UserInteractionEnabled = true;
 

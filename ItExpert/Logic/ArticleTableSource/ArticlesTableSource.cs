@@ -9,11 +9,10 @@ using MonoTouch.Foundation;
 
 namespace ItExpert
 {
-	public class ArticlesTableSource: UITableViewSource
+	public class ArticlesTableSource: UITableViewSource, IUpdatableSource
 	{
-		public ArticlesTableSource (List<Article> items, bool fromFavorite, MagazineAction magazineAction)
+		public ArticlesTableSource (List<Article> items, MagazineAction magazineAction)
 		{
-			_fromFavorite = fromFavorite;
 			_magazineAction = magazineAction;
 			_articles = items;
             _cellIdentifier = "ArticleCell";
@@ -63,28 +62,25 @@ namespace ItExpert
             return cell.GetHeightDependingOnContent(_articles[indexPath.Row]);
 		}
 
+		public void UpdateProperties()
+		{
+			ItExpertHelper.LargestImageSizeInArticlesPreview = 0;
+			if (_articles != null && _articles.Any()) 
+			{
+				var articlesWithPicture = _articles.Where (x => x.PreviewPicture != null);
+				if (articlesWithPicture.Any())
+				{
+					ItExpertHelper.LargestImageSizeInArticlesPreview = articlesWithPicture.Max (x => x.PreviewPicture.Width);
+				}
+			}
+		}
+
 		public override void RowSelected (UITableView tableView, MonoTouch.Foundation.NSIndexPath indexPath)
 		{
 			var article = _articles [indexPath.Row];
 			tableView.DeselectRow (indexPath, false);
 			if (article.ArticleType == ArticleType.Banner)
 			{
-				var obj = article.ExtendedObject;
-				Banner banner = null;
-				var bannerImg = obj as BannerImageView;
-				if (bannerImg != null)
-				{
-					banner = bannerImg.Banner;
-				}
-				var bannerGif = obj as BannerGifView;
-				if (bannerGif != null)
-				{
-					banner = bannerGif.Banner;
-				}
-				if (banner != null)
-				{
-					UIApplication.SharedApplication.OpenUrl (new NSUrl (banner.Url));
-				}
 				return;
 			}
             ArticleDetailsViewController articleDetailsView = OpenArticle(_articles[indexPath.Row]);
@@ -136,7 +132,7 @@ namespace ItExpert
 					_articles.Where(x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal));
 				var articlesId = _articles.Where(x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal)
 					.Select(x => x.Id).ToList();
-				controller = new ArticleDetailsViewController (article, articlesId, _fromFavorite, _magazineAction);
+				controller = new ArticleDetailsViewController (article, articlesId, _magazineAction);
 			}
 			return controller;
 		}
@@ -206,7 +202,6 @@ namespace ItExpert
 
 		private List<Article> _articles;
 		private string _cellIdentifier;
-		private readonly bool _fromFavorite;
 		private MagazineAction _magazineAction;
 		private int _selectItemId = -1;
 	}

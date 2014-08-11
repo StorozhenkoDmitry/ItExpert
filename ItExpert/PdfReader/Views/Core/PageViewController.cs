@@ -65,6 +65,7 @@ namespace mTouchPDFReader.Library.Views.Core
 			_AutoScaleMode = autoScaleMode;
 			PageNumber = pageNumber;
 		}	
+
 		#endregion
 
 		#region UIViewController

@@ -10,7 +10,7 @@ using System.Drawing;
 namespace ItExpert.Model
 {
     [Serializable]
-    public class Settings
+    public class Settings : IDisposable
     {
         private readonly Dictionary<int, ScreenWidth> _screenWidths;
         private readonly Dictionary<int, FontSizeWrapper> _fontValues;
@@ -24,7 +24,6 @@ namespace ItExpert.Model
         [NonSerialized]
         private Color _foreColor;
         private const string FileName = "settings.dt";
-        public const string PdfFolder = "/ItExpertPdf";
         public const string Domen = "http://www.it-world.ru/";
 
         public Settings()
@@ -185,8 +184,9 @@ namespace ItExpert.Model
         public static Settings GetSettings()
         {
             Settings settings = null;
-            var folder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
-            var file = System.IO.Path.Combine(folder, FileName);
+			var documents = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var library = Path.Combine (documents, "..", "Library");
+            var file = System.IO.Path.Combine(library, FileName);
             if (File.Exists(file))
             {
                 using (var fs = File.OpenRead(file))
@@ -222,8 +222,9 @@ namespace ItExpert.Model
 
         public void SaveSettings()
         {
-            var folder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
-            var file = System.IO.Path.Combine(folder, FileName);
+			var documents = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var library = Path.Combine (documents, "..", "Library");
+            var file = System.IO.Path.Combine(library, FileName);
             using (var fs = File.Create(file))
             {
                 var formatter = new BinaryFormatter();
@@ -333,6 +334,14 @@ namespace ItExpert.Model
             settings.SetDetailFontSize(GetDetailFontSize());
             return settings;
         }
+
+		public void Dispose()
+		{
+			_screenWidths.Clear();
+			_fontValues.Clear();
+			_startSections.Clear();
+			_dbSizeLimits.Clear();
+		}
     }
 
     [Serializable]

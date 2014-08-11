@@ -12,6 +12,26 @@ namespace ItExpert
             _height = 44;
         }
 
+		public override void Dispose()
+		{
+			base.Dispose();
+			if (_buttons != null)
+			{
+				foreach (var button in _buttons)
+				{
+					button.TouchDown -= ButtonTouchDown;
+
+					button.TouchUpInside -= ButtonTouchUpInside;
+
+					button.TouchUpOutside -= ButtonTouchUpOutside;
+					button.Dispose();
+				}
+
+				_buttons.Clear();
+			}
+			_buttons = null;
+		}
+
         public override float GetContentHeight(UIView cellContentView, NavigationBarItem item)
         {
             return _height;
@@ -36,6 +56,11 @@ namespace ItExpert
             {
                 foreach (var button in _buttons)
                 {
+					button.TouchDown -= ButtonTouchDown;
+
+					button.TouchUpInside -= ButtonTouchUpInside;
+
+					button.TouchUpOutside -= ButtonTouchUpOutside;
                     button.Dispose();
                 }
 
@@ -63,42 +88,89 @@ namespace ItExpert
                 button.BackgroundColor = ItExpertHelper.ButtonColor;
                 button.Tag = i;
 
-                button.TouchDown += (sender, e) => 
-                {
-                    var senderButton = (sender as UIButton);
-
-                    senderButton.BackgroundColor = ItExpertHelper.ButtonPushedColor;
-                };
-
-                button.TouchUpInside += (sender, e) => 
-                {
-                    var senderButton = (sender as UIButton);
-
-                    senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
-
-                    _item.ButtonPushed(senderButton.Tag);
-                };
-
-                button.TouchUpOutside += (sender, e) => 
-                {
-                    var senderButton = (sender as UIButton);
-
-                    senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
-                };
-
                 _buttons.Add(button);
             }
         }
 
+		void ButtonTouchDown(object sender, EventArgs e)
+		{
+			var senderButton = (sender as UIButton);
+
+			senderButton.BackgroundColor = ItExpertHelper.ButtonPushedColor;
+		}
+
+		void ButtonTouchUpInside(object sender, EventArgs e)
+		{
+			var senderButton = (sender as UIButton);
+
+			senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
+
+			_item.ButtonPushed(senderButton.Tag);
+		}
+
+		void ButtonTouchUpOutside(object sender, EventArgs e)
+		{
+			var senderButton = (sender as UIButton);
+
+			senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
+		}
+
         private void AddButtons(UIView contentView)
         {
-            foreach (var button in _buttons)
-            {
-                contentView.Add(button);
-            }
+			var frame = contentView.Frame;
+			var settingsButtonView = new SettingsButtonView(frame, _buttons, ButtonTouchDown, ButtonTouchUpInside, ButtonTouchUpOutside);
+			contentView.Add(settingsButtonView);
         }
 
         private List<UIButton> _buttons;
     }
+
+	public class SettingsButtonView : UIView, ICleanupObject
+	{
+		private List<UIButton> _buttons;
+		private	EventHandler _buttonTouchDown; 
+		private	EventHandler _buttonTouchUpInside;
+		private	EventHandler _buttonTouchUpOutside;
+
+		public SettingsButtonView(RectangleF frame, List<UIButton> buttons, EventHandler buttonTouchDown,
+			EventHandler buttonTouchUpInside, EventHandler buttonTouchUpOutside): base(frame)
+		{
+			_buttons = buttons;
+			_buttonTouchDown = buttonTouchDown; 
+			_buttonTouchUpInside = buttonTouchUpInside;
+			_buttonTouchUpOutside = buttonTouchUpOutside;
+			foreach (var button in _buttons)
+			{
+				button.TouchDown += _buttonTouchDown;
+				button.TouchUpInside += _buttonTouchUpInside;
+				button.TouchUpOutside += _buttonTouchUpOutside;
+				Add(button);
+			}
+		}
+
+		public void CleanUp()
+		{
+			foreach (var view in Subviews)
+			{
+				view.RemoveFromSuperview();
+			}
+			if (_buttons != null)
+			{
+				foreach (var button in _buttons)
+				{
+					button.TouchDown -= _buttonTouchDown;
+					button.TouchUpInside -= _buttonTouchUpInside;
+					button.TouchUpOutside -= _buttonTouchUpOutside;
+					button.Dispose();
+				}
+
+				_buttons.Clear();
+			}
+			_buttons = null;
+			_buttonTouchDown = null; 
+			_buttonTouchUpInside = null;
+			_buttonTouchUpOutside = null;
+		}
+	}
 }
 

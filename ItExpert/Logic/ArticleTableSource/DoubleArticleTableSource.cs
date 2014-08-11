@@ -9,13 +9,12 @@ using System.Threading;
 
 namespace ItExpert
 {
-	public class DoubleArticleTableSource: UITableViewSource
+	public class DoubleArticleTableSource: UITableViewSource, IUpdatableSource
 	{
 
-		public DoubleArticleTableSource (List<Article> articles, bool fromFavorite, MagazineAction magazineAction)
+		public DoubleArticleTableSource (List<Article> articles, MagazineAction magazineAction)
 		{
             _cellIdentifier = "ArticleCell";
-			_fromFavorite = fromFavorite;
 			_magazineAction = magazineAction;
             _doubleArticles = new List<DoubleArticle>();
             _articles = articles;
@@ -65,30 +64,11 @@ namespace ItExpert
 		{
 			var article = _articles [indexPath.Row];
 			tableView.DeselectRow (indexPath, false);
-			if (article.ArticleType == ArticleType.Banner)
-			{
-				var obj = article.ExtendedObject;
-				Banner banner = null;
-				var bannerImg = obj as BannerImageView;
-				if (bannerImg != null)
-				{
-					banner = bannerImg.Banner;
-				}
-				var bannerGif = obj as BannerGifView;
-				if (bannerGif != null)
-				{
-					banner = bannerGif.Banner;
-				}
-				if (banner != null)
-				{
-					UIApplication.SharedApplication.OpenUrl (new NSUrl (banner.Url));
-				}
-				return;
-			}
 		}
 
 		public override UITableViewCell GetCell (UITableView tableView, NSIndexPath indexPath)
 		{
+
             DoubleArticleTableViewCell cell = tableView.DequeueReusableCell (_cellIdentifier) as DoubleArticleTableViewCell;
 
 			if (cell != null)
@@ -112,6 +92,19 @@ namespace ItExpert
             return cell;
 		}
 
+		public void UpdateProperties()
+		{
+			ItExpertHelper.LargestImageSizeInArticlesPreview = 0;
+			if (_articles != null && _articles.Any()) 
+			{
+				var articlesWithPicture = _articles.Where (x => x.PreviewPicture != null);
+				if (articlesWithPicture.Any())
+				{
+					ItExpertHelper.LargestImageSizeInArticlesPreview = articlesWithPicture.Max (x => x.PreviewPicture.Width);
+				}
+			}
+		}
+
 		public override float GetHeightForRow (UITableView tableView, NSIndexPath indexPath)
 		{
             var cell = CreateCell(tableView);
@@ -124,11 +117,11 @@ namespace ItExpert
 			var articleDetailsView = OpenArticle(e.Article);
 			if (articleDetailsView != null)
 			{
-					var handler = Interlocked.CompareExchange(ref PushDetailsView, null, null);
-					if (handler != null)
-					{
-						handler(this, new PushDetailsEventArgs (articleDetailsView));
-					}
+				var handler = Interlocked.CompareExchange(ref PushDetailsView, null, null);
+				if (handler != null)
+				{
+					handler(this, new PushDetailsEventArgs(articleDetailsView));
+				}
 			}
 
 		}
@@ -191,7 +184,7 @@ namespace ItExpert
 						_articles.Where (x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal));
 					var articlesId = _articles.Where (x => x.ArticleType == ArticleType.Magazine || x.ArticleType == ArticleType.Portal)
                     .Select (x => x.Id).ToList ();
-					controller = new ArticleDetailsViewController (article, articlesId, _fromFavorite, _magazineAction);
+					controller = new ArticleDetailsViewController (article, articlesId, _magazineAction);
 				}
             }
             return controller;
@@ -225,7 +218,6 @@ namespace ItExpert
         private List<Article> _articles;
 		private readonly List<DoubleArticle> _doubleArticles;
 		private string _cellIdentifier;
-		private readonly bool _fromFavorite;
 		private MagazineAction _magazineAction;
 		private int _selectItemId = -1;
 	}

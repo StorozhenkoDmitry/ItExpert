@@ -128,7 +128,7 @@ namespace ItExpert
 			var password = _txtPassword.Text;
 			if (string.IsNullOrWhiteSpace(username))
 			{
-				BTProgressHUD.ShowToast("Введите имя пользователя", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast("Введите имя пользователя", ProgressHUD.MaskType.None, false, 2500);
 				return;
 			}
 			var account = new Account();

@@ -3,6 +3,7 @@ using System.Drawing;
 using MonoTouch.Foundation;
 using MonoTouch.UIKit;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ItExpert
 {
@@ -79,6 +80,24 @@ namespace ItExpert
 
             _checkedButton.ChangeState(true);
         }
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (_buttons != null && _buttons.Any())
+			{
+				foreach (var button in _buttons)
+				{
+					button.Dispose();
+				}
+			}
+			_buttons = null;
+			if (_checkedButton != null)
+			{
+				_checkedButton.Dispose();
+			}
+			_checkedButton = null;
+		}
 
         private RadioButton _checkedButton;
 

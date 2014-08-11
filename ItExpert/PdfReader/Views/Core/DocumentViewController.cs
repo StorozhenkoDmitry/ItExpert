@@ -39,8 +39,6 @@ namespace mTouchPDFReader.Library.Views.Core
 		private const int MaxToolbarButtonsCount = 15;
 		private const float BarPaddingH = 5.0f;
 		private const float BarPaddingV = 5.0f;
-		private const float ToolbarHeight = 50.0f;
-		private const float BottombarHeight = 45.0f;
 		private const float FirstToolButtonLeft = 20.0f;
 		private const float FirstToolButtonTop = 7.0f;
 		private const float ToolButtonSize = 36.0f;
@@ -58,7 +56,6 @@ namespace mTouchPDFReader.Library.Views.Core
 		private AutoScaleModes _AutoScaleMode;
 		private UIButton _zoomInBut;
 		private UIButton _zoomOutBut;
-		private int _pageNumber = -1;
 
 		#endregion
 			
@@ -94,7 +91,6 @@ namespace mTouchPDFReader.Library.Views.Core
 			_bottomBar = _CreateBottomBar();
 			View.AddSubview(_bottomBar);
 			_UpdateSliderMaxValue();
-			_pageNumber = 1;
 			// Create the book PageView controller
 			_BookPageViewController = new UIPageViewController(
 				Options.Instance.PageTransitionStyle,
@@ -106,9 +102,7 @@ namespace mTouchPDFReader.Library.Views.Core
 			_BookPageViewController.GetNextViewController = GetNextPageViewController;
 			_BookPageViewController.GetPreviousViewController = GetPreviousPageViewController;
 			_BookPageViewController.GetSpineLocation = GetSpineLocation;
-			_BookPageViewController.DidFinishAnimating += delegate(object sender, UIPageViewFinishedAnimationEventArgs e) {
-				PageFinishedAnimation(e.Completed, e.Finished, e.PreviousViewControllers);
-			};
+			_BookPageViewController.DidFinishAnimating += PageViewControllerDidFinishAnimating;
 			_BookPageViewController.SetViewControllers(
 				new UIViewController[] { GetPageViewController(1) }, 
 				UIPageViewControllerNavigationDirection.Forward, 
@@ -119,6 +113,11 @@ namespace mTouchPDFReader.Library.Views.Core
 			_BookPageViewController.DidMoveToParentViewController(this);
 			View.Add(_BookPageViewController.View);
 
+		}
+
+		public void PageViewControllerDidFinishAnimating(object sender, UIPageViewFinishedAnimationEventArgs e) 
+		{
+			PageFinishedAnimation(e.Completed, e.Finished, e.PreviousViewControllers);
 		}
 
 		public override void ViewDidLayoutSubviews()
@@ -133,6 +132,34 @@ namespace mTouchPDFReader.Library.Views.Core
 		{
 			PDFDocument.CloseDocument();
 			base.Dispose(disposing);
+			_toolbar.Dispose();
+			_bottomBar.Dispose();
+			_slider.Dispose();
+			_PageNumberLabel.Dispose();
+			_zoomInBut.Dispose();
+			_zoomOutBut.Dispose();
+			_toolbar = null;
+			_bottomBar = null;
+			_slider = null;
+			_PageNumberLabel = null;
+			_zoomInBut = null;
+			_zoomOutBut = null;
+			if (_BookPageViewController != null)
+			{
+				_BookPageViewController.GetNextViewController = null;
+				_BookPageViewController.GetPreviousViewController = null;
+				_BookPageViewController.GetSpineLocation = null;
+				_BookPageViewController.DidFinishAnimating -= PageViewControllerDidFinishAnimating;
+				if (_BookPageViewController.ViewControllers != null && _BookPageViewController.ViewControllers.Any())
+				{
+					foreach (var controller in _BookPageViewController.ViewControllers)
+					{
+						controller.Dispose();
+					}
+				}
+				_BookPageViewController.Dispose();
+				_BookPageViewController = null;
+			}
 		}	
 
 		#endregion
@@ -323,10 +350,10 @@ namespace mTouchPDFReader.Library.Views.Core
 			var rect = View.Bounds;
 			if (_toolbar != null) {
 				rect.Y = _toolbar.Frame.Bottom;
-				rect.Height -= _toolbar.Bounds.Height + BarPaddingV;
+				rect.Height -= (_toolbar.Frame.Height + 5);
 			}
 			if (_bottomBar != null) {
-				rect.Height -= _bottomBar.Bounds.Height + BarPaddingV;
+				rect.Height -= (_bottomBar.Frame.Height + 5);
 			}
 			return rect;
 		}

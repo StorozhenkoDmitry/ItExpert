@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading;
 using Path = System.IO.Path;
 using Picture = ItExpert.Model.Picture;
+using MonoTouch.Foundation;
 
 namespace ItExpert.DataAccessLayer
 {
@@ -27,9 +28,10 @@ namespace ItExpert.DataAccessLayer
 
         public DbEngine()
         {
-            var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-            _db = new SQLiteConnection(Path.Combine(folder, DbName));
-            _db.CreateTable<Block>();
+			var folder = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var library = Path.Combine (folder, "..", "Library");
+			_db = new SQLiteConnection(Path.Combine(library, DbName));
+			_db.CreateTable<Block>();
             _db.CreateTable<Section>();
             _db.CreateTable<ItemSection>();
             _db.CreateTable<Picture>();
@@ -56,6 +58,7 @@ namespace ItExpert.DataAccessLayer
 
         public void Dispose()
         {
+			_db.Dispose();
             _db = null;
             _lockObj = null;
         }
@@ -289,6 +292,7 @@ namespace ItExpert.DataAccessLayer
 							article.AuthorsId = dbArticle.AuthorsId;
 							article.Authors = _db.Query<Author>("SELECT * FROM Author WHERE Id IN (" + article.AuthorsId+ ")");
 						}
+						dbArticle.Dispose();
                     }
                 }
             }
@@ -933,26 +937,28 @@ namespace ItExpert.DataAccessLayer
                             favIdsString + ")");
 				_db.Execute("DELETE FROM Article WHERE IsReaded = 0 AND IsFavorite = 0");
 				_db.Execute(
-                    "UPDATE Article SET Video = NULL, RubricsId = NULL, AuthorsId = NULL, PreviewText = NULL, DetailText = NULL, SectionsId = NULL, Name = NULL, Url = NULL, Timespan = 0 WHERE IsReaded = 1 AND IsFavorite = 0");
+                    "UPDATE Article SET Video = NULL, PreviewText = NULL, DetailText = NULL, Name = NULL, Url = NULL, Timespan = 0 WHERE IsReaded = 1 AND IsFavorite = 0");
                 var magazines = _db.Table<Magazine>().Where(x => x.Exists).ToList();
                 var magIds = string.Join(",", magazines.Select(x => x.Id));
                 _db.Execute("DELETE FROM Magazine WHERE Id NOT IN(" + magIds + ")");
                 _db.Execute("DELETE FROM Picture WHERE Type = 4");
+				CloneDb();
                 var size = GetDbSize();
                 var cacheLimitBytes = cacheLimit*(1024*1024);
                 if (size > cacheLimitBytes*0.7)
                 {
-                    var articles = _db.Query<Article>("SELECT FROM Article WHERE IsReaded = 1 AND IsFavorite = 0");
+                    var articles = _db.Query<Article>("SELECT * FROM Article WHERE IsReaded = 1 AND IsFavorite = 0");
                     var deleteIds = string.Join(",", articles.Skip(100).Select(x => x.Id));
                     _db.Execute("DELETE FROM Article WHERE Id IN(" + deleteIds + ")");
                     var isStop = false;
                     while (!isStop)
                     {
+						CloneDb();
                         size = GetDbSize();
                         if (size > cacheLimitBytes*0.7)
                         {
                             result.IsFavoriteDelete = true;
-                            var favArticles = _db.Query<Article>("SELECT FROM Article WHERE IsFavorite = 1");
+                            var favArticles = _db.Query<Article>("SELECT * FROM Article WHERE IsFavorite = 1");
                             deleteIds = string.Join(",",
                                 favArticles.Skip((int) (favArticles.Count()/2)).Select(x => x.Id));
                             _db.Execute("DELETE FROM Article WHERE Id IN(" + deleteIds + ")");
@@ -984,7 +990,8 @@ namespace ItExpert.DataAccessLayer
                             favIdsString + ")");
                 _db.Execute(
                     "UPDATE Article SET Video = NULL, RubricsId = NULL, AuthorsId = NULL, PreviewText = NULL, DetailText = NULL, SectionsId = NULL, Name = NULL, Url = NULL, Timespan = 0, IsFavorite = 0 WHERE IsFavorite = 1");
-            }
+				CloneDb();
+			}
             finally
             {
                 if (lockTaken) Monitor.Exit(_lockObj);
@@ -1033,11 +1040,98 @@ namespace ItExpert.DataAccessLayer
 
         public long GetDbSize()
         {
-            var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-            var file = new FileInfo(Path.Combine(folder, DbName));
-            var size = file.Length;
+			var folder = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var library = Path.Combine (folder, "..", "Library");
+            var file = new FileInfo(Path.Combine(library, DbName));
+			var size = file.Length;
             return size;
-        }
+        }	
+
+		private void CloneDb()
+		{
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			var library = Path.Combine(folder, "..", "Library");
+			var cloneDb = new SQLiteConnection(Path.Combine(library, "temp.db"));
+			cloneDb.CreateTable<Block>();
+			cloneDb.CreateTable<Section>();
+			cloneDb.CreateTable<ItemSection>();
+			cloneDb.CreateTable<Picture>();
+			cloneDb.CreateTable<Article>();
+			cloneDb.CreateTable<Banner>();
+			cloneDb.CreateTable<MagazineYear>();
+			cloneDb.CreateTable<Magazine>();
+			cloneDb.CreateTable<Rubric>();
+			cloneDb.CreateTable<Author>();
+			var articles = _db.Table<Article>().ToList();
+			foreach (var article in articles)
+			{
+				cloneDb.Insert(article, typeof(Article));
+			}
+			var blocks = _db.Table<Block>().ToList();
+			foreach (var block in blocks)
+			{
+				cloneDb.Insert(block, typeof(Block));
+			}
+			var sections = _db.Table<Section>().ToList();
+			foreach (var section in sections)
+			{
+				cloneDb.Insert(section, typeof(Section));
+			}
+			var itemSections = _db.Table<ItemSection>().ToList();
+			foreach (var section in itemSections)
+			{
+				cloneDb.Insert(section, typeof(ItemSection));
+			}
+			var pictures = _db.Table<Picture>().ToList();
+			foreach (var picture in pictures)
+			{
+				picture.Id = 0;
+				cloneDb.Insert(picture, typeof(Picture));
+			}
+			var banners = _db.Table<Banner>().ToList();
+			foreach (var banner in banners)
+			{
+				cloneDb.Insert(banner, typeof(Banner));
+			}
+			var magYears = _db.Table<MagazineYear>().ToList();
+			foreach (var year in magYears)
+			{
+				cloneDb.Insert(year, typeof(MagazineYear));
+			}
+			var magazines = _db.Table<Magazine>().ToList();
+			foreach (var magazine in magazines)
+			{
+				cloneDb.Insert(magazine, typeof(Magazine));
+			}
+			var rubrics = _db.Table<Rubric>().ToList();
+			foreach (var rubric in rubrics)
+			{
+				cloneDb.Insert(rubric, typeof(Rubric));
+			}
+			var authors = _db.Table<Author>().ToList();
+			foreach (var author in authors)
+			{
+				cloneDb.Insert(author, typeof(Author));
+			}
+			_db.Close();
+			_db.Dispose();
+			cloneDb.Close();
+			cloneDb.Dispose();
+			File.Delete(Path.Combine(library, DbName));
+			var file = new FileInfo(Path.Combine(library, "temp.db"));
+			file.MoveTo(Path.Combine(library, DbName));
+			_db = new SQLiteConnection(Path.Combine(library, DbName));
+			_db.CreateTable<Block>();
+			_db.CreateTable<Section>();
+			_db.CreateTable<ItemSection>();
+			_db.CreateTable<Picture>();
+			_db.CreateTable<Article>();
+			_db.CreateTable<Banner>();
+			_db.CreateTable<MagazineYear>();
+			_db.CreateTable<Magazine>();
+			_db.CreateTable<Rubric>();
+			_db.CreateTable<Author>();
+		}
 
         #endregion
 

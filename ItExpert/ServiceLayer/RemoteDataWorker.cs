@@ -41,6 +41,7 @@ namespace ItExpert.ServiceLayer
         {
             var error = eventArgs.Error;
             _activeConnector.DataReceived -= NewsTransmissed;
+			_activeConnector.Dispose();
             _activeConnector = null;
             if (eventArgs.Abort)
             {
@@ -136,6 +137,7 @@ namespace ItExpert.ServiceLayer
         {
             var error = eventArgs.Error;
             _activeConnector.DataReceived -= CssTransmissed;
+			_activeConnector.Dispose();
             _activeConnector = null;
             if (eventArgs.Abort)
             {
@@ -174,6 +176,7 @@ namespace ItExpert.ServiceLayer
         {
             var error = eventArgs.Error;
             _activeConnector.DataReceived -= ArticleDetailTransmissed;
+			_activeConnector.Dispose();
             _activeConnector = null;
             if (eventArgs.Abort)
             {
@@ -272,6 +275,7 @@ namespace ItExpert.ServiceLayer
         {
             var error = eventArgs.Error;
             _activeConnector.DataReceived -= MagazinesPreviewTransmissed;
+			_activeConnector.Dispose();
             _activeConnector = null;
             if (eventArgs.Abort)
             {
@@ -333,6 +337,7 @@ namespace ItExpert.ServiceLayer
         {
             var error = eventArgs.Error;
             _activeConnector.DataReceived -= MagazineArticlesTransmissed;
+			_activeConnector.Dispose();
             _activeConnector = null;
             if (eventArgs.Abort)
             {
@@ -401,6 +406,7 @@ namespace ItExpert.ServiceLayer
         {
             var error = eventArgs.Error;
             _activeConnector.DataReceived -= MagazineArticleDetailTransmissed;
+			_activeConnector.Dispose();
             _activeConnector = null;
             if (eventArgs.Abort)
             {
@@ -499,6 +505,7 @@ namespace ItExpert.ServiceLayer
         {
             var error = eventArgs.Error;
             _activeConnector.DataReceived -= BannerTransmissed;
+			_activeConnector.Dispose();
             _activeConnector = null;
             if (eventArgs.Abort)
             {
@@ -1072,6 +1079,16 @@ namespace ItExpert.ServiceLayer
 
         #region Public Methods
 
+		public void ClearNewsEventHandler()
+		{
+			NewsGetted = null;
+		}
+
+		public void ClearMagazineArticlesEventHandler()
+		{
+			MagazineArticlesGetted = null;
+		}
+
         public void Dispose()
         {
             NewsGetted = null;
@@ -1080,6 +1097,7 @@ namespace ItExpert.ServiceLayer
             MagazineArticlesGetted = null;
             MagazineArticleDetailGetted = null;
             BannerGetted = null;
+			CssGetted = null;
             if (_activeConnector != null)
             {
                 _activeConnector.Dispose();
@@ -1420,7 +1438,9 @@ namespace ItExpert.ServiceLayer
                     _activeConnector.DataReceived -= MagazineArticleDetailTransmissed;
                     _activeConnector.DataReceived -= ArticleDetailTransmissed;
                     _activeConnector.DataReceived -= BannerTransmissed;
+					_activeConnector.DataReceived -= CssTransmissed;
                     _activeConnector.Abort();
+					_activeConnector.Dispose();
                     _activeConnector = null;
                 }
             }

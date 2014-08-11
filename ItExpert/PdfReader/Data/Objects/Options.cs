@@ -37,7 +37,7 @@ namespace mTouchPDFReader.Library.Data.Objects
 		private const bool DefaultStatusbarVisible = true;
 		private const bool DefaultPageNumberVisible = true;
 
-		private const AutoScaleModes DefaultAutoScaleMode = AutoScaleModes.AutoWidth;
+		private const AutoScaleModes DefaultAutoScaleMode = AutoScaleModes.AutoHeight;
 		private const int DefaultZoomScaleLevels = 10;
 		private const bool DefaultAllowZoomByDoubleTouch = true;
 		private const int DefaultThumbsBufferSize = 20;

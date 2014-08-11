@@ -6,7 +6,7 @@ using MonoTouch.UIKit;
 
 namespace ItExpert.Model
 {
-    public class Article
+    public class Article : IDisposable
     {
         [PrimaryKey]
         public int Id { get; set; }
@@ -68,5 +68,14 @@ namespace ItExpert.Model
 
         [Ignore]
 		public UIView ExtendedObject { get; set; }
+
+		public void Dispose()
+		{
+			if (ExtendedObject != null)
+			{
+				ExtendedObject.Dispose();
+			}
+			ExtendedObject = null;
+		}
     }
 }

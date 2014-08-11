@@ -63,6 +63,7 @@ namespace ItExpert
 			_scrollView = new UIScrollView(new RectangleF(0, NavigationController.NavigationBar.Frame.Bottom, View.Frame.Width, View.Frame.Height - NavigationController.NavigationBar.Frame.Bottom));
 			_scrollView.UserInteractionEnabled = true;
 			_scrollView.ScrollEnabled = true;
+			_scrollView.Bounces = false;
 
 			View.Add(_scrollView);
 			View.UserInteractionEnabled = true;

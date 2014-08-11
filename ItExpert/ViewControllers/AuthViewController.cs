@@ -35,6 +35,7 @@ namespace ItExpert
 		private UIImageView _logoImageView;
 		private UIView _headerView;
 		private UIButton _backButton;
+		private UILabel _splashLabel;
 
 		#endregion
 
@@ -77,6 +78,11 @@ namespace ItExpert
 			{
 				_webView.Frame = new RectangleF(0, _headerView.Frame.Bottom, View.Bounds.Width, View.Bounds.Height - _headerView.Frame.Bottom);
 			}
+			if (_splashLabel != null)
+			{
+				_splashLabel.SizeToFit();
+				_splashLabel.Frame = new RectangleF((View.Bounds.Width - _splashLabel.Frame.Width) / 2, 20, _splashLabel.Frame.Width, _splashLabel.Frame.Height);
+			}
 		}
 
 		void Initialize()
@@ -103,7 +109,19 @@ namespace ItExpert
 
 			View.Add(_headerView);
 			_webView = new UIWebView(new RectangleF(0, _headerView.Frame.Bottom, View.Bounds.Width, View.Bounds.Height - _headerView.Frame.Bottom));
+			_webView.ScrollView.Bounces = false;
+			_webView.Hidden = false;
 			Add(_webView);
+
+			_splashLabel = new UILabel();
+			_splashLabel.Text = "Завершение процесса авторизации";
+			_splashLabel.Font = UIFont.BoldSystemFontOfSize (14);
+			_splashLabel.TextColor = UIColor.Black;
+			_splashLabel.SizeToFit();
+			_splashLabel.Frame = new RectangleF((View.Bounds.Width - _splashLabel.Frame.Width) / 2, 20, _splashLabel.Frame.Width, _splashLabel.Frame.Height);
+			_splashLabel.Hidden = true;
+			Add (_splashLabel);
+
 			Auth();
 		}
 
@@ -150,6 +168,7 @@ namespace ItExpert
 					}
 				}
 			};
+			BTProgressHUD.ShowToast ("Подготовительные действия...", ProgressHUD.MaskType.None, false, 2500);
 			var oAuthBase = new OAuthBase();
 			var nonce = oAuthBase.GenerateNonce();
 			var timestamp = oAuthBase.GenerateTimeStamp();
@@ -209,8 +228,9 @@ namespace ItExpert
 			{
 				InvokeOnMainThread(() =>
 				{
-					var splashData = @"<html><body><span>Завершение процесса авторизации...</span></body></html>";
-					_webView.LoadHtmlString(splashData, null);
+					_webView.Hidden = true;
+					_splashLabel.Hidden = false;
+					View.BringSubviewToFront(_splashLabel);
 				});
 				var data = redirectUrl.Split(new[] { "?" }, StringSplitOptions.RemoveEmptyEntries)[1].Split(new[] { "&" },
 					StringSplitOptions.RemoveEmptyEntries);
@@ -295,6 +315,7 @@ namespace ItExpert
 					}
 				}
 			};
+			BTProgressHUD.ShowToast ("Подготовительные действия...", ProgressHUD.MaskType.None, false, 2500);
 			var oAuthBase = new OAuthBase();
 			var nonce = oAuthBase.GenerateNonce();
 			var timestamp = oAuthBase.GenerateTimeStamp();
@@ -351,8 +372,9 @@ namespace ItExpert
 			{
 				InvokeOnMainThread(() =>
 				{
-					var splashData = @"<html><body><span>Завершение процесса авторизации...</span></body></html>";
-					_webView.LoadHtmlString(splashData, null);
+					_webView.Hidden = true;
+					_splashLabel.Hidden = false;
+					View.BringSubviewToFront(_splashLabel);
 				});
 				var data = redirectUrl.Split(new[] { "?" }, StringSplitOptions.RemoveEmptyEntries)[1].Split(new[] { "&" },
 					StringSplitOptions.RemoveEmptyEntries);
@@ -435,6 +457,7 @@ namespace ItExpert
 					}
 				}
 			};
+			BTProgressHUD.ShowToast ("Подготовительные действия...", ProgressHUD.MaskType.None, false, 2500);
 			var req = (HttpWebRequest)WebRequest.Create("https://getpocket.com/v3/oauth/request");
 			req.Method = "POST";
 			var query = "consumer_key=" + PocketConsumerKey + "&redirect_uri=" + PocketAuthCallback;
@@ -465,19 +488,21 @@ namespace ItExpert
 
 		private void PocketOnRedirectComplited(string redirectUrl)
 		{
-			InvokeOnMainThread(() =>
+			if (string.IsNullOrEmpty(_tokenSecret))
 			{
-				if (string.IsNullOrEmpty(_tokenSecret))
+				InvokeOnMainThread(() =>
 				{
-					BTProgressHUD.ShowToast ("Сбой процесса авторизации", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast("Сбой процесса авторизации", ProgressHUD.MaskType.None, false, 2500);
 					_shareView.OAuthResult = null;
 					Finish();
-				}
-			});
+				});
+				return;
+			}
 			InvokeOnMainThread(() =>
 			{
-				var splashData = @"<html><body><span>Завершение процесса авторизации...</span></body></html>";
-				_webView.LoadHtmlString(splashData, null);
+				_webView.Hidden = true;
+				_splashLabel.Hidden = false;
+				View.BringSubviewToFront(_splashLabel);
 			});
 			if (string.IsNullOrEmpty(_tokenSecret)) return;
 			var req = (HttpWebRequest) WebRequest.Create("https://getpocket.com/v3/oauth/authorize");

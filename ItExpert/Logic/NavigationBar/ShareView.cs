@@ -194,12 +194,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				_toCommonWebOperation = true;
@@ -233,12 +233,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				_toCommonWebOperation = true;
@@ -258,12 +258,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				_toCommonWebOperation = true;
@@ -284,12 +284,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				_toCommonWebOperation = true;
@@ -309,12 +309,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				_toCommonWebOperation = true;
@@ -381,7 +381,7 @@ namespace ItExpert
 				var state = (value == 1) ? true : false;
 				var newState = !state;
 				ApplicationWorker.SharedArticle.IsFavorite = newState;
-				ThreadPool.QueueUserWorkItem(obj => ApplicationWorker.Db.UpdateArticle(ApplicationWorker.SharedArticle));
+				ApplicationWorker.Db.UpdateArticle(ApplicationWorker.SharedArticle);
 				SetFavoriteButtonState(newState);
 			}
 
@@ -451,7 +451,7 @@ namespace ItExpert
 					}
 					else
 					{
-						BTProgressHUD.ShowToast ("Авторизация не удалась", ProgressHUD.MaskType.None, false);
+						BTProgressHUD.ShowToast ("Авторизация не удалась", ProgressHUD.MaskType.None, false, 2500);
 						_isOperation = false;
 					}
 				}
@@ -472,7 +472,7 @@ namespace ItExpert
 					}
 					else
 					{
-						BTProgressHUD.ShowToast ("Авторизация не удалась", ProgressHUD.MaskType.None, false);
+						BTProgressHUD.ShowToast ("Авторизация не удалась", ProgressHUD.MaskType.None, false, 2500);
 						_isOperation = false;
 					}
 				}
@@ -494,7 +494,7 @@ namespace ItExpert
 					}
 					else
 					{
-						BTProgressHUD.ShowToast ("Авторизация не удалась", ProgressHUD.MaskType.None, false);
+						BTProgressHUD.ShowToast ("Авторизация не удалась", ProgressHUD.MaskType.None, false, 2500);
 						_isOperation = false;
 					}
 				}
@@ -516,7 +516,7 @@ namespace ItExpert
 					}
 					else
 					{
-						BTProgressHUD.ShowToast ("Авторизация не удалась", ProgressHUD.MaskType.None, false);
+						BTProgressHUD.ShowToast ("Авторизация не удалась", ProgressHUD.MaskType.None, false, 2500);
 						_isOperation = false;
 					}
 				}
@@ -527,12 +527,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				OAuthResult = null;
@@ -570,12 +570,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				OAuthResult = null;
@@ -613,12 +613,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				OAuthResult = null;
@@ -654,12 +654,12 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_isOperation)
 				{
-					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Выполняется операция", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				OAuthResult = null;
@@ -698,7 +698,7 @@ namespace ItExpert
 
 			private void Auth(string provider)
 			{
-				InvokeOnMainThread(() => BTProgressHUD.ShowToast ("Авторизация", ProgressHUD.MaskType.None, false));
+				InvokeOnMainThread(() => BTProgressHUD.ShowToast ("Авторизация", ProgressHUD.MaskType.None, false, 2500));
 				Action action = () =>
 				{
 					Thread.Sleep(250);
@@ -713,7 +713,7 @@ namespace ItExpert
 
 			private void ShareEvernote(string url, string token)
 			{
-				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500);
 				Action action = () =>
 				{
 					var result = AddEveronteNote(url, token);
@@ -729,7 +729,7 @@ namespace ItExpert
 
 			private void ShareReadability(string token, string tokenSecret)
 			{
-				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500);
 				Action action = () =>
 				{
 					var result = AddReadabilityNote(token, tokenSecret);
@@ -745,7 +745,7 @@ namespace ItExpert
 
 			private void SharePocket(string token)
 			{
-				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500);
 				Action action = () =>
 				{
 					var result = AddPocketNote(token);
@@ -761,7 +761,7 @@ namespace ItExpert
 
 			private void ShareInstapaper(string username, string password)
 			{
-				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500);
 				Action action = () =>
 				{
 					var result = AddInstapaperNote(username, password);
@@ -797,7 +797,7 @@ namespace ItExpert
 				if (!string.IsNullOrEmpty(message))
 				{
 					InvokeOnMainThread(
-						() => BTProgressHUD.ShowToast(message, ProgressHUD.MaskType.None, false));
+						() => BTProgressHUD.ShowToast(message, ProgressHUD.MaskType.None, false, 2500));
 				}
 			}
 

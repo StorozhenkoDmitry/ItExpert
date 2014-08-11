@@ -11,14 +11,36 @@ namespace ItExpert
             return _height;
         }
 
+		public override void Dispose()
+		{
+			base.Dispose();
+			if (_textView != null)
+			{
+				_textView.Dispose();
+			}
+			_textView = null;
+			if (_switch != null)
+			{
+				_switch.ValueChanged -= SwitchValueChanged;
+				_switch.Dispose();
+			}
+			_switch = null;
+		}
+
+		void AddContents(UIView contentView)
+		{
+			var frame = contentView.Frame;
+			var settingsSwitchView = new SettingsSwitchView(frame, _switch, _textView, SwitchValueChanged);
+			contentView.Add(settingsSwitchView);
+		}
+
         protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
             CreateSwitch(cell.ContentView.Frame.Size, item);
 
             _switch.On = (bool)item.GetValue();
 
-            cell.ContentView.Add(_textView);
-            cell.ContentView.Add(_switch);
+			AddContents(cell.ContentView);
         }
 
         protected override void Update(UITableViewCell cell, NavigationBarItem item)
@@ -40,8 +62,7 @@ namespace ItExpert
 
             _switch.On = (bool)item.GetValue();
 
-            cell.ContentView.Add(_textView);
-            cell.ContentView.Add(_switch);
+			AddContents(cell.ContentView);
         }
 
         private void CreateSwitch(SizeF viewSize, NavigationBarItem item)
@@ -53,13 +74,52 @@ namespace ItExpert
             _switch.Frame = new RectangleF(new PointF(viewSize.Width - _switch.Frame.Width - _padding.Right, 
                 viewSize.Height / 2 - _switch.Frame.Height / 2), _switch.Frame.Size);
 
-            _switch.ValueChanged += (sender, e) => 
-            {
-                _item.SetValue((sender as UISwitch).On);
-            };
+            
         }
+
+		void SwitchValueChanged(object sender, EventArgs e)
+		{
+			_item.SetValue((sender as UISwitch).On);
+		}
 
         private UISwitch _switch;
     }
+
+	public class SettingsSwitchView : UIView, ICleanupObject
+	{
+		private UISwitch _switch;
+		private UITextView _textView;
+		private EventHandler _switchValueChanged;
+
+		public SettingsSwitchView(RectangleF frame, UISwitch switchCtrl, UITextView textView, 
+			EventHandler switchValueChanged): base(frame)
+		{
+			_switch = switchCtrl;
+			_textView = textView;
+			_switchValueChanged = switchValueChanged;
+			_switch.ValueChanged += _switchValueChanged;
+			Add(_textView);
+			Add(_switch);
+		}
+
+		public void CleanUp()
+		{
+			foreach (var view in Subviews)
+			{
+				view.RemoveFromSuperview();
+			}
+			if (_textView != null)
+			{
+				_textView.Dispose();
+			}
+			_textView = null;
+			if (_switch != null)
+			{
+				_switch.ValueChanged -= _switchValueChanged;
+			}
+			_switch = null;
+			_switchValueChanged = null;
+		}
+	}
 }
 

@@ -21,6 +21,7 @@ namespace ItExpert
 			_scrollView = new UIScrollView (Bounds);
 			_scrollView.UserInteractionEnabled = true;
 			_scrollView.ScrollEnabled = true;
+			_scrollView.Bounces = false;
 
             _tableView = new UITableView();
 
@@ -32,7 +33,7 @@ namespace ItExpert
             _tableView.Bounces = false;
             _tableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
 
-            _tableView.Source = new NavigationBarTableSource(GetCahceSettingsItems());
+            _tableView.Source = new NavigationBarTableSource(GetCacheSettingsItems());
 
             float offsetBetweenButtons = 10;
 
@@ -52,7 +53,60 @@ namespace ItExpert
 			Add(_scrollView);
 
 			_scrollView.ContentSize = new SizeF (Frame.Width, _deleteAllFavoritesButton.Frame.Bottom + offsetBetweenButtons);
-        }
+			Action reloadData = () =>
+			{
+				Thread.Sleep(250);
+				InvokeOnMainThread(() =>
+				{
+					_tableView.ReloadData();
+				});
+			};
+			ThreadPool.QueueUserWorkItem(state => reloadData());
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (_clearCacheButton != null)
+			{
+				_clearCacheButton.TouchDown -= ButtonTouchDown;
+				_clearCacheButton.TouchUpOutside -= ButtonTouchUpOutside;
+				_clearCacheButton.TouchUpInside -= OnClearCacheButtonPushed;
+				_clearCacheButton.Dispose();
+			}
+			if (_deletePdfButton != null)
+			{
+				_deletePdfButton.TouchUpInside -= OnDeletePdfButtonPushed;
+				_deletePdfButton.TouchDown -= ButtonTouchDown;
+				_deletePdfButton.TouchUpOutside -= ButtonTouchUpOutside;
+				_deletePdfButton.Dispose();
+			}
+			if (_deleteAllFavoritesButton != null)
+			{
+				_deleteAllFavoritesButton.TouchUpInside -= OnDeleteAllFavoritesButtonPushed;
+				_deleteAllFavoritesButton.TouchDown -= ButtonTouchDown;
+				_deleteAllFavoritesButton.TouchUpOutside -= ButtonTouchUpOutside;
+				_deleteAllFavoritesButton.Dispose();
+			}
+			_clearCacheButton = null;
+			_deletePdfButton = null;
+			_deleteAllFavoritesButton = null;
+			if (_tableView != null)
+			{
+				if (_tableView.Source != null)
+				{
+					_tableView.Source.Dispose();
+				}
+				_tableView.Source = null;
+				_tableView.Dispose();
+			}
+			_tableView = null;
+			if (_scrollView != null)
+			{
+				_scrollView.Dispose();
+			}
+			_scrollView = null;
+		}
 
 		public void CorrectSubviewsFrames()
 		{
@@ -90,7 +144,7 @@ namespace ItExpert
 			}
 		}
 
-        private List<NavigationBarItem> GetCahceSettingsItems()
+        private List<NavigationBarItem> GetCacheSettingsItems()
         {
             List<NavigationBarItem> cacheSettingsItems = new List<NavigationBarItem>();
 
@@ -101,7 +155,8 @@ namespace ItExpert
 					var dbSize = ApplicationWorker.Db.GetDbSize();
 					var dbSizeMb = Math.Round((double)dbSize/(1024*1024), 2);
 					return dbSizeMb + " Мб";
-				}
+				},
+				SetValue = (value) => {  }
             });
 
             cacheSettingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.Tap)
@@ -109,26 +164,19 @@ namespace ItExpert
                 Title = "Объем всех Pdf",  
                 GetValue = () => { 
 					var value = string.Empty;
-					var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-					var dirExts = Directory.Exists(folder + Settings.PdfFolder);
-					if (!dirExts)
+					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+					long sizePdfs = 0;
+					var fileNames = Directory.GetFiles(folder, "*.pdf");
+					foreach (var name in fileNames)
 					{
-						value = "0 Мб";
+						var file = new FileInfo(name);
+						sizePdfs += file.Length;
 					}
-					else
-					{
-						long sizePdfs = 0;
-						var fileNames = Directory.GetFiles(folder + Settings.PdfFolder);
-						foreach (var name in fileNames)
-						{
-							var file = new FileInfo(name);
-							sizePdfs += file.Length;
-						}
-						var sizePdfsMb = Math.Round((double)sizePdfs / (1024 * 1024), 2);
-						value = sizePdfsMb + " Мб";
-					}
+					var sizePdfsMb = Math.Round((double)sizePdfs / (1024 * 1024), 2);
+					value = sizePdfsMb + " Мб";
 					return value; 
-				}
+				},
+				SetValue = (value) => {  }
             });
 
             cacheSettingsItems.Add(new NavigationBarItem(NavigationBarItem.ContentType.CacheSlider) 
@@ -156,22 +204,26 @@ namespace ItExpert
 
             button.Frame = new RectangleF(new PointF(Frame.Width / 2 - buttonSize.Width / 2, location.Y), buttonSize);
 
-            button.TouchDown += (sender, e) => 
-            {
-                var senderButton = (sender as UIButton);
+			button.TouchDown += ButtonTouchDown;
 
-                senderButton.BackgroundColor = ItExpertHelper.ButtonPushedColor;
-            };
-
-            button.TouchUpOutside += (sender, e) => 
-            {
-                var senderButton = (sender as UIButton);
-
-                senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
-            };
+			button.TouchUpOutside += ButtonTouchUpOutside;
 
             return button;
         }
+
+		void ButtonTouchDown(object sender, EventArgs e)
+		{
+			var senderButton = (sender as UIButton);
+
+			senderButton.BackgroundColor = ItExpertHelper.ButtonPushedColor;
+		}
+
+		void ButtonTouchUpOutside(object sender, EventArgs e)
+		{
+			var senderButton = (sender as UIButton);
+
+			senderButton.BackgroundColor = ItExpertHelper.ButtonPushedColor;
+		}
 
         private void OnClearCacheButtonPushed(object sender, EventArgs e)
         {
@@ -194,14 +246,16 @@ namespace ItExpert
             var senderButton = (sender as UIButton);
             senderButton.BackgroundColor = ItExpertHelper.ButtonColor;
 
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-			var dirExts = Directory.Exists(folder + Settings.PdfFolder);
-			if (dirExts)
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			var pdfFiles = Directory.GetFiles(folder, "*.pdf");
+			foreach (var file in pdfFiles)
 			{
-				Directory.Delete(folder + Settings.PdfFolder, true);
+				var fileInfo = new FileInfo(file);
+				fileInfo.Delete();
 			}
 			_tableView.ReloadData();
 			ApplicationWorker.Db.SetAllMagazinePdfNotLoaded();
+			ApplicationWorker.OnAllPdfFilesDeleted();
         }
 
         private void OnDeleteAllFavoritesButtonPushed(object sender, EventArgs e)

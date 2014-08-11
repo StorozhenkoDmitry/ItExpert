@@ -28,7 +28,7 @@ namespace ItExpert
             _scrollView.UserInteractionEnabled = true;
             _scrollView.ScrollEnabled = true;
             _scrollView.DelaysContentTouches = false;
-
+			_scrollView.Bounces = false;
             Add(_scrollView);
 
             _verticalSpaceBetweenViews = 10;

@@ -134,7 +134,7 @@ namespace ItExpert
                 _titleTextView.RemoveFromSuperview();
             }
 
-            var attributedString = ItExpertHelper.GetAttributedString(title, UIFont.SystemFontOfSize(ApplicationWorker.Settings.HeaderSize),
+            var attributedString = ItExpertHelper.GetAttributedString(title, UIFont.SystemFontOfSize(16),
                 UIColor.FromRGB(51, 181, 229));
 
             _titleTextView = ItExpertHelper.GetTextView(attributedString, textMaxWidth, new PointF());
@@ -154,13 +154,12 @@ namespace ItExpert
 
             if (message != null)
             {
-                attributedString = ItExpertHelper.GetAttributedString(message, UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize), UIColor.White);
+                attributedString = ItExpertHelper.GetAttributedString(message, UIFont.SystemFontOfSize(14), UIColor.White);
 
                 _messageTextView = ItExpertHelper.GetTextView(attributedString, textMaxWidth, new PointF());
 
                 _messageTextView.Frame = new RectangleF(Frame.Width / 2 - _messageTextView.Frame.Width / 2, 
                     _titleTextView.Frame.Bottom + ComponentHeight.VerticalOffset + Padding.Top,
-
                     _messageTextView.Frame.Width, _messageTextView.Frame.Height);
                 _messageTextView.TextAlignment = UITextAlignment.Center;
                 _messageTextView.BackgroundColor = UIColor.Clear;
@@ -324,6 +323,41 @@ namespace ItExpert
                 ButtonPushed(this, new BlackAlertViewButtonEventArgs(index, radioButtonIndex));
             }
         }
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			foreach (var view in Subviews)
+			{
+				view.RemoveFromSuperview();
+			}
+			if (_titleTextView != null)
+			{
+				_titleTextView.Dispose();
+			}
+			if (_messageTextView != null)
+			{
+				_messageTextView.Dispose();
+			}
+			if (_radioButtonsGroup != null)
+			{
+				_radioButtonsGroup.Dispose();
+			}
+			if (_cancelButton != null)
+			{
+				_cancelButton.Dispose();
+			}
+			if (_confirmButton != null)
+			{
+				_confirmButton.Dispose();
+			}
+			_titleTextView = null;
+			_messageTextView = null;
+			_radioButtonsGroup = null;
+			_cancelButton = null;
+			_confirmButton = null;
+			ButtonPushed = null;
+		}
 
         #endregion
 

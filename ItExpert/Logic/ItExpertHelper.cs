@@ -2,6 +2,7 @@
 using MonoTouch.UIKit;
 using System.Drawing;
 using MonoTouch.Foundation;
+using System.Linq;
 
 namespace ItExpert
 {
@@ -129,6 +130,14 @@ namespace ItExpert
         {
             foreach (var subView in view.Subviews)
             {
+				if (subView.GestureRecognizers != null)
+				{
+					foreach (var gr in subView.GestureRecognizers)
+					{
+						gr.Dispose();
+					}
+					subView.GestureRecognizers = new UIGestureRecognizer[0];;
+				}
                 subView.RemoveFromSuperview();
             }
         }

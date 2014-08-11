@@ -24,6 +24,8 @@ namespace ItExpert
 		private List<Article> _articles;
 		private bool _firstLoad = true;
 		private UIInterfaceOrientation _currentOrientation;
+		private UILabel _holdMessageView;
+		private bool _showFromAnotherScreen = false;
 
 		#endregion
 
@@ -50,6 +52,11 @@ namespace ItExpert
 			{
 				_currentOrientation = InterfaceOrientation;
 				UpdateViewsLayout ();
+			}
+			if (_showFromAnotherScreen)
+			{
+				_showFromAnotherScreen = false;
+				return;
 			}
 			if (!_firstLoad)
 			{
@@ -151,6 +158,7 @@ namespace ItExpert
 				Initialize ();
 				Action action = () =>
 				{
+					Thread.Sleep(150);
 					InvokeOnMainThread(()=>LoadDataFromDb ());
 				};
 				ThreadPool.QueueUserWorkItem(state => action());
@@ -185,6 +193,12 @@ namespace ItExpert
 
 		#region Init
 
+		public void UpdateSource()
+		{
+			_showFromAnotherScreen = true;
+			LoadDataFromDb ();
+		}
+
 		public void Initialize()
 		{
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
@@ -196,15 +210,22 @@ namespace ItExpert
 			InitBottomToolbar ();
 			InitLoadingProgress ();
 			InitNavigationBar();
+			InitHoldMessageView();
 			//Пустой список
 			_articlesTableView = new UITableView(new RectangleF(0, 0, 0, 
 				0), UITableViewStyle.Plain);
+			_articlesTableView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			_articlesTableView.ScrollEnabled = true; 
 			_articlesTableView.UserInteractionEnabled = true;
 			_articlesTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
-			_articlesTableView.Bounces = true;
+			_articlesTableView.Bounces = false;
 			_articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
 			_articlesTableView.TableFooterView = new UIView();
+			if (!UserInterfaceIdiomIsPhone)
+			{
+				_articlesTableView.AllowsSelection = false;
+				_articlesTableView.AllowsMultipleSelection = false;
+			}
 
 			View.Add(_articlesTableView);
 
@@ -263,6 +284,16 @@ namespace ItExpert
 			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.GetSettingsButton(false) };
 		}
 
+		void InitHoldMessageView()
+		{
+			_holdMessageView = new UILabel(new RectangleF(0, 0, 0, 0));
+			_holdMessageView.BackgroundColor = UIColor.Clear;
+			_holdMessageView.Font = UIFont.BoldSystemFontOfSize(16);
+			_holdMessageView.TextColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
+			_holdMessageView.Hidden = true;
+			Add(_holdMessageView);
+		}
+
 		private void Search(string search)
 		{
 			NewsViewController showController = null;
@@ -293,6 +324,7 @@ namespace ItExpert
 
 		void OnSettingsChanged (object sender, EventArgs e)
 		{
+			_articlesTableView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			_loadingIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			var button = _addPreviousArticleButton as UIButton;
@@ -303,6 +335,14 @@ namespace ItExpert
 			}
 			if (_articlesTableView != null)
 			{
+				if (_articlesTableView.Source != null)
+				{
+					var iUpdatatableSource = _articlesTableView.Source as IUpdatableSource;
+					if (iUpdatatableSource != null)
+					{
+						iUpdatatableSource.UpdateProperties();
+					}
+				}
 				_articlesTableView.ReloadData();
 			}
 		}
@@ -340,7 +380,7 @@ namespace ItExpert
 				{
 					if (!lst.Any())
 					{
-						BTProgressHUD.ShowToast ("Больше нет избранных статей", ProgressHUD.MaskType.None, false);	
+						BTProgressHUD.ShowToast ("Больше нет избранных статей", ProgressHUD.MaskType.None, false, 2500);	
 						_prevArticlesExists = false;
 						_articles.RemoveAt(_articles.Count() - 1);
 						if (_articlesTableView != null && _articlesTableView.Source != null)
@@ -368,6 +408,14 @@ namespace ItExpert
 						if (_articlesTableView.Source is DoubleArticleTableSource)
 						{
 							(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+						}
+						if (_articlesTableView.Source != null)
+						{
+							var iUpdatatableSource = _articlesTableView.Source as IUpdatableSource;
+							if (iUpdatatableSource != null)
+							{
+								iUpdatatableSource.UpdateProperties();
+							}
 						}
 						_articlesTableView.ReloadData();
 					}
@@ -478,7 +526,7 @@ namespace ItExpert
 
 		private void OnPushArticleDetails(object sender, PushDetailsEventArgs e)
 		{
-			NavigationController.PushViewController (e.NewsDetailsView, true);
+			NavigationController.PushViewController (e.NewsDetailsView, false);
 		}
 
 		#endregion
@@ -492,6 +540,14 @@ namespace ItExpert
 				var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
 				_articlesTableView.Frame = new RectangleF(0, tableViewTopOffset, View.Bounds.Width, 
 					View.Bounds.Height - tableViewTopOffset - _bottomBar.Frame.Height);
+				if (_articlesTableView.Source != null)
+				{
+					var iUpdatatableSource = _articlesTableView.Source as IUpdatableSource;
+					if (iUpdatatableSource != null)
+					{
+						iUpdatatableSource.UpdateProperties();
+					}
+				}
 				_articlesTableView.ReloadData();
 			}
 
@@ -510,6 +566,13 @@ namespace ItExpert
 				var bottomBarHeight = _bottomBar.Frame.Height;
 
 				_loadingIndicator.Frame = new RectangleF(0, View.Bounds.Height - (height + bottomBarHeight), View.Bounds.Width, height);
+			}
+
+			if (_holdMessageView != null && !_holdMessageView.Hidden)
+			{
+				_holdMessageView.SizeToFit();
+				_holdMessageView.Frame = new RectangleF((View.Bounds.Width - _holdMessageView.Frame.Width) / 2, View.Bounds.Height / 2, _holdMessageView.Frame.Width, _holdMessageView.Frame.Height);
+				View.BringSubviewToFront(_holdMessageView);
 			}
 		}
 
@@ -533,13 +596,13 @@ namespace ItExpert
 
 			if (UserInterfaceIdiomIsPhone)
 			{
-				source = new ArticlesTableSource(articles, true, MagazineAction.NoAction);
+				source = new ArticlesTableSource(articles, MagazineAction.NoAction);
 
 				((ArticlesTableSource)source).PushDetailsView += OnPushArticleDetails;
 			}
 			else
 			{
-				source = new DoubleArticleTableSource(articles, true, MagazineAction.NoAction);
+				source = new DoubleArticleTableSource(articles, MagazineAction.NoAction);
 
 				((DoubleArticleTableSource)source).PushDetailsView += OnPushArticleDetails;
 			}
@@ -554,6 +617,15 @@ namespace ItExpert
 			_articlesTableView.ReloadData();
 		}
 
+		void ShowHoldMessage(string message)
+		{
+			_holdMessageView.Hidden = false;
+			_holdMessageView.Text = message;
+			_holdMessageView.SizeToFit();
+			_holdMessageView.Frame = new RectangleF((View.Bounds.Width - _holdMessageView.Frame.Width) / 2, View.Bounds.Height / 2, _holdMessageView.Frame.Width, _holdMessageView.Frame.Height);
+			View.BringSubviewToFront(_holdMessageView);
+		}
+
 		private void LoadDataFromDb()
 		{
 			_prevArticlesExists = true;
@@ -565,12 +637,16 @@ namespace ItExpert
 			_articles = lst;
 			if (!_articles.Any())
 			{
-				BTProgressHUD.ShowToast ("Нет избранных статей", ProgressHUD.MaskType.None, false);
+				ShowHoldMessage("Нет избранных статей");
 				_prevArticlesExists = false;
 				//Пустой список
 				UpdateTableView(new List<Article>());
 				_articlesTableView.Hidden = true;
 				return;
+			}
+			else
+			{
+				_holdMessageView.Hidden = true;
 			}
 			if (_addPreviousArticleButton != null && _prevArticlesExists)
 			{

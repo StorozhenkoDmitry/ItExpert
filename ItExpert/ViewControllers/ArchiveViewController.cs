@@ -27,6 +27,7 @@ namespace ItExpert
 		private UIActivityIndicatorView _loadingIndicator;
 		private UIActivityIndicatorView _loadingPdfIndicator;
 		private bool _dataLoaded = false;
+		private bool _isLoading = false;
 		#endregion
 
 		#region UIViewController members
@@ -54,9 +55,23 @@ namespace ItExpert
                     View.Frame.Width, 40);
             }
 
+			var height = 50;
+			if (_loadingPdfIndicator != null)
+			{
+				_loadingPdfIndicator.Frame = new RectangleF (0, 100, View.Bounds.Width, height);
+			}
+
+			if (_loadingIndicator != null)
+			{
+				_loadingIndicator.Frame = new RectangleF (0, View.Bounds.Height - height, View.Bounds.Width, height);
+			}
+
             _archiveView.Frame = new RectangleF(0, _yearsView.Frame.Bottom, View.Frame.Width, View.Frame.Height - _yearsView.Frame.Bottom);
 
-            _archiveView.AddMagazineViews(_magazines);
+			if (_magazines != null && !_isLoading)
+			{
+            	_archiveView.AddMagazineViews(_magazines);
+			}
 		}
 
 		public override void ViewDidLoad ()
@@ -77,6 +92,7 @@ namespace ItExpert
 				_dataLoaded = true;
 				Action action = () =>
 				{
+					Thread.Sleep(150);
 					InvokeOnMainThread(() => Initialize());
 				};
 				ThreadPool.QueueUserWorkItem(state => action());
@@ -88,7 +104,7 @@ namespace ItExpert
 			base.ViewWillDisappear (animated);
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesPriviewGetted;
-			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+			_isLoading = false;
 		}
 
 		protected override void Dispose(bool disposing)
@@ -97,6 +113,8 @@ namespace ItExpert
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesPriviewGetted;
 			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+			ApplicationWorker.AllPdfFilesDeleted -= OnAllPdfFilesDeleted;
+			_isLoading = false;
 		}
 
 		#endregion
@@ -110,6 +128,7 @@ namespace ItExpert
 			InitLoadingPdfProgress ();
 			ApplicationWorker.PdfLoader.PdfGetted += OnPdfGetted;
 			ApplicationWorker.SettingsChanged += OnSettingsChanged;
+			ApplicationWorker.AllPdfFilesDeleted += OnAllPdfFilesDeleted;
 
             InitNavigationBar();
 
@@ -117,6 +136,7 @@ namespace ItExpert
 			{
 				_yearsView.RemoveFromSuperview ();
 			}
+				
 			if (_archiveView != null)
 			{
 				_archiveView.RemoveFromSuperview ();
@@ -146,9 +166,10 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
+				_isLoading = true;
 				SetLoadingImageVisible (true);
 				ApplicationWorker.RemoteWorker.MagazinesPriviewGetted += OnMagazinesYearsGetted;
 				ThreadPool.QueueUserWorkItem(
@@ -232,6 +253,8 @@ namespace ItExpert
 					break;
 				}
 			}
+			DestroyPdfLoader();
+			_isLoading = false;
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -248,10 +271,20 @@ namespace ItExpert
 
 		#region Event handlers
 
+		void OnAllPdfFilesDeleted(object sender, EventArgs e)
+		{
+			if (_magazines != null)
+			{
+				UpdateMagazinesPdfExists(_magazines, _currentYear);
+				_archiveView.AddMagazineViews(_magazines);
+			}
+		}
+
 		void OnSettingsChanged (object sender, EventArgs e)
 		{
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			_loadingIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			_loadingPdfIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			_archiveView.AddMagazineViews(_magazines);
 		}
 
@@ -267,6 +300,8 @@ namespace ItExpert
 					break;
 				}
 			}
+			DestroyPdfLoader();
+			_isLoading = false;
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -291,6 +326,7 @@ namespace ItExpert
 				}
 			}
 			DestroyPdfLoader ();
+			_isLoading = false;
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -316,6 +352,7 @@ namespace ItExpert
 				}
 			}
 			DestroyPdfLoader ();
+			_isLoading = false;
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -346,6 +383,7 @@ namespace ItExpert
 				}
 			}
 			DestroyPdfLoader ();
+			_isLoading = false;
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -371,9 +409,11 @@ namespace ItExpert
 				}
 			}
 			DestroyPdfLoader ();
+			_isLoading = false;
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
+				showController.UpdateSource();
 			}
 			else
 			{
@@ -385,6 +425,7 @@ namespace ItExpert
 		private void OnMagazinesYearsGetted(object sender, MagazinesPreviewEventArgs e)
 		{
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
+			_isLoading = false;
 			if (e.Abort)
 			{
 				return;
@@ -428,7 +469,7 @@ namespace ItExpert
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500);
 				}
 				SetLoadingImageVisible (false);
 			});
@@ -436,6 +477,8 @@ namespace ItExpert
 
 		private void ButtonYearOnClick(object sender, EventArgs eventArgs)
 		{
+			if (_isLoading)
+				return;
 			//Выделить активную кнопку и выташить год из кнопка.Tag
 			var year = ((UIButton)sender).Tag;
 			if (year != _currentYear)
@@ -451,23 +494,21 @@ namespace ItExpert
 				}
 				else
 				{
+					_archiveView.AddMagazineViews(new List<Magazine>());
 					if (!ApplicationWorker.Settings.OfflineMode)
 					{
 						var connectAccept = IsConnectionAccept();
 						if (!connectAccept)
 						{
-							BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+							BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 							return;
 						}
+						_isLoading = true;
 						SetLoadingImageVisible (true);
 						ApplicationWorker.RemoteWorker.MagazinesPriviewGetted += OnMagazinesPriviewGetted;
 						ThreadPool.QueueUserWorkItem(
 							state =>
 							ApplicationWorker.RemoteWorker.BeginGetMagazinesPreview(ApplicationWorker.Settings, year));
-					}
-					else
-					{
-						_archiveView.AddMagazineViews(new List<Magazine>());
 					}
 				}
 			}
@@ -478,6 +519,7 @@ namespace ItExpert
 		private void OnMagazinesPriviewGetted(object sender, MagazinesPreviewEventArgs e)
 		{
 			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesPriviewGetted;
+			_isLoading = false;
 			if (e.Abort)
 			{
 				return;
@@ -497,7 +539,7 @@ namespace ItExpert
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false, 2500);
 					_currentYear = -1;
 				}
 				SetLoadingImageVisible (false);
@@ -517,15 +559,16 @@ namespace ItExpert
 				}
 			}
 			DestroyPdfLoader ();
+			_isLoading = false;
 			if (showController != null)
 			{
-				NavigationController.PopToViewController (showController, true);
+				NavigationController.PopToViewController (showController, false);
 				showController.SetMagazineId (ApplicationWorker.Magazine.Id);
 			}
 			else
 			{
 				showController = new MagazineViewController(ApplicationWorker.Magazine.Id);
-				NavigationController.PushViewController(showController, true);
+				NavigationController.PushViewController(showController, false);
         	}
 		}
 
@@ -554,6 +597,7 @@ namespace ItExpert
 				{
 					DeleteMagazine(magazineView);
 				}
+				alertView.Dispose();
 			};
 
 			alertView.Show();
@@ -576,14 +620,9 @@ namespace ItExpert
 				if (!error)
 				{
 					var downloadItem = _downloadMagazineView;
-					var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-					var dir = new DirectoryInfo(folder + Settings.PdfFolder);
-					if (!dir.Exists)
-					{
-						dir.Create();
-					}
+					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 					var fileName = downloadItem.Magazine.Id.ToString("G") + ".pdf";
-					var path = Path.Combine(folder + Settings.PdfFolder, fileName);
+					var path = Path.Combine(folder, fileName);
 					var fs = File.Create(path);
 					fs.Write(e.Pdf, 0, e.Pdf.Length);
 					fs.Flush();
@@ -594,7 +633,7 @@ namespace ItExpert
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false, 2500);
 				}
 				SetLoadingProgressVisible(false);
 				_downloadMagazineView = null;
@@ -608,24 +647,24 @@ namespace ItExpert
 
 		private void DeleteMagazine(MagazineView magazineView)
 		{
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 			var fileName = magazineView.Magazine.Id.ToString("G") + ".pdf";
-			var path = Path.Combine(folder + Settings.PdfFolder, fileName);
+			var path = Path.Combine(folder, fileName);
 			File.Delete(path);
 			magazineView.Magazine.Exists = false;
 			ApplicationWorker.Db.UpdateMagazine(magazineView.Magazine);
 			magazineView.UpdateMagazineExists(false);
-			BTProgressHUD.ShowToast ("Файл удален", ProgressHUD.MaskType.None, false);
+			BTProgressHUD.ShowToast ("Файл удален", ProgressHUD.MaskType.None, false, 2500);
 		}
 
 		private void OpenPdf(Magazine magazine)
 		{
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 			var fileName = magazine.Id.ToString("G") + ".pdf";
-			var path = Path.Combine(folder + Settings.PdfFolder, fileName);
+			var path = Path.Combine(folder, fileName);
 			if (!File.Exists(path))
 			{
-				BTProgressHUD.ShowToast ("Файл не найден", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Файл не найден", ProgressHUD.MaskType.None, false, 2500);
 				return;
 			}
 			var file = new FileInfo (path);
@@ -636,11 +675,11 @@ namespace ItExpert
 		private void UpdateMagazinesPdfExists(List<Magazine> magazines, int year)
 		{
 			if (magazines == null || !magazines.Any()) return;
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 			foreach (var magazine in magazines)
 			{
 				var fileName = magazine.Id.ToString("G") + ".pdf";
-				var path = Path.Combine(folder + Settings.PdfFolder, fileName);
+				var path = Path.Combine(folder, fileName);
 				var file = new FileInfo(path);
 				magazine.Exists = file.Exists;
 			}
@@ -688,12 +727,12 @@ namespace ItExpert
 		{
 			if (ApplicationWorker.Settings.OfflineMode)
 			{
-				BTProgressHUD.ShowToast ("Загрузка Pdf невозможна в оффлайн режиме", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Загрузка Pdf невозможна в оффлайн режиме", ProgressHUD.MaskType.None, false, 2500);
 				return;   
 			}
 			if (string.IsNullOrWhiteSpace(magazineView.Magazine.PdfFileSrc))
 			{
-				BTProgressHUD.ShowToast ("Pdf файл недоступен", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Pdf файл недоступен", ProgressHUD.MaskType.None, false, 2500);
 				return;
 			}
 			if (!ApplicationWorker.PdfLoader.IsOperation())
@@ -701,7 +740,7 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				_downloadMagazineView = magazineView;
@@ -711,7 +750,7 @@ namespace ItExpert
 			}
 			else
 			{
-				BTProgressHUD.ShowToast ("Идет загрузка... Дождитесь завершения", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Идет загрузка Pdf... Дождитесь завершения", ProgressHUD.MaskType.None, false, 2500);
 			}
 		}
 

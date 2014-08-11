@@ -116,10 +116,13 @@ namespace ItExpert.ServiceLayer
                 {
                     if (response.ContentType == "application/pdf")
                     {
-                        var rd = new StreamReader(stream, Encoding.Unicode);
-                        var data = rd.ReadToEnd();
-                        pdf = Encoding.Unicode.GetBytes(data);
+						using(var rd = new StreamReader(stream, Encoding.Unicode))
+						{
+                        	var data = rd.ReadToEnd();
+                        	pdf = Encoding.Unicode.GetBytes(data);
+						}
                     }
+					stream.Dispose();
                 }
             }
             catch (Exception e)
@@ -129,7 +132,7 @@ namespace ItExpert.ServiceLayer
             }
             finally
             {
-                if (response != null) response.Close();
+                if (response != null) response.Dispose();
                 _operationComplete = true;
                 _isOperation = false;
                 var handler = Interlocked.CompareExchange(ref PdfGetted, null, null);

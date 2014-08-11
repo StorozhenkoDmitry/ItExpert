@@ -13,7 +13,7 @@ namespace ItExpert
 
             Index = index;
 
-            _titleTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(title, UIFont.SystemFontOfSize(ApplicationWorker.Settings.HeaderSize),
+            _titleTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(title, UIFont.SystemFontOfSize(16),
                 UIColor.White), Frame.Width, new PointF());
 
             _titleTextView.Frame = new RectangleF(0, Bounds.Height / 2 - _titleTextView.Frame.Height / 2, _titleTextView.Frame.Width, _titleTextView.Frame.Height);
@@ -65,6 +65,39 @@ namespace ItExpert
                 return _uncheckedImage; 
             }
         }
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (_checkedImage != null)
+			{
+				_checkedImage.Dispose();
+			}
+			if (_uncheckedImage != null)
+			{
+				_uncheckedImage.Dispose();
+			}
+			if (_titleTextView != null)
+			{
+				_titleTextView.Dispose();
+			}
+			if (_chekedImageView != null)
+			{
+				_chekedImageView.Dispose();
+			}
+			_checkedImage = null;
+			_uncheckedImage = null;
+			_titleTextView = null;
+			_chekedImageView = null;
+			if (GestureRecognizers != null)
+			{
+				foreach (var gr in GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+			}
+			GestureRecognizers = new UIGestureRecognizer[0];
+		}
 
         private UIImage _checkedImage;
         private UIImage _uncheckedImage;

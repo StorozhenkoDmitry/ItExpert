@@ -11,6 +11,25 @@ namespace ItExpert
             _height = 35;
         }
 
+		public override void Dispose()
+		{
+			base.Dispose();
+			if (_button != null)
+			{
+				_button.TouchDown -= ButtonTouchDown;
+				_button.TouchUpInside -= ButtonTouchUpInside;
+				_button.Dispose();
+			}
+			_button = null;
+		}
+
+		void AddContents(UIView contentView)
+		{
+			var frame = contentView.Frame;
+			var menuItemView = new MenuItemView(frame, _button, ButtonTouchDown, ButtonTouchUpInside);
+			contentView.Add(menuItemView);
+		}
+
         public override float GetContentHeight(UIView cellContentView, NavigationBarItem item)
         {
             return _height;
@@ -20,7 +39,7 @@ namespace ItExpert
         {
             CreateButton(cell.ContentView.Frame.Size, item);
 
-            cell.ContentView.Add(_button);
+			AddContents(cell.ContentView);
         }
 
         protected override void Update(UITableViewCell cell, NavigationBarItem item)
@@ -29,30 +48,8 @@ namespace ItExpert
             {
                 CreateButton(cell.ContentView.Frame.Size, item);
             }
-            else
-            {
-                _textView.Dispose();
-                _textView = null;
 
-                CreateTextView(cell.ContentView.Frame.Size, item);
-            }
-
-            cell.ContentView.Add(_button);
-        }
-
-        private void CreateMenuItem(SizeF viewSize, NavigationBarItem item)
-        {
-            _textFont = UIFont.BoldSystemFontOfSize(16);
-
-            CreateTextView(viewSize, item);
-
-            _tappableView = new UIView(new RectangleF(new PointF(0, 0), viewSize));
-
-            _tappableView.BackgroundColor = UIColor.Clear;
-            _tappableView.AddGestureRecognizer(new UITapGestureRecognizer(() =>
-            {
-                _item.ButtonPushed(0);
-            }));
+			AddContents(cell.ContentView);
         }
 
         private void CreateButton(SizeF viewSize, NavigationBarItem item)
@@ -66,20 +63,58 @@ namespace ItExpert
             _button.TitleLabel.TextColor = UIColor.White;
             _button.HorizontalAlignment = UIControlContentHorizontalAlignment.Left;
 
-            _button.TouchDown += (sender, e) => 
-            {
-                _button.TitleLabel.TextColor = UIColor.FromRGB(160, 160, 160);
-            };
-
-            _button.TouchUpInside += (sender, e) => 
-            {
-                _button.TitleLabel.TextColor = UIColor.White;
-                _item.ButtonPushed(0);
-            };
+            
         }
 
-        private UIView _tappableView;
+		void ButtonTouchDown(object sender, EventArgs e)
+		{
+			var button = sender as UIButton;
+			button.TitleLabel.TextColor = UIColor.FromRGB(160, 160, 160);
+		}
+
+		void ButtonTouchUpInside(object sender, EventArgs e)
+		{
+			var button = sender as UIButton;
+			button.TitleLabel.TextColor = UIColor.White;
+			_item.ButtonPushed(0);
+		}
+
         private UIButton _button;
     }
+
+	public class MenuItemView : UIView, ICleanupObject
+	{
+		private UIButton _button;
+		private EventHandler _buttonTouchDown;
+		private EventHandler _buttonTouchUpInside;
+
+		public MenuItemView(RectangleF frame, UIButton button, EventHandler buttonTouchDown, 
+			EventHandler buttonTouchUpInside): base(frame)
+		{
+			_button = button;
+			_buttonTouchDown = buttonTouchDown;
+			_buttonTouchUpInside = buttonTouchUpInside;
+			_button.TouchDown += _buttonTouchDown;
+			_button.TouchUpInside += _buttonTouchUpInside;
+
+			Add(_button);
+		}
+
+		public void CleanUp()
+		{
+			foreach (var view in Subviews)
+			{
+				view.RemoveFromSuperview();
+			}
+			if (_button != null)
+			{
+				_button.TouchDown -= _buttonTouchDown;
+				_button.TouchUpInside -= _buttonTouchUpInside;
+			}
+			_button = null;
+			_buttonTouchDown = null;
+			_buttonTouchUpInside = null;
+		}
+	}
 }
 

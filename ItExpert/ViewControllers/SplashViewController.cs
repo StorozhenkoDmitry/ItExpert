@@ -161,8 +161,9 @@ namespace ItExpert
 			if (!string.IsNullOrWhiteSpace(e.Css))
 			{
 				ApplicationWorker.Css = e.Css;
-				var folder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
-				var path = Path.Combine(folder, "css.dt");
+				var documents = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+				var library = Path.Combine (documents, "..", "Library");
+				var path = Path.Combine(library, "css.dt");
 				using (var sw = new StreamWriter(path, false, Encoding.UTF8))
 				{
 					sw.Write(e.Css);

@@ -2,7 +2,7 @@
 
 namespace ItExpert
 {
-    public class NavigationBarItem
+    public class NavigationBarItem : IDisposable
     {
         public enum ContentType
         {
@@ -56,6 +56,13 @@ namespace ItExpert
             get;
             set;
         }
+
+		public void Dispose()
+		{
+			ButtonPushed = null;
+			SetValue = null;
+			GetValue = null;
+		}
     }
 }
 

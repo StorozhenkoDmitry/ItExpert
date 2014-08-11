@@ -70,6 +70,7 @@ namespace ItExpert.ServiceLayer
             }
             catch (Exception ex)
             {
+				Abort();
             }
         }
 
@@ -98,6 +99,7 @@ namespace ItExpert.ServiceLayer
             }
             catch (Exception ex)
             {
+				Abort();
             }
         }
 
@@ -128,8 +130,8 @@ namespace ItExpert.ServiceLayer
             {
                 _activeRequest.Handle.Unregister(null);
                 HttpWebRequest request = _activeRequest.Request;
-                if (request != null)
-                    request.Abort();
+				if (request != null)
+					request.Abort();
                 Interlocked.Exchange(ref _activeRequest, null);
             }
             Monitor.Exit(_lockObj);
@@ -152,6 +154,7 @@ namespace ItExpert.ServiceLayer
                     {
                         data = reader.ReadToEnd();
                     }
+					stream.Dispose();
                 }
             }
             catch (Exception e)
@@ -160,7 +163,7 @@ namespace ItExpert.ServiceLayer
             }
             finally
             {
-                if (response != null) response.Close();
+                if (response != null) response.Dispose();
                 _req = null;
                 var handler = Interlocked.CompareExchange(ref DataReceived, null, null);
                 if (handler != null)

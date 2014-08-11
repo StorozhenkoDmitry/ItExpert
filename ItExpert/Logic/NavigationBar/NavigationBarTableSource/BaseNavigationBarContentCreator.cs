@@ -1,16 +1,17 @@
 ﻿using System;
 using MonoTouch.UIKit;
 using System.Drawing;
+using System.Linq;
 
 namespace ItExpert
 {
-    public abstract class BaseNavigationBarContentCreator
+    public abstract class BaseNavigationBarContentCreator : IDisposable
     {
         public BaseNavigationBarContentCreator()
         {
             _needToCreateContent = true;
 
-            _textFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.TextSize);
+            _textFont = UIFont.BoldSystemFontOfSize(14);
             _forecolor = UIColor.White;
 
             _padding = new UIEdgeInsets (7, 4, 7, 4);
@@ -18,10 +19,29 @@ namespace ItExpert
             _height = 44;
         }
 
+		public virtual void Dispose()
+		{
+			if (_textView != null)
+			{
+				_textView.Dispose();
+			}
+			_textView = null;
+			_item = null;
+		}
+
         public void UpdateContent(UITableViewCell cell, NavigationBarItem item)
         {
+			UIView firstSubview = null;
+			if (cell.ContentView.Subviews.Any())
+			{
+				firstSubview = cell.ContentView.Subviews[0];
+			}
             ItExpertHelper.RemoveSubviews(cell.ContentView);
-
+			var cleanup = firstSubview as ICleanupObject;
+			if (cleanup != null)
+			{
+				cleanup.CleanUp();
+			}
             _item = item;
 
             cell.UserInteractionEnabled = true;

@@ -24,7 +24,6 @@ namespace ItExpert
 		private bool _isLoadingData;
 		private bool _isRubricSearch = false;
 		private Rubric _searchRubric = null;
-		private bool _toMenu = false;
 		public static MagazineViewController Current;
 		private UIView _banner = null;
 		private bool _lastMagazine = false;
@@ -40,6 +39,9 @@ namespace ItExpert
 		private bool _firstLoad = true;
 		private UIInterfaceOrientation _currentOrientation;
 		private int _rubricId = -1;
+		private bool _showFromAnotherScreen = false;
+		private UILabel _holdMessageView;
+		private FilterParameters _filterParams;
 
 		#endregion
 
@@ -53,6 +55,11 @@ namespace ItExpert
         {
 			_magazineId = magazineId;
         }
+
+		public MagazineViewController(FilterParameters filterParams)
+		{
+			_filterParams = filterParams;
+		}
 
 		public override void ViewDidLoad ()
 		{
@@ -94,11 +101,38 @@ namespace ItExpert
 				InitMagazine (_magazine);
 				UpdateViewsLayout ();
 			}
+			if (_showFromAnotherScreen)
+			{
+				_showFromAnotherScreen = false;
+				_rubricId = -1;
+				_isRubricSearch = false;
+				_searchRubric = null;
+				_headerAdded = false;
+				_header = null;
+				_prevArticlesExists = true;
+				//Пустой список
+				if (_articles != null)
+				{
+					_articles.Clear();
+				}
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+					}
+				}
+				_articlesTableView.ReloadData ();
+				_articlesTableView.Hidden = true;
+				_holdMessageView.Hidden = true;
+				InitData ();
+				return;
+			}
 			if (_rubricId != -1)
 			{
 				if (ApplicationWorker.Settings.OfflineMode)
 				{
-					BTProgressHUD.ShowToast ("Поиск невозможен в оффлайн режиме", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Поиск невозможен в оффлайн режиме", ProgressHUD.MaskType.None, false, 2500);
 					_rubricId = -1;
 					return;
 				}
@@ -115,7 +149,7 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-						BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+						BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 						return;
 					}
 					_headerAdded = true;
@@ -135,6 +169,7 @@ namespace ItExpert
 						_articlesTableView.ReloadData ();
 					}
 					_articlesTableView.Hidden = true;
+					_holdMessageView.Hidden = true;
 					_prevArticlesExists = true;
 					_articles = null;
 					_searchRubric = rubric;
@@ -262,6 +297,13 @@ namespace ItExpert
 						ExtendedObject = _addPreviousArticleButton
 					});
 				}
+				if (_articlesTableView != null && _articlesTableView.Source != null)
+				{
+					if (_articlesTableView.Source is DoubleArticleTableSource)
+					{
+						(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
+					}
+				}
 				UpdateViewsLayout ();
 				if (ApplicationWorker.Settings.HideReaded && position > 0)
 				{
@@ -292,6 +334,7 @@ namespace ItExpert
 				InitViews();
 				Action action = () =>
 				{
+					Thread.Sleep(150);
 					InvokeOnMainThread(()=>Initialize ());
 				};
 				ThreadPool.QueueUserWorkItem(state => action());
@@ -322,6 +365,7 @@ namespace ItExpert
 			ApplicationWorker.RemoteWorker.MagazineArticlesGetted -= OnMagazineArticlesGetted;
 			ApplicationWorker.RemoteWorker.MagazineArticlesGetted -= SearchRubricOnMagazineArticlesGetted;
 			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+			ApplicationWorker.AllPdfFilesDeleted -= OnAllPdfFilesDeleted;
 		}
 
 		public override void WillRotate(UIInterfaceOrientation toInterfaceOrientation, double duration)
@@ -433,27 +477,7 @@ namespace ItExpert
 		public void SetMagazineId(int magazineId)
 		{
 			_magazineId = magazineId;
-			_rubricId = -1;
-			_isRubricSearch = false;
-			_searchRubric = null;
-			_headerAdded = false;
-			_header = null;
-			_prevArticlesExists = true;
-			//Пустой список
-			if (_articles != null)
-			{
-				_articles.Clear();
-			}
-			if (_articlesTableView != null && _articlesTableView.Source != null)
-			{
-				if (_articlesTableView.Source is DoubleArticleTableSource)
-				{
-					(_articlesTableView.Source as DoubleArticleTableSource).UpdateSource ();
-				}
-			}
-			_articlesTableView.ReloadData ();
-			_articlesTableView.Hidden = true;
-			InitData ();
+			_showFromAnotherScreen = true;
 		}
 
 		void InitViews()
@@ -466,6 +490,7 @@ namespace ItExpert
 			InitLoadingProgress();
 			InitAddPreviousArticleButton();
 			InitNavigationBar();
+			InitHoldMessageView();
 		}
 
 		public void Initialize()
@@ -473,17 +498,24 @@ namespace ItExpert
 			//Пустой список
 			_articlesTableView = new UITableView(new RectangleF(0, 0, 0, 
 				0), UITableViewStyle.Plain);
+			_articlesTableView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			_articlesTableView.ScrollEnabled = true; 
 			_articlesTableView.UserInteractionEnabled = true;
 			_articlesTableView.SeparatorInset = new UIEdgeInsets(0, 0, 0, 0);
-			_articlesTableView.Bounces = true;
+			_articlesTableView.Bounces = false;
 			_articlesTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
 			_articlesTableView.TableFooterView = new UIView();
+			if (!UserInterfaceIdiomIsPhone)
+			{
+				_articlesTableView.AllowsSelection = false;
+				_articlesTableView.AllowsMultipleSelection = false;
+			}
 
 			View.Add(_articlesTableView);
 			_articlesTableView.Hidden = true;
 
 			ApplicationWorker.SettingsChanged += OnSettingsChanged;
+			ApplicationWorker.AllPdfFilesDeleted += OnAllPdfFilesDeleted;
 
 			var screenWidth =
 				ApplicationWorker.Settings.GetScreenWidthForScreen((int)View.Bounds.Width);
@@ -507,6 +539,7 @@ namespace ItExpert
 					}
 				}
 			}
+				
 			if (loadBanners)
 			{
 				if (!ApplicationWorker.Settings.OfflineMode)
@@ -514,7 +547,7 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-						BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+						BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 						return;
 					}
 					ApplicationWorker.RemoteWorker.BannerGetted += StartOnBannerGetted;
@@ -619,6 +652,45 @@ namespace ItExpert
 		private void InitData()
 		{
 			SetLoadingImageVisible (true);
+			if (_filterParams != null)
+			{
+				if (_filterParams.Filter == Filter.Section)
+				{
+					_rubricId = _filterParams.SectionId;
+					_filterParams = null;
+					if (ApplicationWorker.Settings.OfflineMode)
+					{
+						BTProgressHUD.ShowToast ("Поиск невозможен в оффлайн режиме", ProgressHUD.MaskType.None, false, 2500);
+						_rubricId = -1;
+						return;
+					}
+					var rubric = ApplicationWorker.Db.GetRubric(_rubricId);
+					_rubricId = -1;
+					if (rubric != null)
+					{
+						var connectAccept = IsConnectionAccept();
+						if (!connectAccept)
+						{
+							BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
+							return;
+						}
+						_headerAdded = true;
+						_header = rubric.Name;
+						_prevArticlesExists = true;
+						_articles = null;
+						_searchRubric = rubric;
+						_isLoadingData = true;
+						_isRubricSearch = true;
+						ApplicationWorker.RemoteWorker.MagazineArticlesGetted += SearchRubricOnMagazineArticlesGetted;
+						ThreadPool.QueueUserWorkItem(
+							state =>
+							ApplicationWorker.RemoteWorker.BeginGetMagazinesArticlesByRubric(
+								ApplicationWorker.Settings, rubric, Magazine.BlockId, -1));
+						return;
+					}
+				}
+				_filterParams = null;
+			}
 			var lastMagazineId = -1;
 			if (ApplicationWorker.LastMagazine != null)
 			{
@@ -658,7 +730,7 @@ namespace ItExpert
 					var connectAccept = IsConnectionAccept();
 					if (!connectAccept)
 					{
-						BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+						BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 						return;
 					}
 					ApplicationWorker.RemoteWorker.MagazinesPriviewGetted += OnMagazinesPriviewGetted;
@@ -675,9 +747,23 @@ namespace ItExpert
 						InitMagazine(magazine);
 						LoadMagazineArticles();
 					}
+					else
+					{
+						SetLoadingImageVisible (false);
+					}
 				}
 			}
 
+		}
+
+		void InitHoldMessageView()
+		{
+			_holdMessageView = new UILabel(new RectangleF(0, 0, 0, 0));
+			_holdMessageView.BackgroundColor = UIColor.Clear;
+			_holdMessageView.Font = UIFont.BoldSystemFontOfSize(16);
+			_holdMessageView.TextColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
+			_holdMessageView.Hidden = true;
+			Add(_holdMessageView);
 		}
 
         private void InitNavigationBar()
@@ -707,6 +793,8 @@ namespace ItExpert
 					break;
 				}
 			}
+			_isLoadingData = false;
+			DestroyPdfLoader();
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -723,8 +811,18 @@ namespace ItExpert
 
 		#region Event handlers
 
+		void OnAllPdfFilesDeleted (object sender, EventArgs e)
+		{
+			if (_magazine != null)
+			{
+				UpdateMagazinesPdfExists(_magazine);
+				_articlesTableView.ReloadData();
+			}
+		}
+
 		void OnSettingsChanged (object sender, EventArgs e)
 		{
+			_articlesTableView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
 			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			_loadingIndicator.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			var button = _addPreviousArticleButton as UIButton;
@@ -784,6 +882,14 @@ namespace ItExpert
 							ExtendedObject = _addPreviousArticleButton
 						});
 					}
+					if (_articlesTableView.Source != null)
+					{
+						var iUpdatatableSource = _articlesTableView.Source as IUpdatableSource;
+						if (iUpdatatableSource != null)
+						{
+							iUpdatatableSource.UpdateProperties();
+						}
+					}
 					_articlesTableView.ReloadData();
 				}
 			}
@@ -801,6 +907,8 @@ namespace ItExpert
 					break;
 				}
 			}
+			_isLoadingData = false;
+			DestroyPdfLoader();
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -838,7 +946,7 @@ namespace ItExpert
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500);
 				}
 				InitData();
 			});
@@ -870,7 +978,7 @@ namespace ItExpert
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500);
 				}
 				LoadMagazineArticles();
 			});
@@ -889,57 +997,65 @@ namespace ItExpert
 				var error = e.Error;
 				if (!error)
 				{
-					e.Articles.ForEach(article => article.IdMagazine = _magazine.Id);
-					ApplicationWorker.Db.SetPropertiesForArticles(e.Articles);
-					ApplicationWorker.NormalizePreviewText(e.Articles);
-					if (_lastMagazine)
+					if (e.Articles != null && e.Articles.Any())
 					{
-						ApplicationWorker.LastMagazineArticles = e.Articles;
-					}
-					ThreadPool.QueueUserWorkItem(state => UpdateData(e));
-					_allArticles = e.Articles.OrderByDescending(x => x.ActiveFrom).ToList();
-					if (ApplicationWorker.Settings.HideReaded)
-					{
-						_articles = _allArticles.Where(x => !x.IsReaded).ToList();
-						if (_articles.Count() < 6)
+						_holdMessageView.Hidden = true;
+						e.Articles.ForEach(article => article.IdMagazine = _magazine.Id);
+						ApplicationWorker.Db.SetPropertiesForArticles(e.Articles);
+						ApplicationWorker.NormalizePreviewText(e.Articles);
+						if (_lastMagazine)
 						{
-							var count = 6 - _articles.Count();
-							_articles.AddRange(_allArticles.Where(x => x.IsReaded).Take(count));
-							_articles = _articles.OrderByDescending(x => x.ActiveFrom).ToList();
+							ApplicationWorker.LastMagazineArticles = e.Articles;
+						}
+						ThreadPool.QueueUserWorkItem(state => UpdateData(e));
+						_allArticles = e.Articles.OrderByDescending(x => x.ActiveFrom).ToList();
+						if (ApplicationWorker.Settings.HideReaded)
+						{
+							_articles = _allArticles.Where(x => !x.IsReaded).ToList();
+							if (_articles.Count() < 6)
+							{
+								var count = 6 - _articles.Count();
+								_articles.AddRange(_allArticles.Where(x => x.IsReaded).Take(count));
+								_articles = _articles.OrderByDescending(x => x.ActiveFrom).ToList();
+							}
+						}
+						else
+						{
+							_articles = _allArticles.ToList();
+						}
+						var lst = SortAndAddHeader(_articles);
+						//Обновление списка новостей для ListView
+						if (lst != null && lst.Any())
+						{
+							_articles = lst.ToList();
+							if (_banner != null)
+							{
+								_articles.Insert(0,
+									new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+							}
+							if (ApplicationWorker.Magazine != null)
+							{
+								_articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
+							}
+							//Загрузить _articles в список
+
+							if (_articles != null && _articles.Any())
+							{
+								UpdateTableView(_articles);	
+								_articlesTableView.Hidden = false;
+							}
 						}
 					}
 					else
 					{
-						_articles = _allArticles.ToList();
-					}
-					var lst = SortAndAddHeader(_articles);
-					//Обновление списка новостей для ListView
-					if (lst != null && lst.Any())
-					{
-						_articles = lst.ToList();
-						if (_banner != null)
-						{
-							_articles.Insert(0,
-                                new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
-						}
-                        if (ApplicationWorker.Magazine != null)
-                        {
-                            _articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
-                        }
-						//Загрузить _articles в список
-
-                        if (_articles != null && _articles.Any())
-                        {
-							UpdateTableView(_articles);	
-							_articlesTableView.Hidden = false;
-                        }
+						ShowHoldMessage("Статей нет");
 					}
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500);
 				}
-				SetLoadingImageVisible (false);
+				SetLoadingImageVisible(false);
 			});
 		}
 
@@ -950,13 +1066,14 @@ namespace ItExpert
 			var connectAccept = IsConnectionAccept();
 			if (!connectAccept)
 			{
-				BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 				return;
 			}
 			var button = sender as UIButton;
 			if (button != null)
 			{
 				var loading = new UIActivityIndicatorView ( new RectangleF(0, 0, View.Bounds.Width, 40));
+				loading.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 				loading.ActivityIndicatorViewStyle = UIActivityIndicatorViewStyle.WhiteLarge;
 				loading.Color = UIColor.Blue;
 				loading.StartAnimating ();
@@ -990,9 +1107,16 @@ namespace ItExpert
 				var error = e.Error;
 				if (!error)
 				{
-					if (!e.Articles.Any())
+					if (e.Articles == null || !e.Articles.Any())
 					{
-						BTProgressHUD.ShowToast ("Больше статей нет", ProgressHUD.MaskType.None, false);
+						if (_articles == null || !_articles.Any())
+						{
+							ShowHoldMessage("Статей нет");
+						}
+						else 
+						{
+							BTProgressHUD.ShowToast ("Больше статей нет", ProgressHUD.MaskType.None, false, 2500);
+						}
 						_prevArticlesExists = false;
 						if (_addPreviousArticleButton != null && _articles.Any())
 						{
@@ -1007,6 +1131,10 @@ namespace ItExpert
 						}
 						_articlesTableView.ReloadData ();
 						return;
+					}
+					else
+					{
+						_holdMessageView.Hidden = true;
 					}
 					e.Articles.ForEach(article =>
 					{
@@ -1111,6 +1239,14 @@ namespace ItExpert
 							}
 							if (_articlesTableView != null)
 							{
+								if (_articlesTableView.Source != null)
+								{
+									var iUpdatatableSource = _articlesTableView.Source as IUpdatableSource;
+									if (iUpdatatableSource != null)
+									{
+										iUpdatatableSource.UpdateProperties();
+									}
+								}
 								_articlesTableView.ReloadData();
 							}
 							if (_articles != null && _articles.Any())
@@ -1139,7 +1275,11 @@ namespace ItExpert
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false);
+					if (_articlesTableView != null)
+					{
+						_articlesTableView.ReloadData();
+					}
+					BTProgressHUD.ShowToast ("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500);
 				}
 				SetLoadingImageVisible (false);
 			});
@@ -1148,7 +1288,7 @@ namespace ItExpert
 
 		private void OnPushArticleDetails(object sender, PushDetailsEventArgs e)
 		{
-			NavigationController.PushViewController (e.NewsDetailsView, true);
+			NavigationController.PushViewController (e.NewsDetailsView, false);
 		}
 
 		private void ButInCacheOnClick()
@@ -1156,13 +1296,16 @@ namespace ItExpert
 			if (_allArticles == null || !_allArticles.Any() || _magazine == null) return;
 			if (_isRubricSearch)
 			{
-				BTProgressHUD.ShowToast ("Результаты по рубрикам нельзя сбросит в кэш", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Результаты по рубрикам нельзя сбросит в кэш", ProgressHUD.MaskType.None, false, 2500);
 				return;
 			}
-			BTProgressHUD.Show("Cброc в кэш..", -1, ProgressHUD.MaskType.Clear);
 			//отобразить модальный индикатор прогресса;
 			Action inCache = () =>
 			{
+				InvokeOnMainThread(() =>
+				{
+					BTProgressHUD.Show("Cброc в кэш..", -1, ProgressHUD.MaskType.Clear);
+				});
 				_magazine.InCache = true;
 				ApplicationWorker.Db.InsertMagazine(_magazine);
 				var pictures = ApplicationWorker.Db.GetPicturesForParent(_magazine.Id);
@@ -1178,12 +1321,112 @@ namespace ItExpert
 				{
 					ApplicationWorker.Db.InsertPicture(_magazine.PreviewPicture);
 				}
-				ApplicationWorker.Db.SaveInCache(_allArticles.ToList());
-				InvokeOnMainThread(() =>
+				var completeArticlesCount = _allArticles.Count(x => !string.IsNullOrEmpty(x.DetailText)); 
+				var serverInteractionNeeded = ((double)completeArticlesCount / (double)_allArticles.Count()) < 0.5;
+				if (!serverInteractionNeeded)
 				{
-					//скрыть модальный индикатор прогресса;
-					BTProgressHUD.Dismiss();
-				});
+					ApplicationWorker.Db.SaveInCache(_allArticles.ToList());
+					InvokeOnMainThread(()=>{
+						BTProgressHUD.ShowToast("Данные сброшены в кеш", ProgressHUD.MaskType.None, false, 2500);
+						Action hideToastAction = ()=>{
+							Thread.Sleep(1500);
+							InvokeOnMainThread(()=>BTProgressHUD.Dismiss());
+						};
+						ThreadPool.QueueUserWorkItem(state => hideToastAction());
+					});
+				}
+				else
+				{
+					InvokeOnMainThread(() =>
+					{
+						BTProgressHUD.Show("Получение полных статей...", -1, ProgressHUD.MaskType.Clear);
+					});
+					var settingsClone = ApplicationWorker.Settings.Clone();
+					settingsClone.LoadDetails = true;
+					ApplicationWorker.RemoteWorker.MagazineArticlesGetted += (sender, e) => {
+						ApplicationWorker.RemoteWorker.ClearMagazineArticlesEventHandler();
+						if (e.Abort || e.Error)
+						{
+							InvokeOnMainThread(() =>
+							{
+								BTProgressHUD.ShowToast("Сбой при получении данных...Отмена сброса в кеш", ProgressHUD.MaskType.None, false, 2500);
+								Action hideToastAction = ()=>{
+									Thread.Sleep(1500);
+									InvokeOnMainThread(()=>BTProgressHUD.Dismiss());
+								};
+								ThreadPool.QueueUserWorkItem(state => hideToastAction());
+							});
+						}
+						else
+						{
+							if (e.Articles != null && e.Articles.Any())
+							{
+								e.Articles.ForEach(article => article.IdMagazine = _magazine.Id);
+								ApplicationWorker.Db.SetPropertiesForArticles(e.Articles);
+								ApplicationWorker.NormalizePreviewText(e.Articles);
+								if (_lastMagazine)
+								{
+									ApplicationWorker.LastMagazineArticles = e.Articles;
+								}
+								UpdateData(e);
+								_allArticles = e.Articles.OrderByDescending(x => x.ActiveFrom).ToList();
+								if (ApplicationWorker.Settings.HideReaded)
+								{
+									_articles = _allArticles.Where(x => !x.IsReaded).ToList();
+									if (_articles.Count() < 6)
+									{
+										var count = 6 - _articles.Count();
+										_articles.AddRange(_allArticles.Where(x => x.IsReaded).Take(count));
+										_articles = _articles.OrderByDescending(x => x.ActiveFrom).ToList();
+									}
+								}
+								else
+								{
+									_articles = _allArticles.ToList();
+								}
+								var lst = SortAndAddHeader(_articles);
+								//Обновление списка новостей для ListView
+								if (lst != null && lst.Any())
+								{
+									_articles = lst.ToList();
+									if (_banner != null)
+									{
+										_articles.Insert(0,
+											new Article() { ArticleType = ArticleType.Banner, ExtendedObject = _banner });
+									}
+									if (ApplicationWorker.Magazine != null)
+									{
+										_articles.Insert(0, new Article() { ArticleType = ArticleType.MagazinePreview });
+									}
+								}
+								ApplicationWorker.Db.SaveInCache(_allArticles.ToList());
+								InvokeOnMainThread(()=>{
+									UpdateTableView(_articles);	
+									_articlesTableView.Hidden = false;
+									BTProgressHUD.ShowToast("Полные статьи получены и сброшены в кеш", ProgressHUD.MaskType.None, false, 2500);
+									Action hideToastAction = ()=>{
+										Thread.Sleep(1500);
+										InvokeOnMainThread(()=>BTProgressHUD.Dismiss());
+									};
+									ThreadPool.QueueUserWorkItem(state => hideToastAction());
+								});
+							}
+							else
+							{
+								InvokeOnMainThread(()=>{
+									BTProgressHUD.ShowToast("Не удалось получить данные. Сброс в кеш отменен", ProgressHUD.MaskType.None, false, 2500);
+									Action hideToastAction = ()=>{
+										Thread.Sleep(1500);
+										InvokeOnMainThread(()=>BTProgressHUD.Dismiss());
+									};
+									ThreadPool.QueueUserWorkItem(state => hideToastAction());
+								});
+							}
+						}
+					};
+					ApplicationWorker.RemoteWorker.BeginGetMagazineArticles(settingsClone, _magazine.Id);
+				}
+
 			};
 			ThreadPool.QueueUserWorkItem(state => inCache());
 		}
@@ -1195,7 +1438,7 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				_prevArticlesExists = true;
@@ -1214,8 +1457,10 @@ namespace ItExpert
 					_articlesTableView.ReloadData ();
 				}
 				_articlesTableView.Hidden = true;
+				_holdMessageView.Hidden = true;
 				if (_searchRubric != null && _isRubricSearch)
 				{
+					_isLoadingData = true;
 					ApplicationWorker.RemoteWorker.MagazineArticlesGetted += SearchRubricOnMagazineArticlesGetted;
 					ThreadPool.QueueUserWorkItem(
 						state =>
@@ -1244,6 +1489,7 @@ namespace ItExpert
 				}
 			}
 			DestroyPdfLoader ();
+			_isLoadingData = false;
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -1269,6 +1515,7 @@ namespace ItExpert
 				}
 			}
 			DestroyPdfLoader ();
+			_isLoadingData = false;
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
@@ -1334,11 +1581,11 @@ namespace ItExpert
 
 				if (UserInterfaceIdiomIsPhone)
 				{
-					source = new ArticlesTableSource(new List<Article>(), false, MagazineAction.NoAction);
+					source = new ArticlesTableSource(new List<Article>(), MagazineAction.NoAction);
 				}
 				else
 				{
-					source = new DoubleArticleTableSource(new List<Article>(), false, MagazineAction.NoAction);
+					source = new DoubleArticleTableSource(new List<Article>(), MagazineAction.NoAction);
 				}
 
 				var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
@@ -1351,6 +1598,12 @@ namespace ItExpert
 				_articlesTableView.ReloadData();
 				_articlesTableView.Hidden = true;
 				LoadMagazineArticles();
+				return;
+			}
+			if (_isRubricSearch && !_isLoadingData && _magazine == null)
+			{
+				_magazineId = -1;
+				InitData();
 			}
 		}
 
@@ -1370,6 +1623,7 @@ namespace ItExpert
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
+				showController.UpdateSource();
 			}
 			else
 			{
@@ -1398,14 +1652,9 @@ namespace ItExpert
 			{
 				if (!error)
 				{
-					var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-					var dir = new DirectoryInfo(folder + Settings.PdfFolder);
-					if (!dir.Exists)
-					{
-						dir.Create();
-					}
+					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 					var fileName = _magazine.Id.ToString("G") + ".pdf";
-					var path = Path.Combine(folder + Settings.PdfFolder, fileName);
+					var path = Path.Combine(folder, fileName);
 					var fs = File.Create(path);
 					fs.Write(e.Pdf, 0, e.Pdf.Length);
 					fs.Flush();
@@ -1438,7 +1687,7 @@ namespace ItExpert
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false, 2500);
 				}
 				IsLoadingPdf = false;
 				if (_articlesTableView != null)
@@ -1455,7 +1704,14 @@ namespace ItExpert
 				var tableViewTopOffset = NavigationController.NavigationBar.Frame.Height + ItExpertHelper.StatusBarHeight;
                 _articlesTableView.Frame = new RectangleF(0, tableViewTopOffset, View.Bounds.Width, 
                     View.Bounds.Height - tableViewTopOffset - _bottomBar.Frame.Height);
-
+				if (_articlesTableView.Source != null)
+				{
+					var iUpdatatableSource = _articlesTableView.Source as IUpdatableSource;
+					if (iUpdatatableSource != null)
+					{
+						iUpdatatableSource.UpdateProperties();
+					}
+				}
                 _articlesTableView.ReloadData();
             }
 
@@ -1475,20 +1731,55 @@ namespace ItExpert
 
 				_loadingIndicator.Frame = new RectangleF(0, View.Bounds.Height - (height + bottomBarHeight), View.Bounds.Width, height);
 			}
+
+			if (_holdMessageView != null && !_holdMessageView.Hidden)
+			{
+				_holdMessageView.SizeToFit();
+				_holdMessageView.Frame = new RectangleF((View.Bounds.Width - _holdMessageView.Frame.Width) / 2, View.Bounds.Height / 2, _holdMessageView.Frame.Width, _holdMessageView.Frame.Height);
+				View.BringSubviewToFront(_holdMessageView);
+			}
         }
 
 		#endregion
 
 		#region Logic
 
+		public void DeleteMagazinePdf()
+		{
+			if (_magazine == null)
+				return;
+			var alertView = new BlackAlertView("Удаление", String.Format("Удалить журнал: {0}?", _magazine.Name), "Нет", "Да");
+
+			alertView.ButtonPushed += (s, ev) => 
+			{
+				if (ev.ButtonIndex == 1)
+				{
+					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+					var fileName = _magazine.Id.ToString("G") + ".pdf";
+					var path = Path.Combine(folder, fileName);
+					File.Delete(path);
+					_magazine.Exists = false;
+					ApplicationWorker.Db.UpdateMagazine(_magazine);
+					if (_articlesTableView != null)
+					{
+						_articlesTableView.ReloadData ();
+					}
+					BTProgressHUD.ShowToast ("Файл удален", ProgressHUD.MaskType.None, false, 2500);
+				}
+				alertView.Dispose();
+			};
+
+			alertView.Show();
+		}
+
 		public void OpenMagazinePdf()
 		{
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 			var fileName = _magazine.Id.ToString("G") + ".pdf";
-			var path = Path.Combine(folder + Settings.PdfFolder, fileName);
+			var path = Path.Combine(folder, fileName);
 			if (!File.Exists(path))
 			{
-				BTProgressHUD.ShowToast ("Файл не найден", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Файл не найден", ProgressHUD.MaskType.None, false, 2500);
 				return;
 			}
 			var file = new FileInfo (path);
@@ -1498,14 +1789,16 @@ namespace ItExpert
 
 		public void DownloadMagazinePdf()
 		{
+			if (_magazine.Exists || IsLoadingPdf)
+				return;
 			if (ApplicationWorker.Settings.OfflineMode)
 			{
-				BTProgressHUD.ShowToast ("Загрузка Pdf невозможна в оффлайн режиме", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Загрузка Pdf невозможна в оффлайн режиме", ProgressHUD.MaskType.None, false, 2500);
 				return;
 			}
 			if (string.IsNullOrWhiteSpace(_magazine.PdfFileSrc))
 			{
-				BTProgressHUD.ShowToast ("Pdf файл недоступен", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Pdf файл недоступен", ProgressHUD.MaskType.None, false, 2500);
 				return;
 			}
 			if (!ApplicationWorker.PdfLoader.IsOperation())
@@ -1513,7 +1806,7 @@ namespace ItExpert
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				IsLoadingPdf = true;
@@ -1526,7 +1819,7 @@ namespace ItExpert
 			}
 			else
 			{
-				BTProgressHUD.ShowToast ("Идет загрузка... Дождитесь завершения", ProgressHUD.MaskType.None, false);
+				BTProgressHUD.ShowToast ("Идет загрузка Pdf... Дождитесь завершения", ProgressHUD.MaskType.None, false, 2500);
 			}
 		}
 
@@ -1547,9 +1840,9 @@ namespace ItExpert
 		private void UpdateMagazinesPdfExists(Magazine magazine)
 		{
 			if (magazine == null) return;
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 			var fileName = magazine.Id.ToString("G") + ".pdf";
-			var path = System.IO.Path.Combine(folder + Settings.PdfFolder, fileName);
+			var path = System.IO.Path.Combine(folder, fileName);
 			var file = new FileInfo(path);
 			magazine.Exists = file.Exists;
 		}
@@ -1557,12 +1850,13 @@ namespace ItExpert
 		private void LoadMagazineArticles()
 		{
 			if (_magazine == null) return;
+			_holdMessageView.Hidden = true;
 			if (!ApplicationWorker.Settings.OfflineMode)
 			{
 				var connectAccept = IsConnectionAccept();
 				if (!connectAccept)
 				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
 					return;
 				}
 				if (_lastMagazine)
@@ -1670,6 +1964,13 @@ namespace ItExpert
 							});
 						}
 					}
+					else
+					{
+						InvokeOnMainThread(() =>
+						{
+							SetLoadingImageVisible(false);
+						});
+					}
 				};
 				ThreadPool.QueueUserWorkItem(state => action());
 			}
@@ -1696,7 +1997,24 @@ namespace ItExpert
 					var changeRubrics = dbArticle.RubricsId != article.RubricsId;
 					if (changeBlock || changeSections || changeRubrics)
 					{
+						var pictures = ApplicationWorker.Db.GetPicturesForParent(article.Id);
+						foreach (var picture in pictures)
+						{
+							ApplicationWorker.Db.DeletePicture(picture.Id);
+						}
 						ApplicationWorker.Db.UpdateArticle(article);
+						if (article.PreviewPicture != null)
+						{
+							ApplicationWorker.Db.InsertPicture(article.PreviewPicture);
+						}
+						if (article.DetailPicture != null)
+						{
+							ApplicationWorker.Db.InsertPicture(article.DetailPicture);
+						}
+						if (article.AwardsPicture != null)
+						{
+							ApplicationWorker.Db.InsertPicture(article.AwardsPicture);
+						}
 					}
 				}
 			}
@@ -1746,13 +2064,13 @@ namespace ItExpert
 
             if (UserInterfaceIdiomIsPhone)
             {
-				source = new ArticlesTableSource(articles, false, action);
+				source = new ArticlesTableSource(articles, action);
 
                 (source as ArticlesTableSource).PushDetailsView += OnPushArticleDetails;
             }
             else
             {
-				source = new DoubleArticleTableSource(articles, false, action);
+				source = new DoubleArticleTableSource(articles, action);
 
                 (source as DoubleArticleTableSource).PushDetailsView += OnPushArticleDetails;
             }
@@ -1766,6 +2084,15 @@ namespace ItExpert
             _articlesTableView.Source = source;
             _articlesTableView.ReloadData();
         }
+
+		void ShowHoldMessage(string message)
+		{
+			_holdMessageView.Hidden = false;
+			_holdMessageView.Text = message;
+			_holdMessageView.SizeToFit();
+			_holdMessageView.Frame = new RectangleF((View.Bounds.Width - _holdMessageView.Frame.Width) / 2, View.Bounds.Height / 2, _holdMessageView.Frame.Width, _holdMessageView.Frame.Height);
+			View.BringSubviewToFront(_holdMessageView);
+		}
 
 		public void DestroyPdfLoader()
 		{

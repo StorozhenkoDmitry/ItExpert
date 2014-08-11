@@ -56,6 +56,17 @@ namespace ItExpert
             _alertWindow.MakeKeyAndVisible();
         }
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (_alertView != null)
+			{
+				_alertView.Dispose();
+				_alertView = null;
+			}
+			ButtonPushed = null;
+		}
+
         private void AddAlertView()
         {
             View.Frame = ItExpertHelper.GetRealScreenSize();
@@ -90,6 +101,10 @@ namespace ItExpert
                 }
 
                 _alertWindow.Dispose();
+				if (_alertView != null)
+				{
+					_alertView.Dispose();
+				}
                 _alertView = null;
             }
 

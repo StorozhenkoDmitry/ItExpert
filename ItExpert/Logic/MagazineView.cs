@@ -134,7 +134,7 @@ namespace ItExpert
             button.Frame = frame;
             button.SetTitle(title, UIControlState.Normal);
             button.SetTitleColor(UIColor.White, UIControlState.Normal);
-            button.Font = UIFont.SystemFontOfSize(ApplicationWorker.Settings.TextSize);
+            button.Font = UIFont.SystemFontOfSize(16);
             button.BackgroundColor = UIColor.FromRGB(160, 160, 160);
             button.Layer.CornerRadius = 3;
 

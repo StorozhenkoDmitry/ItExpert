@@ -26,13 +26,40 @@ namespace ItExpert
             return _height;
         }
 
+		public override void Dispose()
+		{
+			base.Dispose();
+			if (_textView != null)
+			{
+				_textView.Dispose();
+			}
+			_textView = null;
+
+			if (_rightTextView != null)
+			{
+				_rightTextView.Dispose();
+			}
+			_rightTextView = null;
+
+			if (_slider != null)
+			{
+				_slider.ValueChanged -= SliderValueChanged;
+				_slider.Dispose();
+			}
+			_slider = null;
+		}
+
+		void AddContents(UIView contentView)
+		{
+			var frame = contentView.Frame;
+			var cacheSliderView = new CacheSliderView(frame, _slider, _textView, _rightTextView, SliderValueChanged);
+			contentView.Add(cacheSliderView);
+		}
+
         protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
             CreateSlider(cell.ContentView.Frame.Size, item);
-
-            cell.ContentView.Add(_textView);
-            cell.ContentView.Add(_rightTextView);
-            cell.ContentView.Add(_slider);
+			AddContents(cell.ContentView);
         }
 
         protected override void Update(UITableViewCell cell, NavigationBarItem item)
@@ -62,9 +89,7 @@ namespace ItExpert
 				cell.ContentView.Frame.Width - _padding.Right - _padding.Left - sliderHorizontalOffset * 2, 
 				_slider.Frame.Height);
 
-            cell.ContentView.Add(_textView);
-            cell.ContentView.Add(_rightTextView);
-            cell.ContentView.Add(_slider);
+			AddContents(cell.ContentView);
         }
 
         private void CreateSlider(SizeF viewSize, NavigationBarItem item)
@@ -90,25 +115,61 @@ namespace ItExpert
 			_slider.MaxValue = 8;
             _slider.Value = (int)_item.GetValue();
 			_slider.Continuous = true;
-
-            _slider.ValueChanged += (sender, e) => 
-            {
-                var value = Convert.ToInt32(_slider.Value);
-				ApplicationWorker.Settings.SetDbLimitSize(value);
-				var dbLimit = ApplicationWorker.Settings.GetDbLimitSizeInMb();
-				var dbLimitString = ItExpertHelper.GetAttributedString(dbLimit + " Мб", UIFont.SystemFontOfSize(12), UIColor.White);
-				_rightTextView.AttributedText = dbLimitString;
-                _item.SetValue(value);
-            };
         }
+
+		void SliderValueChanged(object sender, EventArgs e)
+		{
+			var value = Convert.ToInt32(_slider.Value);
+			ApplicationWorker.Settings.SetDbLimitSize(value);
+			var dbLimit = ApplicationWorker.Settings.GetDbLimitSizeInMb();
+			var dbLimitString = ItExpertHelper.GetAttributedString(dbLimit + " Мб", UIFont.SystemFontOfSize(12), UIColor.White);
+			_rightTextView.AttributedText = dbLimitString;
+			_item.SetValue(value);
+		}
 
         private UITextView _rightTextView;
         private UISlider _slider;
-
-		void GetDbSizeLimitInMb(int limit)
-		{
-
-		}
     }
+
+	public class CacheSliderView : UIView, ICleanupObject
+	{
+		private UISlider _slider;
+		private UITextView _rightTextView;
+		private UITextView _textView;
+		private EventHandler _sliderValueChanged;
+
+		public CacheSliderView(RectangleF frame, UISlider slider, UITextView textView, UITextView rightTextView,
+			EventHandler sliderValueChanged): base(frame)
+		{
+			_slider = slider;
+			_textView = textView;
+			_rightTextView = rightTextView;
+			_sliderValueChanged = sliderValueChanged;
+			_slider.ValueChanged += _sliderValueChanged;
+			Add(_textView);
+			Add(_rightTextView);
+			Add(_slider);
+		}
+
+		public void CleanUp()
+		{
+			foreach (var view in Subviews)
+			{
+				view.RemoveFromSuperview();
+			}
+			if (_textView != null)
+			{
+				_textView.Dispose();
+			}
+			_textView = null;
+			if (_slider != null)
+			{
+				_slider.ValueChanged -= _sliderValueChanged;
+			}
+			_slider = null;
+			_rightTextView = null;
+			_sliderValueChanged = null;
+		}
+	}
 }
 

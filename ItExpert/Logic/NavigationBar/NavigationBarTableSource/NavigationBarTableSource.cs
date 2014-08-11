@@ -13,6 +13,20 @@ namespace ItExpert
             _cellIdentifier = "SettingsCell";
         }
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (_items != null)
+			{
+				foreach (var item in _items)
+				{
+					item.Dispose();
+				}
+				_items.Clear();
+			}
+			_items = null;
+		}
+
         public override int RowsInSection(UITableView tableview, int section)
         {
             return _items.Count;

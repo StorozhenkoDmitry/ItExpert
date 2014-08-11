@@ -130,7 +130,15 @@ namespace mTouchPDFReader.Library.Views.Core
 					ZoomIncrement(); 
 				}
 			}			
-		}		
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			_PageContentView.Dispose();
+			_PageContentContainerView.Dispose();
+		}
+
 		#endregion
 		
 		#region Logic

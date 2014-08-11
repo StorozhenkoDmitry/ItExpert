@@ -13,6 +13,7 @@ namespace ItExpert
     public class SettingsView: UIViewController
     {
 		private bool _forDetail = false;
+		private bool _settingsChanged = false;
 
         enum BackButtonState
         {
@@ -108,7 +109,7 @@ namespace ItExpert
             _settingsTableView.ScrollEnabled = true; 
             _settingsTableView.UserInteractionEnabled = true;
             _settingsTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
-            _settingsTableView.Bounces = true;
+            _settingsTableView.Bounces = false;
             _settingsTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
 
             _settingsTableView.Source = new NavigationBarTableSource(GetSettingsItems());
@@ -182,7 +183,7 @@ namespace ItExpert
                 Title = "Скрывать прочитанные статьи",  
                 GetValue = () => { return ApplicationWorker.Settings.HideReaded; },
                 SetValue = (value) => { ApplicationWorker.Settings.HideReaded = (bool)value; 
-					ApplicationWorker.OnSettingsChanged();
+					_settingsChanged = true;
 				}
             });
 
@@ -224,6 +225,7 @@ namespace ItExpert
 							ApplicationWorker.OnSettingsChanged();
 							_settingsTableView.ReloadData();
 						}
+						themeAlert.Dispose();
 					};
 					var currentTheme = ApplicationWorker.Settings.GetTheme();
 					if (currentTheme == ItExpert.Enum.Theme.Light)
@@ -254,6 +256,7 @@ namespace ItExpert
 							ApplicationWorker.Settings.Page = page;
 							_settingsTableView.ReloadData();
 						}
+						pageAlert.Dispose();
 					};
 					var currentPage = ApplicationWorker.Settings.Page;
 					var pages = new [] {Page.News, Page.Trends, Page.Magazine, Page.Archive, Page.Favorite } ;
@@ -269,9 +272,9 @@ namespace ItExpert
 				GetValue = () => { return ApplicationWorker.Settings.GetStringNetworkMode(ApplicationWorker.Settings.NetworkMode); },
                 SetValue = (value) => { 
 					var networkModesStr = new []{ "Wi-Fi", "Любое" };
-					var pageAlert = new BlackAlertView ("Выбор типа подключения", "Отмена", networkModesStr, "Ok");
+					var networkModeAlert = new BlackAlertView ("Выбор типа подключения", "Отмена", networkModesStr, "Ok");
 
-					pageAlert.ButtonPushed += (sender, e) =>
+					networkModeAlert.ButtonPushed += (sender, e) =>
 					{
 						if (e.ButtonIndex == 1)
 						{
@@ -279,12 +282,13 @@ namespace ItExpert
 							ApplicationWorker.Settings.NetworkMode = networkMode;
 							_settingsTableView.ReloadData();
 						}
+						networkModeAlert.Dispose();
 					};
 					var currentNetworkMode = ApplicationWorker.Settings.NetworkMode;
 					var networkModes = new []{ NetworkMode.WiFi, NetworkMode.All };
 					var index = networkModes.ToList().BinarySearch(currentNetworkMode);
-					pageAlert.SetRadionButtonActive(index);
-					pageAlert.Show(); 
+					networkModeAlert.SetRadionButtonActive(index);
+					networkModeAlert.Show(); 
 				}
             });
 
@@ -294,6 +298,7 @@ namespace ItExpert
 				GetValue = () => { return !ApplicationWorker.Settings.LoadImages; },
                 SetValue = (value) => {
 					ApplicationWorker.Settings.LoadImages = !((bool)value); 
+					_settingsChanged = true;
 				}
             });
 
@@ -343,7 +348,7 @@ namespace ItExpert
 
 		void ClearCache()
 		{
-			BTProgressHUD.ShowToast("Очистка кэша...", ProgressHUD.MaskType.None, false);
+			BTProgressHUD.ShowToast("Очистка кэша...", ProgressHUD.MaskType.None, false, 2500);
 			Action clearCache = () =>
 			{
 				var result = ApplicationWorker.Db.ClearCache();
@@ -358,7 +363,7 @@ namespace ItExpert
 				}
 				InvokeOnMainThread(() =>
 				{
-					BTProgressHUD.ShowToast(message, ProgressHUD.MaskType.None, false);
+					BTProgressHUD.ShowToast(message, ProgressHUD.MaskType.None, false, 2500);
 				});
 			};
 			ThreadPool.QueueUserWorkItem(state => clearCache());
@@ -366,6 +371,11 @@ namespace ItExpert
 
         private void OnTapOutsideTableView()
         {
+			if (_settingsChanged)
+			{
+				ApplicationWorker.OnSettingsChanged();
+				_settingsChanged = false;
+			}
 			ApplicationWorker.Settings.SaveSettings();
             if (TapOutsideTableView != null)
             {

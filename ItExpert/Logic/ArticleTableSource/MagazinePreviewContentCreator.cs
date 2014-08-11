@@ -123,6 +123,22 @@ namespace ItExpert
             _button.SetTitle(ApplicationWorker.Magazine.Exists ? "Открыть" : "Скачать", UIControlState.Normal);
 
             cell.ContentView.Add(_button);
+
+			if (ApplicationWorker.Magazine.Exists)
+			{
+				if (_deleteButton == null)
+				{
+					_deleteButton = new UIButton(UIButtonType.RoundedRect);
+					_deleteButton.SetTitle("Удалить", UIControlState.Normal);
+					_deleteButton.Frame = new RectangleF(_button.Frame.X, _button.Frame.Bottom + 8, 80, 28);
+					_deleteButton.SetTitleColor(UIColor.FromRGB(180, 180, 180), UIControlState.Normal);
+					_deleteButton.Font = UIFont.SystemFontOfSize(16);
+					_deleteButton.BackgroundColor = UIColor.FromRGB(30, 30, 30);
+					_deleteButton.Layer.CornerRadius = 3;
+					_deleteButton.TouchUpInside += OnDeleteButtonPush;
+				}
+				cell.ContentView.Add(_deleteButton);
+			}
         }
 
 		private void AddProgress(UITableViewCell cell)
@@ -138,17 +154,22 @@ namespace ItExpert
 			cell.ContentView.Add(_progress);
 		}
 
-        private void OnButtonPush(object sender, EventArgs e)
+		private void OnDeleteButtonPush(object sender, EventArgs e)
         {
-            if (ApplicationWorker.Magazine.Exists)
-            {
-				MagazineViewController.Current.OpenMagazinePdf ();
-            }
-            else
-            {
-				MagazineViewController.Current.DownloadMagazinePdf ();
-            }
+			MagazineViewController.Current.DeleteMagazinePdf ();
         }
+
+		private void OnButtonPush(object sender, EventArgs e)
+		{
+			if (ApplicationWorker.Magazine.Exists)
+			{
+				MagazineViewController.Current.OpenMagazinePdf ();
+			}
+			else
+			{
+				MagazineViewController.Current.DownloadMagazinePdf ();
+			}
+		}
 
         private float _leftHeaderOffset;
         private float _spaceBetweenHeaderAndButton;
@@ -157,6 +178,7 @@ namespace ItExpert
         private UIImageView _imageView;
         private UITextView _headerTextView;
         private UIButton _button;
+		private UIButton _deleteButton;
 		private UIActivityIndicatorView _progress;
     }
 }

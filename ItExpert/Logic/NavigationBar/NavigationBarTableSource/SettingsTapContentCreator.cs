@@ -11,6 +11,34 @@ namespace ItExpert
             return _height;
         }
 
+		public override void Dispose()
+		{
+			base.Dispose();
+			if (_textView != null)
+			{
+				_textView.Dispose();
+			}
+			_textView = null;
+
+			if (_rightTextView != null)
+			{
+				_rightTextView.Dispose();
+			}
+			_rightTextView = null;
+
+			if (_tapGestureRecognizer != null)
+			{
+				_tapGestureRecognizer.Dispose();
+			}
+			_tapGestureRecognizer = null;
+
+			if (_tapView != null)
+			{
+				_tapView.Dispose();
+			}
+			_tapView = null;
+		}
+
         protected override void Create(UITableViewCell cell, NavigationBarItem item)
         {
             CreateRightTextView(cell.ContentView.Frame.Size, item);

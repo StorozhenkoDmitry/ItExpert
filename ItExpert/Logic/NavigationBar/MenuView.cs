@@ -28,6 +28,56 @@ namespace ItExpert
 			_searchClick = searchClick;
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			_newsClick = null;
+			_trendsClick = null;
+			_magazineClick = null;
+			_archiveClick = null;
+			_favoriteClick = null;
+			_aboutUsClick = null;
+			_searchClick = null;
+			TapOutsideTableView = null;
+			if (_menuTableView != null)
+			{
+				if (_menuTableView.Source != null)
+				{
+					_menuTableView.Source.Dispose();
+				}
+				_menuTableView.Source = null;
+				_menuTableView.Dispose();
+			}
+			_menuTableView = null;
+			if (_tapableViewHorizontal != null)
+			{
+				if (_tapableViewHorizontal.GestureRecognizers != null)
+				{
+					foreach (var gr in _tapableViewHorizontal.GestureRecognizers)
+					{
+						gr.Dispose();
+					}
+				}
+				_tapableViewHorizontal.GestureRecognizers = new UIGestureRecognizer[0];
+				_tapableViewHorizontal.Dispose();
+			}
+			_tapableViewHorizontal = null;
+
+			if (_tapableViewVertical != null)
+			{
+				if (_tapableViewVertical.GestureRecognizers != null)
+				{
+					foreach (var gr in _tapableViewVertical.GestureRecognizers)
+					{
+						gr.Dispose();
+					}
+				}
+				_tapableViewVertical.GestureRecognizers = new UIGestureRecognizer[0];
+				_tapableViewVertical.Dispose();
+			}
+			_tapableViewVertical = null;
+		}
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -43,7 +93,7 @@ namespace ItExpert
             _menuTableView.ScrollEnabled = true; 
             _menuTableView.UserInteractionEnabled = true;
             _menuTableView.SeparatorInset = new UIEdgeInsets (0, 0, 0, 0);
-            _menuTableView.Bounces = true;
+            _menuTableView.Bounces = false;
             _menuTableView.SeparatorColor = UIColor.FromRGB(100, 100, 100);
             _menuTableView.Source = new NavigationBarTableSource(GetMenuItems());
             _menuTableView.Bounces = false;
