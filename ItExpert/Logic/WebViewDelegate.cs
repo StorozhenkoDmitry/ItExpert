@@ -9,6 +9,12 @@ namespace ItExpert
     {
         public event EventHandler WebViewLoaded;
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			WebViewLoaded = null;
+		}
+
         public override bool ShouldStartLoad(UIWebView webView, NSUrlRequest request, UIWebViewNavigationType navigationType)
         {
             if (navigationType == UIWebViewNavigationType.LinkClicked)

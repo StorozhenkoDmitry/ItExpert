@@ -292,7 +292,6 @@ namespace ItExpert.DataAccessLayer
 							article.AuthorsId = dbArticle.AuthorsId;
 							article.Authors = _db.Query<Author>("SELECT * FROM Author WHERE Id IN (" + article.AuthorsId+ ")");
 						}
-						dbArticle.Dispose();
                     }
                 }
             }

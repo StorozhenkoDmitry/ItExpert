@@ -19,6 +19,7 @@ namespace ItExpert
 			{
 				foreach (var button in _buttons)
 				{
+					button.RemoveFromSuperview();
 					button.TouchDown -= ButtonTouchDown;
 
 					button.TouchUpInside -= ButtonTouchUpInside;

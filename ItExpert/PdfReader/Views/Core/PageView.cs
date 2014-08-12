@@ -135,7 +135,10 @@ namespace mTouchPDFReader.Library.Views.Core
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
+			_PageContentView.RemoveFromSuperview();
 			_PageContentView.Dispose();
+
+			_PageContentContainerView.RemoveFromSuperview();
 			_PageContentContainerView.Dispose();
 		}
 

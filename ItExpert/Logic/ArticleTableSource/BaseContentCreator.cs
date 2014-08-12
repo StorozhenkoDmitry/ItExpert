@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace ItExpert
 {
-    public abstract class BaseContentCreator
+    public abstract class BaseContentCreator : IDisposable
     {
         public enum CreatorType
         {
@@ -26,9 +26,31 @@ namespace ItExpert
             _needToCreateContent = true;
         }
 
+		public virtual void Dispose()
+		{
+
+		}
+
         public void UpdateContent(UITableViewCell cell, Article article)
         {
+			UIView firstSubview = null;
+			if (cell.ContentView.Subviews.Any())
+			{
+				firstSubview = cell.ContentView.Subviews[0];
+			}
             ItExpertHelper.RemoveSubviews(cell.ContentView);
+			var cleanup = firstSubview as ICleanupObject;
+			if (cleanup != null)
+			{
+				cleanup.CleanUp();
+			}
+			if (cell.GestureRecognizers != null)
+			{
+				foreach (var gr in cell.GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+			}
 			cell.GestureRecognizers = new UIGestureRecognizer[0];
 
             cell.UserInteractionEnabled = true;
@@ -47,7 +69,24 @@ namespace ItExpert
 
         public void UpdateDoubleContent(UITableViewCell cell, DoubleArticle article)
         {
-            ItExpertHelper.RemoveSubviews(cell.ContentView);
+			UIView firstSubview = null;
+			if (cell.ContentView.Subviews.Any())
+			{
+				firstSubview = cell.ContentView.Subviews[0];
+			}
+			ItExpertHelper.RemoveSubviews(cell.ContentView);
+			var cleanup = firstSubview as ICleanupObject;
+			if (cleanup != null)
+			{
+				cleanup.CleanUp();
+			}
+			if (cell.GestureRecognizers != null)
+			{
+				foreach (var gr in cell.GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+			}
 			cell.GestureRecognizers = new UIGestureRecognizer[0];
 
             cell.UserInteractionEnabled = true;

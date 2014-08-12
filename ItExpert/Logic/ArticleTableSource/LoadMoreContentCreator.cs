@@ -9,12 +9,10 @@ namespace ItExpert
     {
         public override float GetContentHeight(UIView cellContentView, Article article)
         {
-            if (article.ExtendedObject is UIButton)
+			var button = article.ExtendedObject as UIButton;
+            if (button != null)
             {
-                var button = article.ExtendedObject as UIButton;
-
                 var textHeight = ItExpertHelper.GetTextHeight(button.TitleLabel.Font, button.TitleLabel.Text, cellContentView.Frame.Width);
-
                 return textHeight + _padding.Top + _padding.Bottom;
             }
             else

@@ -56,11 +56,13 @@ namespace ItExpert
 			base.Dispose();
 			if (_textView != null)
 			{
+				_textView.RemoveFromSuperview();
 				_textView.Dispose();
 			}
 			_textView = null;
 			if (_button != null)
 			{
+				_button.RemoveFromSuperview();
 				if (_button.ImageView != null && _button.ImageView.Image != null)
 				{
 					_button.ImageView.Image.Dispose();

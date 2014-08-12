@@ -4,6 +4,7 @@ using ItExpert.Model;
 using ItExpert.Enum;
 using MonoTouch.Foundation;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ItExpert
 {
@@ -16,6 +17,23 @@ namespace ItExpert
 
             _creatorsPool = new Dictionary<BaseContentCreator.CreatorType, BaseContentCreator>();
         }
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			InvokeOnMainThread(() =>
+			{
+				if (_creatorsPool != null && _creatorsPool.Any())
+				{
+					foreach (var contentCreator in _creatorsPool.Values)
+					{
+						contentCreator.Dispose();
+					}
+					_creatorsPool.Clear();
+					_creatorsPool = null;
+				}
+			});
+		}
 
         public void UpdateContent(Article article)
         {

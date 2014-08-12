@@ -24,6 +24,28 @@ namespace ItExpert
             Add(_scrollView);
         }
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (_buttons != null)
+			{
+				foreach (var button in _buttons)
+				{
+					button.RemoveFromSuperview();
+					button.TouchUpInside -= ButtonTouchUpInside;
+					button.Dispose();
+				}
+				_buttons.Clear();
+			}
+			_buttons = null;
+			if (_scrollView != null)
+			{
+				_scrollView.RemoveFromSuperview();
+				_scrollView.Dispose();
+			}
+			_scrollView = null;
+		}
+
         public override RectangleF Frame
         {
             get
@@ -61,7 +83,16 @@ namespace ItExpert
 
         public void AddButtons(List<UIButton> buttons)
 		{
-			ItExpertHelper.RemoveSubviews (_scrollView);
+			if (_buttons != null)
+			{
+				foreach (var button in _buttons)
+				{
+					button.RemoveFromSuperview();
+					button.TouchUpInside -= ButtonTouchUpInside;
+					button.Dispose();
+				}
+				_buttons.Clear();
+			}
 
 			if (buttons.Count == 0)
 			{
@@ -79,14 +110,6 @@ namespace ItExpert
 			float buttonWidth = 60;
 			float totalWidth = 0;
 
-			Action removeButtonsHighliting = () =>
-			{
-				foreach (var button in _buttons)
-				{
-					button.BackgroundColor = UIColor.Black;
-				}
-			};
-
 			for (int i = 0; i < _buttons.Count; i++)
 			{
 				var button = _buttons [i];
@@ -102,12 +125,7 @@ namespace ItExpert
 					button.BackgroundColor = UIColor.FromRGB (160, 160, 160);
 				}
 
-				button.TouchUpInside += (sender, e) =>
-				{
-					removeButtonsHighliting ();
-
-					(sender as UIButton).BackgroundColor = UIColor.FromRGB (160, 160, 160);
-				};
+				button.TouchUpInside += ButtonTouchUpInside;
 
 				_scrollView.Add (buttons [i]);
 
@@ -119,6 +137,15 @@ namespace ItExpert
 			{
 				Frame = new RectangleF ((Frame.Width - totalWidth) / 2, Frame.Y, totalWidth, Frame.Height);
 			}
+		}
+
+		void ButtonTouchUpInside(object sender, EventArgs e)
+		{
+			foreach (var button in _buttons)
+			{
+				button.BackgroundColor = UIColor.Black;
+			}
+			(sender as UIButton).BackgroundColor = UIColor.FromRGB (160, 160, 160);
 		}
 
         private UIScrollView _scrollView;

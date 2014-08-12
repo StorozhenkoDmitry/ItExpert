@@ -3,6 +3,7 @@ using MonoTouch.UIKit;
 using System.Collections.Generic;
 using ItExpert.Model;
 using ItExpert.Enum;
+using System.Linq;
 
 namespace ItExpert
 {
@@ -17,6 +18,25 @@ namespace ItExpert
 
 			delegates = new List<EventHandler<DoubleCellPushedEventArgs>>();
         }
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			InvokeOnMainThread(() =>
+			{
+				RemoveAllEvents();
+				if (_creatorsPool != null && _creatorsPool.Any())
+				{
+					foreach (var contentCreator in _creatorsPool.Values)
+					{
+						contentCreator.Dispose();
+					}
+					_creatorsPool.Clear();
+					_creatorsPool = null;
+				}
+				delegates = null;
+			});
+		}
 
         public event EventHandler<DoubleCellPushedEventArgs> CellPushed
 		{

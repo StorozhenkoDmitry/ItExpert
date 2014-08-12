@@ -69,6 +69,7 @@ namespace ItExpert
 			base.Dispose(disposing);
 			if (_clearCacheButton != null)
 			{
+				_clearCacheButton.RemoveFromSuperview();
 				_clearCacheButton.TouchDown -= ButtonTouchDown;
 				_clearCacheButton.TouchUpOutside -= ButtonTouchUpOutside;
 				_clearCacheButton.TouchUpInside -= OnClearCacheButtonPushed;
@@ -76,6 +77,7 @@ namespace ItExpert
 			}
 			if (_deletePdfButton != null)
 			{
+				_deletePdfButton.RemoveFromSuperview();
 				_deletePdfButton.TouchUpInside -= OnDeletePdfButtonPushed;
 				_deletePdfButton.TouchDown -= ButtonTouchDown;
 				_deletePdfButton.TouchUpOutside -= ButtonTouchUpOutside;
@@ -83,6 +85,7 @@ namespace ItExpert
 			}
 			if (_deleteAllFavoritesButton != null)
 			{
+				_deleteAllFavoritesButton.RemoveFromSuperview();
 				_deleteAllFavoritesButton.TouchUpInside -= OnDeleteAllFavoritesButtonPushed;
 				_deleteAllFavoritesButton.TouchDown -= ButtonTouchDown;
 				_deleteAllFavoritesButton.TouchUpOutside -= ButtonTouchUpOutside;
@@ -93,6 +96,7 @@ namespace ItExpert
 			_deleteAllFavoritesButton = null;
 			if (_tableView != null)
 			{
+				_tableView.RemoveFromSuperview();
 				if (_tableView.Source != null)
 				{
 					_tableView.Source.Dispose();
@@ -103,6 +107,7 @@ namespace ItExpert
 			_tableView = null;
 			if (_scrollView != null)
 			{
+				_scrollView.RemoveFromSuperview();
 				_scrollView.Dispose();
 			}
 			_scrollView = null;

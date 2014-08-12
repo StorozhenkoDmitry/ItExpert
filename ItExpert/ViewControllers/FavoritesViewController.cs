@@ -26,6 +26,12 @@ namespace ItExpert
 		private UIInterfaceOrientation _currentOrientation;
 		private UILabel _holdMessageView;
 		private bool _showFromAnotherScreen = false;
+		private MenuView _menu;
+		private UIButton _menuButton;
+		private UIBarButtonItem _menuBarButton;
+		private SettingsView _settingsView;
+		private UIButton _settingsButton;
+		private UIBarButtonItem _settingsBarButton;
 
 		#endregion
 
@@ -186,7 +192,123 @@ namespace ItExpert
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+			InvokeOnMainThread(() =>
+			{
+				ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+				if (_menuButton != null)
+				{
+					_menuButton.RemoveFromSuperview();
+					if (_menuButton.ImageView != null && _menuButton.ImageView.Image != null)
+					{
+						_menuButton.ImageView.Image.Dispose();
+						_menuButton.ImageView.Image = null;
+					}
+					_menuButton.TouchUpInside -= MenuButtonTouchUp;
+					_menuButton.Dispose();
+				}
+				_menuButton = null;
+
+				if (_menuBarButton != null)
+				{
+					_menuBarButton.Dispose();
+				}
+				_menuBarButton = null;
+
+				if (_menu != null)
+				{
+					_menu.TapOutsideTableView -= ViewTapOutsideTableView;
+					_menu.Dispose();
+				}
+				_menu = null;
+
+				if (_settingsButton != null)
+				{
+					_settingsButton.RemoveFromSuperview();
+					if (_settingsButton.ImageView != null && _settingsButton.ImageView.Image != null)
+					{
+						_settingsButton.ImageView.Image.Dispose();
+						_settingsButton.ImageView.Image = null;
+					}
+					_settingsButton.TouchUpInside -= SettingsButtonTouchUp;
+					_settingsButton.Dispose();
+				}
+				_settingsButton = null;
+
+				if (_settingsBarButton != null)
+				{
+					_settingsBarButton.Dispose();
+				}
+				_settingsBarButton = null;
+
+				if (_settingsView != null)
+				{
+					_settingsView.TapOutsideTableView -= ViewTapOutsideTableView;
+					_settingsView.Dispose();
+				}
+				_settingsView = null;
+
+				if (_bottomBar != null)
+				{
+					_bottomBar.RemoveFromSuperview();
+					_bottomBar.NewsButton.ButtonClick -= ButNewsOnClick;
+					_bottomBar.TrendsButton.ButtonClick -= ButTrendsOnClick;
+					_bottomBar.MagazineButton.ButtonClick -= ButMagazineOnClick;
+					_bottomBar.ArchiveButton.ButtonClick -= ButArchiveOnClick;
+					_bottomBar.FavoritesButton.ButtonClick -= ButFavoriteOnClick;
+					_bottomBar.Dispose();
+				}
+				_bottomBar = null;
+
+				if (_addPreviousArticleButton != null)
+				{
+					_addPreviousArticleButton.RemoveFromSuperview();
+					_addPreviousArticleButton.TouchUpInside -= AddPreviousArticleOnClick;
+					_addPreviousArticleButton.TouchDown -= AddPreviousArticleTouchDown;
+					_addPreviousArticleButton.TouchUpOutside -= AddPreviousArticleTouchUpOutside;
+					_addPreviousArticleButton.Dispose();
+				}
+				_addPreviousArticleButton = null;
+
+				if (_articlesTableView != null)
+				{
+					_articlesTableView.RemoveFromSuperview();
+					if (_articlesTableView.Source != null)
+					{
+						if (_articlesTableView.Source is ArticlesTableSource)
+						{
+							((ArticlesTableSource)_articlesTableView.Source).PushDetailsView -= OnPushArticleDetails;
+						}
+						if (_articlesTableView.Source is DoubleArticleTableSource)
+						{
+							((DoubleArticleTableSource)_articlesTableView.Source).PushDetailsView -= OnPushArticleDetails;
+						}
+						_articlesTableView.Source.Dispose();
+						_articlesTableView.Source = null;
+					}
+					_articlesTableView.Dispose();
+				}
+				_articlesTableView = null;
+
+				if (_loadingIndicator != null)
+				{
+					_loadingIndicator.RemoveFromSuperview();
+					_loadingIndicator.Dispose();
+				}
+				_loadingIndicator = null;
+
+				if (_holdMessageView != null)
+				{
+					_holdMessageView.RemoveFromSuperview();
+					_holdMessageView.Dispose();
+				}
+				_holdMessageView = null;
+
+				if (_articles != null)
+				{
+					_articles.Clear();
+				}
+				_articles = null;
+			});
 		}
 
 		#endregion
@@ -270,18 +392,56 @@ namespace ItExpert
 			button.TitleLabel.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			button.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			button.TouchUpInside += AddPreviousArticleOnClick;
+			button.TouchUpOutside += AddPreviousArticleTouchUpOutside;
+			button.TouchUpInside += AddPreviousArticleOnClick;
 			_addPreviousArticleButton = button;
+		}
+
+		void AddPreviousArticleTouchDown(object sender, EventArgs e)
+		{
+			(sender as UIButton).SetTitleColor(UIColor.FromRGB(180, 180, 180), UIControlState.Normal);
+		}
+
+		void AddPreviousArticleTouchUpOutside(object sender, EventArgs e)
+		{
+			(sender as UIButton).SetTitleColor(UIColor.FromRGB(140, 140, 140), UIControlState.Normal);
 		}
 
 		private void InitNavigationBar()
 		{
-			var menu = new MenuView(ButNewsOnClick, ButTrendsOnClick, ButMagazineOnClick, ButArchiveOnClick, ButFavoriteOnClick, AboutUsShow, Search);
-			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { NavigationBarButton.GetMenu(menu), NavigationBarButton.Logo };
+			_menu = new MenuView(ButNewsOnClick, ButTrendsOnClick, ButMagazineOnClick, ButArchiveOnClick, ButFavoriteOnClick, AboutUsShow, Search);
+			_menu.TapOutsideTableView += ViewTapOutsideTableView;
+			_menuButton = NavigationBarButton.GetButton("NavigationBar/Menu.png", 2);
+			_menuButton.TouchUpInside += MenuButtonTouchUp;
+			_menuBarButton = new UIBarButtonItem(_menuButton);
+			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { _menuBarButton, NavigationBarButton.Logo };
 
 			UIBarButtonItem space = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
 
 			space.Width = -10;
-			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.GetSettingsButton(false) };
+
+			_settingsButton = NavigationBarButton.GetButton("NavigationBar/Settings.png", 4.1f);
+			_settingsBarButton = new UIBarButtonItem(_settingsButton);
+			_settingsView = new SettingsView(false);
+			_settingsView.TapOutsideTableView += ViewTapOutsideTableView;
+			_settingsButton.TouchUpInside += SettingsButtonTouchUp;
+
+			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, _settingsBarButton };
+		}
+
+		void ViewTapOutsideTableView(object sender, EventArgs e)
+		{
+			NavigationBarButton.HideWindow();
+		}
+
+		void MenuButtonTouchUp(object sender, EventArgs e)
+		{
+			NavigationBarButton.ShowWindow(_menu);
+		}
+
+		void SettingsButtonTouchUp(object sender, EventArgs e)
+		{
+			NavigationBarButton.ShowWindow(_settingsView);
 		}
 
 		void InitHoldMessageView()
@@ -310,6 +470,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.SearchFromAnother (search);
+				Dispose();
 			}
 			else
 			{
@@ -361,12 +522,13 @@ namespace ItExpert
 			}
 			if (showController != null)
 			{
-				NavigationController.PopToViewController (showController, false);
+				NavigationController.PopToViewController (showController, true);
+				Dispose();
 			}
 			else
 			{
 				showController = new AboutUsViewController ();
-				NavigationController.PushViewController (showController, false);
+				NavigationController.PushViewController (showController, true);
 			}
 		}
 
@@ -440,6 +602,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.ShowFromAnotherScreen (Page.Trends);
+				Dispose();
 			}
 			else
 			{
@@ -464,6 +627,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.ShowFromAnotherScreen (Page.News);
+				Dispose();
 			}
 			else
 			{
@@ -487,6 +651,7 @@ namespace ItExpert
 			if (showController != null)
 			{
 				NavigationController.PopToViewController (showController, false);
+				Dispose();
 			}
 			else
 			{
@@ -511,6 +676,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.SetMagazineId (-1);
+				Dispose();
 			}
 			else
 			{
@@ -526,7 +692,7 @@ namespace ItExpert
 
 		private void OnPushArticleDetails(object sender, PushDetailsEventArgs e)
 		{
-			NavigationController.PushViewController (e.NewsDetailsView, false);
+			NavigationController.PushViewController (e.NewsDetailsView, true);
 		}
 
 		#endregion
@@ -658,6 +824,15 @@ namespace ItExpert
 			}
 			UpdateTableView(_articles);
 			_articlesTableView.Hidden = false;
+			Action reloadData = () =>
+			{
+				Thread.Sleep(250);
+				InvokeOnMainThread(() =>
+				{
+					_articlesTableView.ReloadData();
+				});
+			};
+			ThreadPool.QueueUserWorkItem(state => reloadData());
 		}
 
 		#endregion

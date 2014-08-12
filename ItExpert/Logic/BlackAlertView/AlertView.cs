@@ -177,6 +177,7 @@ namespace ItExpert
             if (_cancelButton != null)
             {
                 _cancelButton.RemoveFromSuperview();
+				_cancelButton.TouchUpInside -= CancelButtonClick;
             }
 
             _isConfirmButtonExists = confirmButtonTitle != null;
@@ -187,7 +188,7 @@ namespace ItExpert
 
             _cancelButton.SetTitle(cancelButtonTitle, UIControlState.Normal);
             _cancelButton.SetTitleColor(UIColor.White, UIControlState.Normal);
-            _cancelButton.TouchUpInside += (sender, e) => OnButtonPushed(0);
+			_cancelButton.TouchUpInside += CancelButtonClick;
 
             Add(_cancelButton);
 
@@ -196,13 +197,14 @@ namespace ItExpert
                 if (_confirmButton != null)
                 {
                     _confirmButton.RemoveFromSuperview();
+					_confirmButton.TouchUpInside -= ConfirmButtonClick;
                 }
 
                 _confirmButton = new UIButton(new RectangleF(Frame.Width / 2, upperLineY, Frame.Width / 2, ButtonHeight));
 
                 _confirmButton.SetTitle(confirmButtonTitle, UIControlState.Normal);
                 _confirmButton.SetTitleColor(UIColor.White, UIControlState.Normal);
-                _confirmButton.TouchUpInside += (sender, e) => OnButtonPushed(1);
+				_confirmButton.TouchUpInside += ConfirmButtonClick;
 
                 Add(_confirmButton);
             }
@@ -309,6 +311,16 @@ namespace ItExpert
             SetNeedsDisplay();
         }
 
+		void CancelButtonClick(object sender, EventArgs e)
+		{
+			OnButtonPushed(0);
+		}
+
+		void ConfirmButtonClick(object sender, EventArgs e)
+		{
+			OnButtonPushed(1);
+		}
+
         public void OnButtonPushed(int index)
         {
             if (ButtonPushed != null)
@@ -327,28 +339,31 @@ namespace ItExpert
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			foreach (var view in Subviews)
-			{
-				view.RemoveFromSuperview();
-			}
 			if (_titleTextView != null)
 			{
+				_titleTextView.RemoveFromSuperview();
 				_titleTextView.Dispose();
 			}
 			if (_messageTextView != null)
 			{
+				_messageTextView.RemoveFromSuperview();
 				_messageTextView.Dispose();
 			}
 			if (_radioButtonsGroup != null)
 			{
+				_radioButtonsGroup.RemoveFromSuperview();
 				_radioButtonsGroup.Dispose();
 			}
 			if (_cancelButton != null)
 			{
+				_cancelButton.RemoveFromSuperview();
+				_cancelButton.TouchUpInside -= CancelButtonClick;
 				_cancelButton.Dispose();
 			}
 			if (_confirmButton != null)
 			{
+				_confirmButton.RemoveFromSuperview();
+				_confirmButton.TouchUpInside -= ConfirmButtonClick;
 				_confirmButton.Dispose();
 			}
 			_titleTextView = null;

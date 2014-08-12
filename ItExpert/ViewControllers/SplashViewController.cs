@@ -51,6 +51,33 @@ namespace ItExpert
 			Initialize ();
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			InvokeOnMainThread(() =>
+			{
+				if (_indicator != null)
+				{
+					_indicator.RemoveFromSuperview();
+					_indicator.Dispose();
+				}
+
+				if (_splashImage != null)
+				{
+					_splashImage.RemoveFromSuperview();
+					if (_splashImage.Image != null)
+					{
+						_splashImage.Image.Dispose();
+						_splashImage.Image = null;
+					}
+					_splashImage.Dispose();
+				}
+				
+				_indicator = null;
+				_splashImage = null;
+			});
+		}
+
 		private void InitSplash()
 		{
 			var fileName = "Splash.png";

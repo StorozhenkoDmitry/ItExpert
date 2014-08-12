@@ -9,6 +9,8 @@ namespace ItExpert
 	public class AboutUsViewController : UIViewController
 	{
 		private bool _isInit = false;
+		private UIButton _backButton;
+		private UIBarButtonItem _backButtonBar;
 
 		public AboutUsViewController ()
 		{
@@ -41,6 +43,56 @@ namespace ItExpert
 			}
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			InvokeOnMainThread(() =>
+			{
+				ItExpertHelper.RemoveSubviews(View);
+				if (_scrollView != null)
+				{
+					_scrollView.Dispose();
+				}
+				if (_publishersTxt != null)
+				{
+					_publishersTxt.Dispose();
+				}
+				if (_aboutUsLbl != null)
+				{
+					_aboutUsLbl.Dispose();
+				}
+				if (_aboutUsText != null)
+				{
+					_aboutUsText.Dispose();
+				}
+
+				if (_backButton != null)
+				{
+					_backButton.RemoveFromSuperview();
+					if (_backButton.ImageView != null && _backButton.ImageView.Image != null)
+					{
+						_backButton.ImageView.Image.Dispose();
+						_backButton.ImageView.Image = null;
+					}
+					_backButton.TouchUpInside -= BackButtonTouchUp;
+					_backButton.Dispose();
+				}
+
+				if (_backButtonBar != null)
+				{
+					_backButtonBar.Dispose();
+				}
+
+
+				_backButton = null;
+				_backButtonBar = null;
+				_scrollView = null;
+				_publishersTxt = null;
+				_aboutUsText = null;
+				_aboutUsLbl = null;
+			});
+		}
+
 		private void InitNavigationBar()
 		{
 			UIBarButtonItem spaceForBack = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
@@ -51,7 +103,17 @@ namespace ItExpert
 
 			spaceForLogo.Width = 20;
 
-			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { spaceForBack, NavigationBarButton.Back, spaceForLogo, NavigationBarButton.Logo };           
+			_backButton = NavigationBarButton.GetButton("NavigationBar/Back.png", 2);
+			_backButton.TouchUpInside += BackButtonTouchUp;
+			_backButtonBar = new UIBarButtonItem(_backButton);
+
+			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { spaceForBack, _backButtonBar, spaceForLogo, NavigationBarButton.Logo };           
+		}
+
+		void BackButtonTouchUp(object sender, EventArgs e)
+		{
+			NavigationController.PopViewControllerAnimated(true);
+			Dispose();
 		}
 
 		void Initialize()

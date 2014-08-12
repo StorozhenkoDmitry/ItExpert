@@ -61,9 +61,19 @@ namespace ItExpert
 			base.Dispose(disposing);
 			if (_alertView != null)
 			{
+				_alertView.ButtonPushed -= OnButtonPushed;
+				_alertView.RemoveFromSuperview();
 				_alertView.Dispose();
-				_alertView = null;
 			}
+			_alertView = null;
+
+			if (_backgroundView != null)
+			{
+				_backgroundView.RemoveFromSuperview();
+				_backgroundView.Dispose();
+			}
+			_backgroundView = null;
+
 			ButtonPushed = null;
 		}
 
@@ -103,9 +113,18 @@ namespace ItExpert
                 _alertWindow.Dispose();
 				if (_alertView != null)
 				{
+					_alertView.ButtonPushed -= OnButtonPushed;
+					_alertView.RemoveFromSuperview();
 					_alertView.Dispose();
 				}
-                _alertView = null;
+				_alertView = null;
+
+				if (_backgroundView != null)
+				{
+					_backgroundView.RemoveFromSuperview();
+					_backgroundView.Dispose();
+				}
+				_backgroundView = null;
             }
 
             if (ButtonPushed != null)

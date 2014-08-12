@@ -17,14 +17,20 @@ namespace ItExpert
 	public class ArticleDetailsViewController: UIViewController
 	{
 		private UIPageViewController _pageController;
+		private UIButton _backButton;
+		private UIBarButtonItem _backButtonBar;
+		private SettingsView _settingsView;
+		private UIButton _settingsButton;
+		private UIBarButtonItem _settingsBarButton;
+		private ShareView _shareView;
+		private UIButton _shareButton;
+		private UIBarButtonItem _shareBarButton;
 
 		public ArticleDetailsViewController (Article article, List<int> articlesId, MagazineAction magazineAction)
 		{
 			_article = article;
 			_magazineAction = magazineAction;
 			_articlesId = articlesId;
-			_authors.Clear();
-			_authors.AddRange(article.Authors.Select(x => x.Name));
 			ApplicationWorker.SettingsChanged += OnSettingsChanged;
 		}
 
@@ -60,7 +66,90 @@ namespace ItExpert
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+			InvokeOnMainThread(() =>
+			{
+				if (_backButton != null)
+				{
+					_backButton.RemoveFromSuperview();
+					if (_backButton.ImageView != null && _backButton.ImageView.Image != null)
+					{
+						_backButton.ImageView.Image.Dispose();
+						_backButton.ImageView.Image = null;
+					}
+					_backButton.TouchUpInside -= BackButtonTouchUp;
+					_backButton.Dispose();
+				}
+
+				if (_backButtonBar != null)
+				{
+					_backButtonBar.Dispose();
+				}
+					
+				_backButton = null;
+				_backButtonBar = null;
+
+				if (_settingsButton != null)
+				{
+					_settingsButton.RemoveFromSuperview();
+					if (_settingsButton.ImageView != null && _settingsButton.ImageView.Image != null)
+					{
+						_settingsButton.ImageView.Image.Dispose();
+						_settingsButton.ImageView.Image = null;
+					}
+					_settingsButton.TouchUpInside -= SettingsButtonTouchUp;
+					_settingsButton.Dispose();
+				}
+				_settingsButton = null;
+
+				if (_settingsBarButton != null)
+				{
+					_settingsBarButton.Dispose();
+				}
+				_settingsBarButton = null;
+
+				if (_settingsView != null)
+				{
+					_settingsView.TapOutsideTableView -= ViewTapOutsideTableView;
+					_settingsView.Dispose();
+				}
+				_settingsView = null;
+
+				if (_shareButton != null)
+				{
+					_shareButton.RemoveFromSuperview();
+					if (_shareButton.ImageView != null && _shareButton.ImageView.Image != null)
+					{
+						_shareButton.ImageView.Image.Dispose();
+						_shareButton.ImageView.Image = null;
+					}
+					_shareButton.TouchUpInside -= ShareButtonTouchUp;
+					_shareButton.Dispose();
+				}
+				_shareButton = null;
+
+				if (_shareBarButton != null)
+				{
+					_shareBarButton.Dispose();
+				}
+				_shareBarButton = null;
+
+				if (_shareView != null)
+				{
+					_shareView.TapOutsideTableView -= ViewTapOutsideTableView;
+					_shareView.Dispose();
+				}
+				_shareView = null;
+
+				if (_pageController != null)
+				{
+					_pageController.GetNextViewController = null;
+					_pageController.GetPreviousViewController = null;
+					_pageController.Dispose();
+				}
+				_pageController = null;
+
+				ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+			});
 		}
 
 		void OnSettingsChanged (object sender, EventArgs e)
@@ -74,10 +163,7 @@ namespace ItExpert
 
 		void Exit()
 		{
-			if (UIApplication.SharedApplication.KeyWindow.RootViewController is UINavigationController)
-			{
-				(UIApplication.SharedApplication.KeyWindow.RootViewController as UINavigationController).PopViewControllerAnimated(true);
-			}
+			NavigationController.PopViewControllerAnimated(true);
 			Dispose();
 		}
 
@@ -155,171 +241,61 @@ namespace ItExpert
 
             spaceForLogo.Width = 20;
 
-            NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { spaceForBack, NavigationBarButton.Back, spaceForLogo, NavigationBarButton.Logo };           
+			_backButton = NavigationBarButton.GetButton("NavigationBar/Back.png", 2);
+			_backButton.TouchUpInside += BackButtonTouchUp;
+			_backButtonBar = new UIBarButtonItem(_backButton);
+
+			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { spaceForBack, _backButtonBar, spaceForLogo, NavigationBarButton.Logo };           
 
             UIBarButtonItem spaceForSettings = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
 
             spaceForSettings.Width = -10;
 
-			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { spaceForSettings, NavigationBarButton.GetSettingsButton(true), NavigationBarButton.Share };
+			_settingsButton = NavigationBarButton.GetButton("NavigationBar/Settings.png", 4.1f);
+			_settingsBarButton = new UIBarButtonItem(_settingsButton);
+			_settingsView = new SettingsView(true);
+			_settingsView.TapOutsideTableView += ViewTapOutsideTableView;
+			_settingsButton.TouchUpInside += SettingsButtonTouchUp;
+
+
+			_shareButton = NavigationBarButton.GetButton("NavigationBar/Share.png", 4.5f);
+			_shareBarButton = new UIBarButtonItem(_shareButton);
+			_shareView = new ShareView();
+			_shareView.TapOutsideTableView += ViewTapOutsideTableView;
+			_shareButton.TouchUpInside += ShareButtonTouchUp;
+
+			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { spaceForSettings, _settingsBarButton, _shareBarButton };
         }
 
-		#region Worked with server
-
-		public void GetArticleFromServer(Article article)
+		void BackButtonTouchUp(object sender, EventArgs e)
 		{
-			if (!ApplicationWorker.Settings.OfflineMode)
-			{
-				var connectAccept = IsConnectionAccept();
-				if (!connectAccept)
-				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
-					return;
-				}
-				ApplicationWorker.RemoteWorker.ArticleDetailGetted -= OnArticleDetailGetted;
-				ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted -= OnMagazineArticleDetailGetted;
-				ApplicationWorker.RemoteWorker.Abort();
-				_article = article;
-				if (_article.ArticleType == ArticleType.Portal)
-				{
-					ApplicationWorker.RemoteWorker.ArticleDetailGetted += OnArticleDetailGetted;
-					ThreadPool.QueueUserWorkItem(
-						state =>
-						ApplicationWorker.RemoteWorker.BeginGetArticleDetail(ApplicationWorker.Settings, -1,
-							-1,
-							_article.Id));
-				}
-				if (_article.ArticleType == ArticleType.Magazine)
-				{
-					ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted += OnMagazineArticleDetailGetted;
-					ThreadPool.QueueUserWorkItem(
-						state =>
-						ApplicationWorker.RemoteWorker.BeginGetMagazineArticleDetail(
-							ApplicationWorker.Settings, -1, -1, _article.Id));
-				}
-			}
-			else
-			{
-				if (_article.ArticleType  == ArticleType.Magazine && _magazineAction == MagazineAction.Open)
-				{
-					ShowShowPdfDialog ();
-					return;
-				}
-				ShowNotFindArticleDialog();
-			}
+			Exit();
 		}
 
-		private void OnMagazineArticleDetailGetted(object sender, MagazineArticleDetailEventArgs e)
+		void ViewTapOutsideTableView(object sender, EventArgs e)
 		{
-			ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted -= OnMagazineArticleDetailGetted;
-			if (e.Abort)
-			{
-				return;
-			}
-			var error = e.Error;
-			if (!error)
-			{
-				var article = e.Article;
-				if (article != null)
-				{
-					article.IsReaded = true;
-					if (_article != null)
-					{
-						_article.DetailText = article.DetailText;
-						_article.IsReaded = article.IsReaded;
-						_article.Authors = article.Authors;
-						_article.AuthorsId = article.AuthorsId;
-						_article.Video = article.Video;
-						_authors.Clear();
-						_authors.AddRange(article.Authors.Select(x => x.Name));
-						if (ApplicationWorker.Settings.LoadImages && article.DetailPicture != null)
-						{
-							_article.DetailPicture = article.DetailPicture;
-						}
-						if (article.AwardsPicture != null)
-						{
-							_article.AwardsPicture = article.AwardsPicture;
-						}
-						ThreadPool.QueueUserWorkItem(state => SaveArticle(_article));
-					}
-					else
-					{
-						_article = article;
-					}
-					InvokeOnMainThread(() =>
-					{
-						var currentController = _pageController.ViewControllers[0] as ArticleDetailContentViewController;
-						if (currentController != null)
-						{
-							currentController.SetArticle(_article);
-						}
-					});
-				}
-			}
-			else
-			{
-				InvokeOnMainThread(() => BTProgressHUD.ShowToast("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500));
-			}
+			NavigationBarButton.HideWindow();
 		}
 
-		private void OnArticleDetailGetted(object sender, ArticleDetailEventArgs e)
+		void SettingsButtonTouchUp(object sender, EventArgs e)
 		{
-			ApplicationWorker.RemoteWorker.ArticleDetailGetted -= OnArticleDetailGetted;
-			if (e.Abort)
-			{
-				return;
-			}
-			var error = e.Error;
-			if (!error)
-			{
-				var article = e.Article;
-				if (article != null)
-				{
-					article.IsReaded = true;
-					if (_article != null)
-					{
-						_article.DetailText = article.DetailText;
-						_article.IsReaded = article.IsReaded;
-						_article.Authors = article.Authors;
-						_article.AuthorsId = article.AuthorsId;
-						_article.Video = article.Video;
-						_authors.Clear();
-						_authors.AddRange(article.Authors.Select(x => x.Name));
-						if (ApplicationWorker.Settings.LoadImages && article.DetailPicture != null)
-						{
-							_article.DetailPicture = article.DetailPicture;
-						}
-						if (article.AwardsPicture != null)
-						{
-							_article.AwardsPicture = article.AwardsPicture;
-						}
-						ThreadPool.QueueUserWorkItem(state => SaveArticle(_article));
-					}
-					else
-					{
-						_article = article;
-					}
-					InvokeOnMainThread(() =>
-					{
-						var currentController = _pageController.ViewControllers[0] as ArticleDetailContentViewController;
-						if (currentController != null)
-						{
-							currentController.SetArticle(_article);
-						}
-					});
-				}
-			}
-			else
-			{
-				InvokeOnMainThread(() => BTProgressHUD.ShowToast("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500));
-			}
+			NavigationBarButton.ShowWindow(_settingsView);
 		}
 
-		#endregion
+		void ShareButtonTouchUp(object sender, EventArgs e)
+		{
+			NavigationBarButton.ShowWindow(_shareView);
+			_shareView.Update();
+		}
 
 		#region Logic
 
 		#region Filter articles
+
+		public void SetArticle(Article article)
+		{
+			_article = article;
+		}
 
 		public void ShowFilterSectionDialog(string sectionString)
 		{
@@ -383,8 +359,9 @@ namespace ItExpert
 				}
 				if (showController != null)
 				{
-					NavigationController.PopToViewController (showController, true);
+					NavigationController.PopToViewController (showController, false);
 					showController.FilterSection (sectionId, blockId);
+					Dispose();
 				}
 				else
 				{
@@ -394,8 +371,10 @@ namespace ItExpert
 						SectionId = sectionId,
 						BlockId = blockId
 					};
+					NavigationController.DismissViewController(false, null);
 					showController = new NewsViewController(filterParams);
-					NavigationController.PushViewController(showController, true);
+					NavigationController.PushViewController(showController, false);
+					Dispose();
 				}
 			}
 			if (_article.ArticleType == ArticleType.Magazine)
@@ -413,7 +392,7 @@ namespace ItExpert
 				}
 				if (showController != null)
 				{
-					NavigationController.PopToViewController(showController, true);
+					NavigationController.PopToViewController(showController, false);
 					showController.SearchRubric(sectionId);
 				}
 				else
@@ -422,8 +401,10 @@ namespace ItExpert
 						Filter = Filter.Section,
 						SectionId = sectionId,
 					};
+					NavigationController.DismissViewController(false, null);
 					showController = new MagazineViewController(filterParams);
-					NavigationController.PushViewController(showController, true);
+					NavigationController.PushViewController(showController, false);
+					Dispose();
 				}
 			}
 		}
@@ -460,7 +441,7 @@ namespace ItExpert
 			}
 			if (showController != null)
 			{
-				NavigationController.PopToViewController(showController, true);
+				NavigationController.PopToViewController(showController, false);
 				showController.FilterAuthor(sectionId, blockId, authorId);
 			}
 			else
@@ -472,8 +453,10 @@ namespace ItExpert
 					BlockId = blockId,
 					AuthorId = authorId,
 				};
+				NavigationController.DismissViewController(false, null);
 				showController = new NewsViewController(filterParams);
-				NavigationController.PushViewController(showController, true);
+				NavigationController.PushViewController(showController, false);
+				Dispose();
 			}
 		}
 
@@ -486,8 +469,11 @@ namespace ItExpert
 			}
 			if (article.ArticleType == ArticleType.Magazine && _magazineAction == MagazineAction.Download)
 			{
-				ShowLoadPdfDialog();
-				return;
+				if (!ApplicationWorker.Settings.OfflineMode)
+				{
+					ShowLoadPdfDialog();
+					return;
+				}
 			}
 			ShowNotFindArticleDialog();
 			return;
@@ -520,6 +506,11 @@ namespace ItExpert
 					{
 						NavigationController.PopToViewController (showController, true);
 						showController.DownloadMagazinePdf();
+						Dispose();
+					}
+					else
+					{
+						Exit();
 					}
 					alertView.Dispose();
 				}
@@ -555,6 +546,11 @@ namespace ItExpert
 					{
 						NavigationController.PopToViewController (showController, true);
 						showController.OpenMagazinePdf();
+						Dispose();
+					}
+					else
+					{
+						Exit();
 					}
 					alertView.Dispose();
 				}
@@ -581,93 +577,6 @@ namespace ItExpert
 		{
 			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
 			_articlesId = null;
-			_authors = null;
-		}
-
-		private void SaveArticle(Article article)
-		{
-			var pictures = ApplicationWorker.Db.GetPicturesForParent(article.Id);
-			if (pictures != null && pictures.Any())
-			{
-				var detailPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Detail);
-				if (detailPicture != null)
-				{
-					ApplicationWorker.Db.DeletePicture(detailPicture.Id);
-				}
-				var awardsPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Awards);
-				if (awardsPicture != null)
-				{
-					ApplicationWorker.Db.DeletePicture(awardsPicture.Id);
-				}
-				var previewPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Preview);
-				if (previewPicture != null)
-				{
-					ApplicationWorker.Db.DeletePicture(previewPicture.Id);
-				}
-			}
-			if (article.DetailPicture != null)
-			{
-				ApplicationWorker.Db.InsertPicture(article.DetailPicture);
-			}
-			if (article.AwardsPicture != null)
-			{
-				ApplicationWorker.Db.InsertPicture(article.AwardsPicture);
-			}
-			if (article.PreviewPicture != null)
-			{
-				ApplicationWorker.Db.InsertPicture(article.PreviewPicture);
-			}
-			var authors = article.Authors;
-			if (authors != null && authors.Any())
-			{
-				foreach (var author in authors)
-				{
-					var dbAuthor = ApplicationWorker.Db.GetAuthor(author.Id);
-					if (dbAuthor == null)
-					{
-						ApplicationWorker.Db.InsertAuthor(author);
-					}
-				}
-			}
-			var rubrics = article.Rubrics;
-			if (rubrics != null && rubrics.Any())
-			{
-				foreach (var rubric in rubrics)
-				{
-					var dbRubric = ApplicationWorker.Db.GetRubric(rubric.Id);
-					if (dbRubric == null)
-					{
-						ApplicationWorker.Db.InsertRubric(rubric);
-					}
-				}
-			}
-			ApplicationWorker.Db.DeleteItemSectionsForArticle(article.Id);
-			if (article.Sections != null && article.Sections.Any())
-			{
-				ApplicationWorker.Db.InsertItemSections(article.Sections);
-			}
-			ApplicationWorker.Db.InsertArticle(article);
-		}
-			
-		private bool IsConnectionAccept()
-		{
-			var result = true;
-			var internetStatus = Reachability.InternetConnectionStatus();
-			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.WiFi)
-			{
-				if (internetStatus != NetworkStatus.ReachableViaWiFiNetwork)
-				{
-					result = false;
-				}
-			}
-			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.All)
-			{
-				if (internetStatus == NetworkStatus.NotReachable)
-				{
-					result = false;
-				}
-			}
-			return result;
 		}
 
 		#endregion
@@ -675,7 +584,6 @@ namespace ItExpert
 		private Article _article;
 		private MagazineAction _magazineAction;
 		private List<int> _articlesId;
-		private List<string> _authors = new List<string>();
 
 
 	}

@@ -17,6 +17,7 @@ namespace ItExpert
 			base.Dispose();
 			if (_searchTextField != null)
 			{
+				_searchTextField.RemoveFromSuperview();
 				_searchTextField.ShouldReturn -= TextFieldShouldReturn;
 				_searchTextField.Dispose();
 			}
@@ -24,6 +25,7 @@ namespace ItExpert
 
 			if (_searchButton != null)
 			{
+				_searchButton.RemoveFromSuperview();
 				if (_searchButton.ImageView != null && _searchButton.ImageView.Image != null)
 				{
 					_searchButton.ImageView.Image.Dispose();

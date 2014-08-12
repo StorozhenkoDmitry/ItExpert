@@ -23,6 +23,7 @@ namespace ItExpert
 		{
 			if (_textView != null)
 			{
+				_textView.RemoveFromSuperview();
 				_textView.Dispose();
 			}
 			_textView = null;

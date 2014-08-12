@@ -3,12 +3,13 @@ using ItExpert.Model;
 using MonoTouch.UIKit;
 using System.Drawing;
 using MonoTouch.Foundation;
+using System.Threading;
 
 namespace ItExpert
 {
     public class DoublePortalContentCreator : BaseContentCreator
     {
-        internal class Content: IDisposable
+        public class Content: IDisposable
         {
             public enum Position
             {
@@ -29,49 +30,95 @@ namespace ItExpert
             {
                 if (ImageView != null)
                 {
+					ImageView.RemoveFromSuperview();
+					if (ImageView.Image != null)
+					{
+						ImageView.Image.Dispose();
+						ImageView.Image = null;
+					}
                     ImageView.Dispose();
                     ImageView = null;
                 }
 
                 if (ImageViewContainer != null)
                 {
+					ImageViewContainer.RemoveFromSuperview();
                     ImageViewContainer.Dispose();
                     ImageViewContainer = null;
                 }
 
                 if (HeaderTextView != null)
                 {
+					if (HeaderTextView.GestureRecognizers != null)
+					{
+						foreach (var gr in HeaderTextView.GestureRecognizers)
+						{
+							gr.Dispose();
+						}
+					}
+					HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
+					HeaderTextView.RemoveFromSuperview();
                     HeaderTextView.Dispose();
                     HeaderTextView = null;
                 }
 
                 if (PreviewTextView != null)
                 {
+					if (PreviewTextView.GestureRecognizers != null)
+					{
+						foreach (var gr in PreviewTextView.GestureRecognizers)
+						{
+							gr.Dispose();
+						}
+					}
+					PreviewTextView.RemoveFromSuperview();
                     PreviewTextView.Dispose();
                     PreviewTextView = null;
                 }
 
                 if (IsReadedButtonImageView != null)
                 {
+					IsReadedButtonImageView.RemoveFromSuperview();
+					if (IsReadedButtonImageView.Image != null)
+					{
+						IsReadedButtonImageView.Image.Dispose();
+						IsReadedButtonImageView.Image = null;
+					}
                     IsReadedButtonImageView.Dispose();
                     IsReadedButtonImageView = null;
                 }
 
                 if (IsReadedButton != null)
                 {
+					IsReadedButton.RemoveFromSuperview();
                     IsReadedButton.Dispose();
                     IsReadedButton = null;
                 }
 
                 if (MainContainer != null)
                 {
+					MainContainer.RemoveFromSuperview();
                     MainContainer.Dispose();
                     MainContainer = null;
                 }
-
-				GC.Collect ();
             }
         }
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			CellPushed = null;
+			if (_leftContent != null)
+			{
+				_leftContent.Dispose();
+			}
+			if (_rightContent != null)
+			{
+				_rightContent.Dispose();
+			}
+			_leftContent = null;
+			_rightContent = null;
+		}
 
         public event EventHandler<DoubleCellPushedEventArgs> CellPushed;
 
@@ -81,7 +128,7 @@ namespace ItExpert
 
             leftContent.MainContainer = new UIView(new RectangleF(0, 0, cellContentView.Frame.Width / 2, cellContentView.Frame.Height));
 
-            CreateContnentElements(leftContent.MainContainer, article.LeftContent, ItExpertHelper.LargestImageSizeInArticlesPreview, leftContent);
+            CreateContentElements(leftContent.MainContainer, article.LeftContent, ItExpertHelper.LargestImageSizeInArticlesPreview, leftContent);
 
             Content rightContent = null;
 
@@ -91,7 +138,7 @@ namespace ItExpert
 
                 rightContent.MainContainer = new UIView(new RectangleF(cellContentView.Frame.Width / 2, 0, cellContentView.Frame.Width / 2, cellContentView.Frame.Height));
 
-                CreateContnentElements(rightContent.MainContainer, article.RightContent, ItExpertHelper.LargestImageSizeInArticlesPreview, rightContent);
+                CreateContentElements(rightContent.MainContainer, article.RightContent, ItExpertHelper.LargestImageSizeInArticlesPreview, rightContent);
             }
 
             var maxHeight = GetMaxHeight(leftContent, rightContent);
@@ -180,12 +227,12 @@ namespace ItExpert
             }
         }
 
-        private void CreateContnentElements(UIView mainContainer, Article article, float largestImageWidth, Content content)
+        private void CreateContentElements(UIView mainContainer, Article article, float largestImageWidth, Content content)
         {
             content.Article = article;
 
             content.IsReadedButton = new UIButton(new RectangleF(mainContainer.Frame.Width - _padding.Right - 70, 2, 70, 70));
-            content.IsReadedButton.TouchUpInside += OnReadedButtonTouchUpInside;
+            
 
             var buttonImage = new UIImage(GetIsReadedButtonImageData(content.Article.IsReaded), (float)2.5);
 
@@ -289,54 +336,6 @@ namespace ItExpert
                 new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
         }
 
-        private void AddCellElements(UIView cellContentView, Content content)
-        {
-			ItExpertHelper.RemoveSubviews(content.MainContainer);
-			content.PreviewTextView.UserInteractionEnabled = true;
-			content.HeaderTextView.UserInteractionEnabled = true;
-			if (content.PreviewTextView.GestureRecognizers != null)
-			{
-				foreach (var gr in content.PreviewTextView.GestureRecognizers)
-				{
-					gr.Dispose();
-				}
-			}
-			content.PreviewTextView.GestureRecognizers = new UIGestureRecognizer[0];
-			if (content.HeaderTextView.GestureRecognizers != null)
-			{
-				foreach (var gr in content.HeaderTextView.GestureRecognizers)
-				{
-					gr.Dispose();
-				}
-			}
-			content.HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
-			var previewTap = new UITapGestureRecognizer(() =>
-			{
-				if (CellPushed != null)
-				{
-					CellPushed(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
-				}
-			});
-			var headerTap = new UITapGestureRecognizer(() =>
-			{
-				if (CellPushed != null)
-				{
-					CellPushed(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
-				}
-			});
-			content.PreviewTextView.AddGestureRecognizer(previewTap);
-			content.HeaderTextView.AddGestureRecognizer(headerTap);
-            content.MainContainer.Add (content.IsReadedButton);
-            content.MainContainer.Add (content.HeaderTextView);
-            content.MainContainer.Add (content.PreviewTextView);
-			if (content.ImageViewContainer != null)
-			{
-				content.MainContainer.Add(content.ImageViewContainer);
-			}
-            content.IsReadedButton.BringSubviewToFront(content.MainContainer);
-            cellContentView.Add(content.MainContainer);
-        }
-
         private void UpdateTextView(UITextView textViewToUpdate, float updatedTextViewWidth, UIFont font, UIColor foregroundColor, string updatedText, PointF updatedTextViewLocation, UIView imageView = null)
         {
 			textViewToUpdate.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
@@ -433,7 +432,7 @@ namespace ItExpert
             content.MainContainer = new UIView(frame);
             content.MainContainer.UserInteractionEnabled = true;
 
-            CreateContnentElements(content.MainContainer, article, ItExpertHelper.LargestImageSizeInArticlesPreview, content);
+            CreateContentElements(content.MainContainer, article, ItExpertHelper.LargestImageSizeInArticlesPreview, content);
 
             content.IsReadedButton.Tag = (int)contentPosition;
         }
@@ -454,6 +453,52 @@ namespace ItExpert
             content.ImageViewContainer.UserInteractionEnabled = true;
         }
 
+		private void AddCellElements(UIView cellContentView, Content content)
+		{
+			ItExpertHelper.RemoveSubviews(content.MainContainer);
+
+			if (content.PreviewTextView.GestureRecognizers != null)
+			{
+				foreach (var gr in content.PreviewTextView.GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+			}
+			content.PreviewTextView.GestureRecognizers = new UIGestureRecognizer[0];
+			if (content.HeaderTextView.GestureRecognizers != null)
+			{
+				foreach (var gr in content.HeaderTextView.GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+			}
+			content.HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
+
+			content.PreviewTextView.UserInteractionEnabled = true;
+			content.HeaderTextView.UserInteractionEnabled = true;
+
+			var previewTap = new UITapGestureRecognizer(() =>
+			{
+				if (CellPushed != null)
+				{
+					CellPushed(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
+				}
+			});
+			var headerTap = new UITapGestureRecognizer(() =>
+			{
+				var handler = Interlocked.CompareExchange(ref CellPushed, null, null);
+				if (handler != null)
+				{
+					handler(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
+				}
+			});
+			var frame = content.MainContainer.Frame;
+			var doublePortalView = new DoublePortalView(frame, content, OnReadedButtonTouchUpInside, 
+				headerTap, previewTap);
+			cellContentView.Add(doublePortalView);
+			cellContentView.BringSubviewToFront(doublePortalView);
+		}
+
         public override float GetContentHeight(UIView cellContentView, Article article)
         {
             throw new NotImplementedException();
@@ -472,5 +517,73 @@ namespace ItExpert
         private Content _leftContent;
         private Content _rightContent;
     }
+
+	public class DoublePortalView : UIView, ICleanupObject
+	{
+		private DoublePortalContentCreator.Content _content;
+		private EventHandler _isReaderClick;
+		private UITapGestureRecognizer _headerTap;
+		private UITapGestureRecognizer _previewTap;
+
+		public DoublePortalView(RectangleF frame, DoublePortalContentCreator.Content content,
+			EventHandler isReadedClick, UITapGestureRecognizer headerTap, 
+			UITapGestureRecognizer previewTap): base(frame)
+		{
+			_content = content;
+			_isReaderClick = isReadedClick;
+			_content.IsReadedButton.TouchUpInside += _isReaderClick;
+			_headerTap = headerTap;
+			_previewTap = previewTap;
+			if (_previewTap != null)
+			{
+				_content.PreviewTextView.AddGestureRecognizer(_previewTap);
+			}
+			if (_headerTap != null)
+			{
+				_content.HeaderTextView.AddGestureRecognizer(_headerTap);
+			}
+			Add (_content.IsReadedButton);
+			Add (_content.HeaderTextView);
+			Add (_content.PreviewTextView);
+			if (content.ImageViewContainer != null)
+			{
+				Add(content.ImageViewContainer);
+			}
+			BringSubviewToFront(_content.HeaderTextView);
+			BringSubviewToFront(_content.PreviewTextView);
+			if (content.ImageViewContainer != null)
+			{
+				BringSubviewToFront(_content.ImageViewContainer);
+			}
+			BringSubviewToFront(_content.IsReadedButton);
+		}
+
+		public void CleanUp()
+		{
+			foreach (var view in Subviews)
+			{
+				view.RemoveFromSuperview();
+			}
+			if (_content != null)
+			{
+				var content = _content;
+				content.PreviewTextView.GestureRecognizers = new UIGestureRecognizer[0];
+				content.HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
+				if (_previewTap != null)
+				{
+					_previewTap.Dispose();
+				}
+				if (_headerTap != null)
+				{
+					_headerTap.Dispose();
+				}
+				content.IsReadedButton.TouchUpInside -= _isReaderClick;
+			}
+			_content = null;
+			_isReaderClick = null;
+			_headerTap = null;
+			_previewTap = null;
+		}
+	}
 }
 

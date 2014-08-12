@@ -16,6 +16,7 @@ namespace ItExpert
 			base.Dispose();
 			if (_button != null)
 			{
+				_button.RemoveFromSuperview();
 				_button.TouchDown -= ButtonTouchDown;
 				_button.TouchUpInside -= ButtonTouchUpInside;
 				_button.Dispose();

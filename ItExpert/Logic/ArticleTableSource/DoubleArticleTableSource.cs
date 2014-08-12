@@ -53,6 +53,13 @@ namespace ItExpert
             }
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			PushDetailsView = null;
+			_articles = null;
+		}
+
 		public event EventHandler<PushDetailsEventArgs> PushDetailsView;
 
 		public override int RowsInSection (UITableView tableview, int section)

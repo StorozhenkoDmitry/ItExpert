@@ -54,10 +54,52 @@ namespace ItExpert
             }
         }
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			MagazinePushed = null;
+			MagazineOpen = null;
+			MagazineDelete = null;
+			MagazineDownload = null;
+
+			if (_scrollView != null)
+			{
+				foreach (var view in _scrollView.Subviews)
+				{
+					view.RemoveFromSuperview();
+					var magazineView = view as MagazineView;
+					if (magazineView != null)
+					{
+						magazineView.MagazineImagePushed -= OnMagazineImagePushed;
+						magazineView.MagazineDownload -= OnMagazineDownload;
+						magazineView.MagazineOpen -= OnMagazineOpen;
+						magazineView.MagazineDelete -= OnMagazineDelete;
+						magazineView.Dispose();
+					}
+				}
+				_scrollView.RemoveFromSuperview();
+				_scrollView.Dispose();
+			}
+			_scrollView = null;
+		}
+
         public void AddMagazineViews(List<Magazine> magazines)
         {
 			BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
-            ItExpertHelper.RemoveSubviews(_scrollView);
+			foreach (var view in _scrollView.Subviews)
+			{
+				view.RemoveFromSuperview();
+				var magazineView = view as MagazineView;
+				if (magazineView != null)
+				{
+					magazineView.MagazineImagePushed -= OnMagazineImagePushed;
+					magazineView.MagazineDownload -= OnMagazineDownload;
+					magazineView.MagazineOpen -= OnMagazineOpen;
+					magazineView.MagazineDelete -= OnMagazineDelete;
+					magazineView.Dispose();
+				}
+			}
+			ItExpertHelper.RemoveSubviews(_scrollView);
 			_items = magazines;
             _nextViewPosition = new PointF(_padding.Left, _padding.Top);
 

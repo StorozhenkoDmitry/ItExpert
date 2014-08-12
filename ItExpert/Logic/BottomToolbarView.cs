@@ -52,6 +52,46 @@ namespace ItExpert
             UserInteractionEnabled = true;
         }
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+
+			if (_newsButton != null)
+			{
+				_newsButton.RemoveFromSuperview();
+				_newsButton.Dispose();
+			}
+			_newsButton = null;
+
+			if (_magazineButton != null)
+			{
+				_magazineButton.RemoveFromSuperview();
+				_magazineButton.Dispose();
+			}
+			_magazineButton = null;
+
+			if (_archiveButton != null)
+			{
+				_archiveButton.RemoveFromSuperview();
+				_archiveButton.Dispose();
+			}
+			_archiveButton = null;
+
+			if (_trendsButton != null)
+			{
+				_trendsButton.RemoveFromSuperview();
+				_trendsButton.Dispose();
+			}
+			_trendsButton = null;
+
+			if (_favoritesButton != null)
+			{
+				_favoritesButton.RemoveFromSuperview();
+				_favoritesButton.Dispose();
+			}
+			_favoritesButton = null;
+		}
+
         private void AddButtons()
         {
             float buttonWidth = Frame.Width / 5;
@@ -90,10 +130,40 @@ namespace ItExpert
 
         public override void LayoutIfNeeded()
         {
-            foreach (var subView in Subviews)
-            {
-                subView.RemoveFromSuperview();
-            }
+			if (_newsButton != null)
+			{
+				_newsButton.RemoveFromSuperview();
+				_newsButton.Dispose();
+			}
+			_newsButton = null;
+
+			if (_magazineButton != null)
+			{
+				_magazineButton.RemoveFromSuperview();
+				_magazineButton.Dispose();
+			}
+			_magazineButton = null;
+
+			if (_archiveButton != null)
+			{
+				_archiveButton.RemoveFromSuperview();
+				_archiveButton.Dispose();
+			}
+			_archiveButton = null;
+
+			if (_trendsButton != null)
+			{
+				_trendsButton.RemoveFromSuperview();
+				_trendsButton.Dispose();
+			}
+			_trendsButton = null;
+
+			if (_favoritesButton != null)
+			{
+				_favoritesButton.RemoveFromSuperview();
+				_favoritesButton.Dispose();
+			}
+			_favoritesButton = null;
 
             AddButtons();
         }

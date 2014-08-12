@@ -14,17 +14,6 @@ namespace ItExpert
 		public override void Dispose()
 		{
 			base.Dispose();
-			if (_textView != null)
-			{
-				_textView.Dispose();
-			}
-			_textView = null;
-
-			if (_rightTextView != null)
-			{
-				_rightTextView.Dispose();
-			}
-			_rightTextView = null;
 
 			if (_tapGestureRecognizer != null)
 			{
@@ -32,8 +21,23 @@ namespace ItExpert
 			}
 			_tapGestureRecognizer = null;
 
+			if (_textView != null)
+			{
+				_textView.RemoveFromSuperview();
+				_textView.Dispose();
+			}
+			_textView = null;
+
+			if (_rightTextView != null)
+			{
+				_rightTextView.RemoveFromSuperview();
+				_rightTextView.Dispose();
+			}
+			_rightTextView = null;
+
 			if (_tapView != null)
 			{
+				_tapView.RemoveFromSuperview();
 				_tapView.Dispose();
 			}
 			_tapView = null;

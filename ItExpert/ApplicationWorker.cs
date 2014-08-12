@@ -86,10 +86,6 @@ namespace ItExpert
             Magazine = null;
             LastMagazine = null;
             LastMagazineArticles = null;
-			if (SharedArticle != null)
-			{
-				SharedArticle.Dispose();
-			}
             SharedArticle = null;
 			AllPdfFilesDeleted = null;
         }

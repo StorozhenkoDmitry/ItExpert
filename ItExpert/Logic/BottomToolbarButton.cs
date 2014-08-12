@@ -38,6 +38,37 @@ namespace ItExpert
             AddGestureRecognizer(_tapGestureRecognizer);
         }
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			ButtonClick = null;
+
+			if (_tapGestureRecognizer != null)
+			{
+				_tapGestureRecognizer.Dispose();
+			}
+			_tapGestureRecognizer = null;
+
+			if (_imageView != null)
+			{
+				if (_imageView.Image != null)
+				{
+					_imageView.Image.Dispose();
+					_imageView.Image = null;
+				}
+				_imageView.RemoveFromSuperview();
+				_imageView.Dispose();
+			}
+			_imageView = null;
+
+			if (_label != null)
+			{
+				_label.RemoveFromSuperview();
+				_label.Dispose();
+			}
+			_label = null;
+		}
+
 		public void OnButtonClick()
 		{
 			var handler = Interlocked.CompareExchange(ref ButtonClick, null, null);

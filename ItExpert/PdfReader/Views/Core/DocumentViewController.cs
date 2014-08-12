@@ -132,12 +132,18 @@ namespace mTouchPDFReader.Library.Views.Core
 		{
 			PDFDocument.CloseDocument();
 			base.Dispose(disposing);
-			_toolbar.Dispose();
-			_bottomBar.Dispose();
+			_slider.RemoveFromSuperview();
 			_slider.Dispose();
+			_PageNumberLabel.RemoveFromSuperview();
 			_PageNumberLabel.Dispose();
+			_zoomInBut.RemoveFromSuperview();
 			_zoomInBut.Dispose();
+			_zoomOutBut.RemoveFromSuperview();
 			_zoomOutBut.Dispose();
+			_toolbar.RemoveFromSuperview();
+			_toolbar.Dispose();
+			_bottomBar.RemoveFromSuperview();
+			_bottomBar.Dispose();
 			_toolbar = null;
 			_bottomBar = null;
 			_slider = null;

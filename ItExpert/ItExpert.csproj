@@ -281,13 +281,14 @@
     <Compile Include="Logic\ArticleTableSource\IUpdatableSource.cs" />
     <Compile Include="Logic\FilterParameters.cs" />
     <Compile Include="ViewControllers\ArticleDetailContentViewController.cs" />
-    <Compile Include="Logic\NavigationBar\NavigationBarTableSource\ICleanupObject.cs" />
+    <Compile Include="Logic\ICleanupObject.cs" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="MainStoryboard_iPhone.storyboard" />
     <InterfaceDefinition Include="MainStoryboard_iPad.storyboard" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
     <Folder Include="Model\" />
     <Folder Include="DataAccessLayer\" />

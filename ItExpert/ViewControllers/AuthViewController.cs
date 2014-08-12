@@ -36,6 +36,7 @@ namespace ItExpert
 		private UIView _headerView;
 		private UIButton _backButton;
 		private UILabel _splashLabel;
+		private EventHandler _webViewLoadStarted;
 
 		#endregion
 
@@ -57,10 +58,72 @@ namespace ItExpert
 			SetFrame();
 		}
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			InvokeOnMainThread(() =>
+			{
+				if (_backButton != null)
+				{
+					_backButton.TouchUpInside -= BackButtonTouchUp;
+					_backButton.RemoveFromSuperview();
+					if (_backButton.ImageView != null && _backButton.ImageView.Image != null)
+					{
+						_backButton.ImageView.Image.Dispose();
+						_backButton.ImageView.Image = null;
+					}
+					_backButton.Dispose();
+				}
+				_backButton = null;
+
+				if (_logoImageView != null)
+				{
+					_logoImageView.RemoveFromSuperview();
+					if (_logoImageView.Image != null)
+					{
+						_logoImageView.Image.Dispose();
+						_logoImageView.Image = null;
+					}
+					_logoImageView.Dispose();
+				}
+				_logoImageView = null;
+
+
+				if (_splashLabel != null)
+				{
+					_splashLabel.RemoveFromSuperview();
+					_splashLabel.Dispose();
+				}
+				_splashLabel = null;
+
+				if (_headerView != null)
+				{
+					_headerView.RemoveFromSuperview();
+					_headerView.Dispose();
+				}
+				_headerView = null;
+
+				if (_webView != null)
+				{
+					_webView.RemoveFromSuperview();
+					if (_webViewLoadStarted != null)
+					{
+						_webView.LoadStarted -= _webViewLoadStarted;
+					}
+					_webView.Dispose();
+				}
+				_webView = null;
+			});
+		}
+
 		void Finish()
 		{
-			DismissViewController(true, null);
-			_shareView.FinishAuth();
+			InvokeOnMainThread(() =>
+			{
+				DismissViewController(true, null);
+				_shareView.FinishAuth();
+				Dispose();
+			});
 		}
 
 		void SetFrame()
@@ -95,11 +158,7 @@ namespace ItExpert
 			var image = new UIImage(NSData.FromFile("NavigationBar/Back.png"), 2);
 			_backButton = new UIButton(new RectangleF(new PointF(10, _headerView.Frame.Height / 2 - image.Size.Height / 2), image.Size));
 			_backButton.SetImage(image, UIControlState.Normal);
-			_backButton.TouchUpInside += (sender, e) =>
-			{
-				_shareView.OAuthResult = null;
-				Finish();
-			};
+			_backButton.TouchUpInside += BackButtonTouchUp;
 			_headerView.Add(_backButton);
 
 			_logoImageView = new UIImageView(new UIImage(NSData.FromFile("NavigationBar/Logo.png"), 2));
@@ -123,6 +182,12 @@ namespace ItExpert
 			Add (_splashLabel);
 
 			Auth();
+		}
+
+		void BackButtonTouchUp(object sender, EventArgs e)
+		{
+			_shareView.OAuthResult = null;
+			Finish();
 		}
 
 		void Auth()
@@ -154,7 +219,7 @@ namespace ItExpert
 		private void AuthReadability()
 		{
 			var methodCalled = false;
-			_webView.LoadStarted += (sender, e) =>
+			_webViewLoadStarted = (sender, e) =>
 			{
 				if (!methodCalled)
 				{
@@ -168,6 +233,7 @@ namespace ItExpert
 					}
 				}
 			};
+			_webView.LoadStarted += _webViewLoadStarted;
 			BTProgressHUD.ShowToast ("Подготовительные действия...", ProgressHUD.MaskType.None, false, 2500);
 			var oAuthBase = new OAuthBase();
 			var nonce = oAuthBase.GenerateNonce();
@@ -301,7 +367,7 @@ namespace ItExpert
 		private void AuthEvernote()
 		{
 			var methodCalled = false;
-			_webView.LoadStarted += (sender, e) =>
+			_webViewLoadStarted = (sender, e) =>
 			{
 				if (!methodCalled)
 				{
@@ -315,6 +381,7 @@ namespace ItExpert
 					}
 				}
 			};
+			_webView.LoadStarted += _webViewLoadStarted;
 			BTProgressHUD.ShowToast ("Подготовительные действия...", ProgressHUD.MaskType.None, false, 2500);
 			var oAuthBase = new OAuthBase();
 			var nonce = oAuthBase.GenerateNonce();
@@ -443,7 +510,7 @@ namespace ItExpert
 		private void AuthPocket()
 		{
 			var methodCalled = false;
-			_webView.LoadStarted += (sender, e) =>
+			_webViewLoadStarted = (sender, e) =>
 			{
 				if (!methodCalled)
 				{
@@ -457,6 +524,7 @@ namespace ItExpert
 					}
 				}
 			};
+			_webView.LoadStarted += _webViewLoadStarted;
 			BTProgressHUD.ShowToast ("Подготовительные действия...", ProgressHUD.MaskType.None, false, 2500);
 			var req = (HttpWebRequest)WebRequest.Create("https://getpocket.com/v3/oauth/request");
 			req.Method = "POST";

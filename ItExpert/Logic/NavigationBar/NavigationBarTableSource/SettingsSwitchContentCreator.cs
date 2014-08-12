@@ -16,11 +16,14 @@ namespace ItExpert
 			base.Dispose();
 			if (_textView != null)
 			{
+				_textView.RemoveFromSuperview();
 				_textView.Dispose();
 			}
 			_textView = null;
+
 			if (_switch != null)
 			{
+				_switch.RemoveFromSuperview();
 				_switch.ValueChanged -= SwitchValueChanged;
 				_switch.Dispose();
 			}

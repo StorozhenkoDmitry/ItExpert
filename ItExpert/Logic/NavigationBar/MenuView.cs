@@ -41,6 +41,7 @@ namespace ItExpert
 			TapOutsideTableView = null;
 			if (_menuTableView != null)
 			{
+				_menuTableView.RemoveFromSuperview();
 				if (_menuTableView.Source != null)
 				{
 					_menuTableView.Source.Dispose();
@@ -49,8 +50,10 @@ namespace ItExpert
 				_menuTableView.Dispose();
 			}
 			_menuTableView = null;
+
 			if (_tapableViewHorizontal != null)
 			{
+				_tapableViewHorizontal.RemoveFromSuperview();
 				if (_tapableViewHorizontal.GestureRecognizers != null)
 				{
 					foreach (var gr in _tapableViewHorizontal.GestureRecognizers)
@@ -65,6 +68,7 @@ namespace ItExpert
 
 			if (_tapableViewVertical != null)
 			{
+				_tapableViewVertical.RemoveFromSuperview();
 				if (_tapableViewVertical.GestureRecognizers != null)
 				{
 					foreach (var gr in _tapableViewVertical.GestureRecognizers)
@@ -76,6 +80,8 @@ namespace ItExpert
 				_tapableViewVertical.Dispose();
 			}
 			_tapableViewVertical = null;
+
+			_navigationController = null;
 		}
 
         public override void ViewDidLoad()
@@ -160,6 +166,7 @@ namespace ItExpert
 			{ 
 				SetValue = (value) =>
 				{
+					OnTapOutsideTableView();
 					var search = value as string;
 					if (search != null)
 					{
@@ -169,7 +176,6 @@ namespace ItExpert
 							_searchClick(search);
 						}
 					}
-					OnTapOutsideTableView();
 				}
 			});
 
@@ -178,8 +184,8 @@ namespace ItExpert
                 Title = "Новости", 
                 ButtonPushed = (value) =>
                 {
-					_newsClick(null, new EventArgs());
 					OnTapOutsideTableView();
+					_newsClick(null, new EventArgs());
                 }
             });
 
@@ -188,8 +194,8 @@ namespace ItExpert
                 Title = "Журнал", 
                 ButtonPushed = (value) =>
                 {
-					_magazineClick(null, new EventArgs());
 					OnTapOutsideTableView();
+					_magazineClick(null, new EventArgs());
                 }
             });
 
@@ -198,8 +204,8 @@ namespace ItExpert
                 Title = "Архив журнала", 
                 ButtonPushed = (value) =>
                 {
-					_archiveClick(null, new EventArgs());
 					OnTapOutsideTableView();
+					_archiveClick(null, new EventArgs());
                 }
             });
 
@@ -208,8 +214,8 @@ namespace ItExpert
                 Title = "Тренды", 
                 ButtonPushed = (value) =>
                 {
-					_trendsClick(null, new EventArgs());
 					OnTapOutsideTableView();
+					_trendsClick(null, new EventArgs());
                 }
             });
 
@@ -218,8 +224,8 @@ namespace ItExpert
                 Title = "Избранное", 
                 ButtonPushed = (value) =>
                 {
-					_favoriteClick(null, new EventArgs());
 					OnTapOutsideTableView();
+					_favoriteClick(null, new EventArgs());
                 }
             });
 
@@ -228,8 +234,8 @@ namespace ItExpert
                 Title = "О нас", 
                 ButtonPushed = (value) =>
                 {
-					_aboutUsClick(null, new EventArgs());
 					OnTapOutsideTableView();
+					_aboutUsClick(null, new EventArgs());
                 }
             });
 

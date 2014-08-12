@@ -23,13 +23,70 @@ namespace ItExpert
 
 			_previewTextView.Dispose ();
 			_previewTextView = null;
-
+			if (_imageView != null)
+			{
+				_imageView.Dispose();
+				_imageView = null;
+			}
 			if (_imageViewContainer != null)
 			{
 				_imageViewContainer.Dispose();
 				_imageViewContainer = null;
 			}
             return height + _padding.Bottom;
+		}
+
+		public override void Dispose()
+		{
+			base.Dispose();
+
+			if (_imageView != null)
+			{
+				_imageView.RemoveFromSuperview();
+				_imageView.Dispose();
+			}
+			_imageView = null;
+
+			if (_imageViewContainer != null)
+			{
+				_imageViewContainer.RemoveFromSuperview();
+				_imageViewContainer.Dispose();
+			}
+			_imageViewContainer = null;
+
+			if (_isReadedButtonImageView != null)
+			{
+				if (_isReadedButtonImageView.Image != null)
+				{
+					_isReadedButtonImageView.Image.Dispose();
+					_isReadedButtonImageView.Image = null;
+				}
+				_isReadedButtonImageView.RemoveFromSuperview();
+				_isReadedButtonImageView.Dispose();
+			}
+			_isReadedButtonImageView = null;
+
+			if (_isReadedButton != null)
+			{
+				_isReadedButton.TouchUpInside -= OnReadedButtonTouchUpInside;
+				_isReadedButton.RemoveFromSuperview();
+				_isReadedButton.Dispose();
+			}
+			_isReadedButton = null;
+
+			if (_headerTextView != null)
+			{
+				_headerTextView.RemoveFromSuperview();
+				_headerTextView.Dispose();
+			}
+			_headerTextView = null;
+
+			if (_previewTextView != null)
+			{
+				_previewTextView.RemoveFromSuperview();
+				_previewTextView.Dispose();
+			}
+			_previewTextView = null;
 		}
 
         protected override void Create(UITableViewCell cell, Article article)
@@ -117,8 +174,27 @@ namespace ItExpert
 		{
             _article = article;
 
+			if (_isReadedButtonImageView != null)
+			{
+				if (_isReadedButtonImageView.Image != null)
+				{
+					_isReadedButtonImageView.Image.Dispose();
+					_isReadedButtonImageView.Image = null;
+				}
+				_isReadedButtonImageView.RemoveFromSuperview();
+				_isReadedButtonImageView.Dispose();
+				_isReadedButtonImageView = null;
+			}
+
+			if (_isReadedButton != null)
+			{
+				_isReadedButton.TouchUpInside -= OnReadedButtonTouchUpInside;
+				_isReadedButton.RemoveFromSuperview();
+				_isReadedButton.Dispose();
+				_isReadedButton = null;
+			}
+
             _isReadedButton = new UIButton(new RectangleF(cellContentView.Frame.Width - _padding.Right - 70, 2, 70, 70));
-            _isReadedButton.TouchUpInside += OnReadedButtonTouchUpInside;
             _isReadedButton.AdjustsImageWhenHighlighted = false;
 
             var buttonImage = new UIImage(GetIsReadedButtonImageData(_article.IsReaded), (float)2.5);
@@ -139,6 +215,11 @@ namespace ItExpert
 			}
 			else
 			{
+				if (_imageView != null)
+				{
+					_imageView.Dispose();
+					_imageView = null;
+				}
 				if (_imageViewContainer != null)
 				{
 					_imageViewContainer.Dispose();
@@ -153,14 +234,10 @@ namespace ItExpert
 
         private void AddCellElements(UIView cellContentView)
         {
-            cellContentView.Add (_isReadedButton);
-            cellContentView.Add (_headerTextView);
-            cellContentView.Add (_previewTextView);
-			if (_imageViewContainer != null)
-			{
-				cellContentView.Add(_imageViewContainer);
-			}
-            _isReadedButton.BringSubviewToFront(cellContentView);
+			var frame = cellContentView.Frame;
+			var portalView = new PortalView(frame, _imageViewContainer, _imageView, _previewTextView, 
+				                 _headerTextView, _isReadedButton, _isReadedButtonImageView, OnReadedButtonTouchUpInside);
+			cellContentView.Add(portalView);
         }
 
 		private void UpdateTextView(UITextView textViewToUpdate, float updatedTextViewWidth, UIFont font, UIColor foregroundColor, string updatedText, PointF updatedTextViewLocation, UIView imageView = null)
@@ -232,6 +309,58 @@ namespace ItExpert
 		private UITextView _headerTextView;
         private UIButton _isReadedButton;
         private UIImageView _isReadedButtonImageView;
+	}
+
+	public class PortalView : UIView, ICleanupObject
+	{
+		private UIView _imageViewContainer;
+		private UIImageView _imageView;
+		private UITextView _previewTextView;
+		private UITextView _headerTextView;
+		private UIButton _isReadedButton;
+		private UIImageView _isReadedButtonImageView;
+		private EventHandler _isReadedButtonTouchUp;
+
+		public PortalView(RectangleF frame, UIView imageViewContainer, UIImageView imageView,
+			UITextView previewTextView, UITextView headerTextView, UIButton isReadedButton,
+			UIImageView isReadedButtonImageView, EventHandler isReadedButtonTouchUp): base(frame)
+		{
+			_imageViewContainer = imageViewContainer;
+			_imageView = imageView;
+			_previewTextView = previewTextView;
+			_headerTextView = headerTextView;
+			_isReadedButton = isReadedButton;
+			_isReadedButtonImageView = isReadedButtonImageView;
+			_isReadedButtonTouchUp = isReadedButtonTouchUp;
+			_isReadedButton.TouchUpInside += _isReadedButtonTouchUp;
+			Add (_isReadedButton);
+			Add (_headerTextView);
+			Add (_previewTextView);
+			if (_imageViewContainer != null)
+			{
+				Add(_imageViewContainer);
+			}
+			BringSubviewToFront(_isReadedButton);
+		}
+
+		public void CleanUp()
+		{
+			foreach (var view in Subviews)
+			{
+				view.RemoveFromSuperview();
+			}
+			if (_isReadedButton != null)
+			{
+				_isReadedButton.TouchUpInside -= _isReadedButtonTouchUp;
+			}
+			_imageViewContainer = null;
+			_imageView = null;
+			_previewTextView = null;
+			_headerTextView = null;
+			_isReadedButton = null;
+			_isReadedButtonImageView = null;
+			_isReadedButtonTouchUp = null;
+		}
 	}
 }
 

@@ -79,24 +79,18 @@ namespace ItExpert
 			}
 			if (_titleTextView != null)
 			{
+				_titleTextView.RemoveFromSuperview();
 				_titleTextView.Dispose();
 			}
 			if (_chekedImageView != null)
 			{
+				_chekedImageView.RemoveFromSuperview();
 				_chekedImageView.Dispose();
 			}
 			_checkedImage = null;
 			_uncheckedImage = null;
 			_titleTextView = null;
 			_chekedImageView = null;
-			if (GestureRecognizers != null)
-			{
-				foreach (var gr in GestureRecognizers)
-				{
-					gr.Dispose();
-				}
-			}
-			GestureRecognizers = new UIGestureRecognizer[0];
 		}
 
         private UIImage _checkedImage;

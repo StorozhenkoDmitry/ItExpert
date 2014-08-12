@@ -5,6 +5,9 @@ using System.Linq;
 using ItExpert.Model;
 using ItExpert.Enum;
 using System.Text;
+using ItExpert.ServiceLayer;
+using BigTed;
+using System.Threading;
 
 namespace ItExpert
 {
@@ -31,6 +34,8 @@ namespace ItExpert
 		private UIWebView _articleTextWebView;
 		private UIView _splashScreen;
 		private UITextView _titleTextView;
+		private UIView _sectionWrapper;
+		private UIView _authorWrapper;
 
 		#endregion
 
@@ -66,10 +71,169 @@ namespace ItExpert
 			base.DidRotate(fromInterfaceOrientation);
 			_initalFrame = View.Frame;
 			_maxWidth = _initalFrame.Width - _padding.Left - _padding.Right;
+			if (_articleTextWebView != null)
+			{
+				if (_articleTextWebView.Delegate != null)
+				{
+					var del = _articleTextWebView.Delegate as WebViewDelegate;
+					if (del != null)
+					{
+						del.WebViewLoaded -= OnWebViewLoaded;
+					}
+					_articleTextWebView.Delegate.Dispose();
+				}
+			}
+			if (_authorWrapper != null)
+			{
+				if (_authorWrapper.GestureRecognizers != null)
+				{
+					foreach (var gr in _authorWrapper.GestureRecognizers)
+					{
+						gr.Dispose();
+					}
+				}
+			}
+			if (_sectionWrapper != null)
+			{
+				if (_sectionWrapper.GestureRecognizers != null)
+				{
+					foreach (var gr in _sectionWrapper.GestureRecognizers)
+					{
+						gr.Dispose();
+					}
+				}
+			}
 			ItExpertHelper.RemoveSubviews(View);
 			_splashScreen.Dispose();
 			_splashScreen = null;
 			UpdateScreen();
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			InvokeOnMainThread(() =>
+			{
+				ApplicationWorker.RemoteWorker.ArticleDetailGetted -= OnArticleDetailGetted;
+				ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted -= OnMagazineArticleDetailGetted;
+
+				if (_articleTextWebView != null)
+				{
+					_articleTextWebView.RemoveFromSuperview();
+					if (_articleTextWebView.Delegate != null)
+					{
+						var del = _articleTextWebView.Delegate as WebViewDelegate;
+						if (del != null)
+						{
+							del.WebViewLoaded -= OnWebViewLoaded;
+						}
+						_articleTextWebView.Delegate.Dispose();
+					}
+					_articleTextWebView.Dispose();
+				}
+				_articleTextWebView = null;
+
+				if (_articleAuthorView != null)
+				{
+					_articleAuthorView.RemoveFromSuperview();
+					_articleAuthorView.Dispose();
+				}
+				_articleAuthorView = null;
+
+				if (_articleSectionView != null)
+				{
+					_articleSectionView.RemoveFromSuperview();
+					_articleSectionView.Dispose();
+				}
+				_articleSectionView = null;
+
+				if (_authorWrapper != null)
+				{
+					_authorWrapper.RemoveFromSuperview();
+					if (_authorWrapper.GestureRecognizers != null)
+					{
+						foreach (var gr in _authorWrapper.GestureRecognizers)
+						{
+							gr.Dispose();
+						}
+					}
+					_authorWrapper.Dispose();
+				}
+				_authorWrapper = null;
+
+				if (_sectionWrapper != null)
+				{
+					_sectionWrapper.RemoveFromSuperview();
+					if (_sectionWrapper.GestureRecognizers != null)
+					{
+						foreach (var gr in _sectionWrapper.GestureRecognizers)
+						{
+							gr.Dispose();
+						}
+					}
+					_sectionWrapper.Dispose();
+				}
+				_sectionWrapper = null;
+
+				if (_articleHeaderView != null)
+				{
+					_articleHeaderView.RemoveFromSuperview();
+					_articleHeaderView.Dispose();
+				}
+				_articleHeaderView = null;
+
+				if (_titleTextView != null)
+				{
+					_titleTextView.RemoveFromSuperview();
+					_titleTextView.Dispose();
+				}
+				_titleTextView = null;
+
+				if (_splashScreen != null)
+				{
+					_splashScreen.RemoveFromSuperview();
+					_splashScreen.Dispose();
+				}
+				_splashScreen = null;
+
+				if (_articleImageView != null)
+				{
+					_articleImageView.RemoveFromSuperview();
+					if (_articleImageView.Image != null)
+					{
+						_articleImageView.Image.Dispose();
+						_articleImageView.Image = null;
+					}
+					_articleImageView.Dispose();
+				}
+				_articleImageView = null;
+
+				if (_articleAwardImageView != null)
+				{
+					_articleAwardImageView.RemoveFromSuperview();
+					if (_articleAwardImageView.Image != null)
+					{
+						_articleAwardImageView.Image.Dispose();
+						_articleAwardImageView.Image = null;
+					}
+					_articleAwardImageView.Dispose();
+				}
+				_articleAwardImageView = null;
+
+				if (_articleImagesContainer != null)
+				{
+					_articleImagesContainer.RemoveFromSuperview();
+					_articleImagesContainer.Dispose();
+				}
+				_articleImagesContainer = null;
+
+				if (_scrollView != null)
+				{
+					_scrollView.RemoveFromSuperview();
+					_scrollView.Dispose();
+				}
+				_scrollView = null;
+			});
 		}
 
 		void Initialize()
@@ -138,10 +302,141 @@ namespace ItExpert
 			}
 			else
 			{
+				GetArticleFromServer(_article);
+			}
+		}
+
+		#endregion
+
+		#region Worked with server
+
+		public void GetArticleFromServer(Article article)
+		{
+			if (!ApplicationWorker.Settings.OfflineMode)
+			{
+				var connectAccept = IsConnectionAccept();
+				if (!connectAccept)
+				{
+					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
+					return;
+				}
+				ApplicationWorker.RemoteWorker.ArticleDetailGetted -= OnArticleDetailGetted;
+				ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted -= OnMagazineArticleDetailGetted;
+				ApplicationWorker.RemoteWorker.Abort();
+				_article = article;
+				if (_article.ArticleType == ArticleType.Portal)
+				{
+					ApplicationWorker.RemoteWorker.ArticleDetailGetted += OnArticleDetailGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetArticleDetail(ApplicationWorker.Settings, -1,
+							-1,
+							_article.Id));
+				}
+				if (_article.ArticleType == ArticleType.Magazine)
+				{
+					ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted += OnMagazineArticleDetailGetted;
+					ThreadPool.QueueUserWorkItem(
+						state =>
+						ApplicationWorker.RemoteWorker.BeginGetMagazineArticleDetail(
+							ApplicationWorker.Settings, -1, -1, _article.Id));
+				}
+			}
+			else
+			{
 				if (_parent != null)
 				{
-					_parent.GetArticleFromServer(_article);
+					_parent.ArticleDetailTextNotAvailable(article);
+					return;
 				}
+			}
+		}
+
+		private void OnMagazineArticleDetailGetted(object sender, MagazineArticleDetailEventArgs e)
+		{
+			ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted -= OnMagazineArticleDetailGetted;
+			if (e.Abort)
+			{
+				return;
+			}
+			var error = e.Error;
+			if (!error)
+			{
+				var article = e.Article;
+				if (article != null)
+				{
+					article.IsReaded = true;
+					if (_article != null)
+					{
+						_article.DetailText = article.DetailText;
+						_article.IsReaded = article.IsReaded;
+						_article.Authors = article.Authors;
+						_article.AuthorsId = article.AuthorsId;
+						_article.Video = article.Video;
+						if (ApplicationWorker.Settings.LoadImages && article.DetailPicture != null)
+						{
+							_article.DetailPicture = article.DetailPicture;
+						}
+						if (article.AwardsPicture != null)
+						{
+							_article.AwardsPicture = article.AwardsPicture;
+						}
+						ThreadPool.QueueUserWorkItem(state => SaveArticle(_article));
+					}
+					else
+					{
+						_article = article;
+					}
+					InvokeOnMainThread(() => UpdateScreen());
+				}
+			}
+			else
+			{
+				InvokeOnMainThread(() => BTProgressHUD.ShowToast("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500));
+			}
+		}
+
+		private void OnArticleDetailGetted(object sender, ArticleDetailEventArgs e)
+		{
+			ApplicationWorker.RemoteWorker.ArticleDetailGetted -= OnArticleDetailGetted;
+			if (e.Abort)
+			{
+				return;
+			}
+			var error = e.Error;
+			if (!error)
+			{
+				var article = e.Article;
+				if (article != null)
+				{
+					article.IsReaded = true;
+					if (_article != null)
+					{
+						_article.DetailText = article.DetailText;
+						_article.IsReaded = article.IsReaded;
+						_article.Authors = article.Authors;
+						_article.AuthorsId = article.AuthorsId;
+						_article.Video = article.Video;
+						if (ApplicationWorker.Settings.LoadImages && article.DetailPicture != null)
+						{
+							_article.DetailPicture = article.DetailPicture;
+						}
+						if (article.AwardsPicture != null)
+						{
+							_article.AwardsPicture = article.AwardsPicture;
+						}
+						ThreadPool.QueueUserWorkItem(state => SaveArticle(_article));
+					}
+					else
+					{
+						_article = article;
+					}
+					InvokeOnMainThread(() => UpdateScreen());
+				}
+			}
+			else
+			{
+				InvokeOnMainThread(() => BTProgressHUD.ShowToast("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500));
 			}
 		}
 
@@ -154,12 +449,6 @@ namespace ItExpert
 			return _article.Id;
 		}
 
-		public void SetArticle(Article article)
-		{
-			_article = article;
-			UpdateScreen();
-		}
-
 		private void ShowSplash(bool isVisible)
 		{
 			if (_splashScreen == null)
@@ -170,7 +459,7 @@ namespace ItExpert
 					UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize), 
 					ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor())), _initalFrame.Width, 
 					new PointF(0, 0));
-
+				_titleTextView.BackgroundColor = UIColor.Clear;
 				_titleTextView.Frame = new RectangleF(_initalFrame.Width / 2 - _titleTextView.Frame.Width / 2, 150, _titleTextView.Frame.Width, _titleTextView.Frame.Height);
 
 				_splashScreen.Add(_titleTextView);
@@ -192,6 +481,10 @@ namespace ItExpert
 		private void UpdateScreen()
 		{
 			ApplicationWorker.SharedArticle = _article;
+			if (_parent != null)
+			{
+				_parent.SetArticle(_article);
+			}
 			var article = _article;
 			if (string.IsNullOrWhiteSpace(article.DetailText))
 			{
@@ -304,9 +597,13 @@ namespace ItExpert
 				_articleSectionView = ItExpertHelper.GetTextView(
 					ItExpertHelper.GetAttributedString(section, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true),
 					_maxWidth, new PointF(0, 4));
-				var viewWrapper = new UIView(new RectangleF(new PointF(_padding.Left, top), new SizeF(_articleSectionView.Frame.Width, _articleSectionView.Frame.Height + 8)));
-				viewWrapper.Add(_articleSectionView);
-				viewWrapper.UserInteractionEnabled = true;
+				_articleSectionView.BackgroundColor = UIColor.Clear;
+
+				_sectionWrapper = new UIView(new RectangleF(new PointF(_padding.Left, top), new SizeF(_articleSectionView.Frame.Width, _articleSectionView.Frame.Height + 8)));
+				_sectionWrapper.BackgroundColor = UIColor.Clear;
+				_sectionWrapper.Add(_articleSectionView);
+				_sectionWrapper.UserInteractionEnabled = true;
+
 				UITapGestureRecognizer tap = new UITapGestureRecognizer(() =>
 				{
 					if (_parent != null)
@@ -316,10 +613,10 @@ namespace ItExpert
 					}
 				});
 
-				viewWrapper.AddGestureRecognizer (tap);
-				_scrollView.Add(viewWrapper);
+				_sectionWrapper.AddGestureRecognizer (tap);
+				_scrollView.Add(_sectionWrapper);
 
-				return viewWrapper.Frame.Bottom + _padding.Bottom;
+				return _sectionWrapper.Frame.Bottom + _padding.Bottom;
 			}
 
 			return top;
@@ -388,7 +685,7 @@ namespace ItExpert
 				_articleHeaderView = ItExpertHelper.GetTextView(
 					ItExpertHelper.GetAttributedString(_article.Name, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), 
 						ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor())), _maxWidth, new PointF(_padding.Left, top));
-
+				_articleHeaderView.BackgroundColor = UIColor.Clear;
 				_scrollView.Add(_articleHeaderView);
 
 				return _articleHeaderView.Frame.Bottom + _padding.Bottom;
@@ -404,10 +701,13 @@ namespace ItExpert
 				_articleAuthorView = ItExpertHelper.GetTextView(
 					ItExpertHelper.GetAttributedString(author, UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.DetailHeaderSize), UIColor.Blue, true),
 					_maxWidth, new PointF(0, 4));
-				var viewWrapper = new UIView(new RectangleF(new PointF(_padding.Left, top), new SizeF(_articleAuthorView.Frame.Width, _articleAuthorView.Frame.Height + 8)));
-				viewWrapper.Add(_articleAuthorView);
+				_articleAuthorView.BackgroundColor = UIColor.Clear;
 
-				viewWrapper.UserInteractionEnabled = true;
+				_authorWrapper = new UIView(new RectangleF(new PointF(_padding.Left, top), new SizeF(_articleAuthorView.Frame.Width, _articleAuthorView.Frame.Height + 8)));
+				_authorWrapper.BackgroundColor = UIColor.Clear;
+				_authorWrapper.Add(_articleAuthorView);
+
+				_authorWrapper.UserInteractionEnabled = true;
 
 				UITapGestureRecognizer tap = new UITapGestureRecognizer (() =>
 				{
@@ -418,10 +718,10 @@ namespace ItExpert
 					}
 				});
 
-				viewWrapper.AddGestureRecognizer (tap);
-				_scrollView.Add(viewWrapper);
+				_authorWrapper.AddGestureRecognizer (tap);
+				_scrollView.Add(_authorWrapper);
 
-				return viewWrapper.Frame.Bottom + _padding.Bottom;
+				return _authorWrapper.Frame.Bottom + _padding.Bottom;
 			}
 
 			return top;
@@ -461,6 +761,92 @@ namespace ItExpert
 		private void OnWebViewLoaded(object sender, EventArgs e)
 		{
 			_scrollView.ContentSize = new SizeF(_maxWidth, _articleTextWebView.Frame.Bottom);
+		}
+
+		private void SaveArticle(Article article)
+		{
+			var pictures = ApplicationWorker.Db.GetPicturesForParent(article.Id);
+			if (pictures != null && pictures.Any())
+			{
+				var detailPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Detail);
+				if (detailPicture != null)
+				{
+					ApplicationWorker.Db.DeletePicture(detailPicture.Id);
+				}
+				var awardsPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Awards);
+				if (awardsPicture != null)
+				{
+					ApplicationWorker.Db.DeletePicture(awardsPicture.Id);
+				}
+				var previewPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Preview);
+				if (previewPicture != null)
+				{
+					ApplicationWorker.Db.DeletePicture(previewPicture.Id);
+				}
+			}
+			if (article.DetailPicture != null)
+			{
+				ApplicationWorker.Db.InsertPicture(article.DetailPicture);
+			}
+			if (article.AwardsPicture != null)
+			{
+				ApplicationWorker.Db.InsertPicture(article.AwardsPicture);
+			}
+			if (article.PreviewPicture != null)
+			{
+				ApplicationWorker.Db.InsertPicture(article.PreviewPicture);
+			}
+			var authors = article.Authors;
+			if (authors != null && authors.Any())
+			{
+				foreach (var author in authors)
+				{
+					var dbAuthor = ApplicationWorker.Db.GetAuthor(author.Id);
+					if (dbAuthor == null)
+					{
+						ApplicationWorker.Db.InsertAuthor(author);
+					}
+				}
+			}
+			var rubrics = article.Rubrics;
+			if (rubrics != null && rubrics.Any())
+			{
+				foreach (var rubric in rubrics)
+				{
+					var dbRubric = ApplicationWorker.Db.GetRubric(rubric.Id);
+					if (dbRubric == null)
+					{
+						ApplicationWorker.Db.InsertRubric(rubric);
+					}
+				}
+			}
+			ApplicationWorker.Db.DeleteItemSectionsForArticle(article.Id);
+			if (article.Sections != null && article.Sections.Any())
+			{
+				ApplicationWorker.Db.InsertItemSections(article.Sections);
+			}
+			ApplicationWorker.Db.InsertArticle(article);
+		}
+
+		private bool IsConnectionAccept()
+		{
+			var result = true;
+			var internetStatus = Reachability.InternetConnectionStatus();
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.WiFi)
+			{
+				if (internetStatus != NetworkStatus.ReachableViaWiFiNetwork)
+				{
+					result = false;
+				}
+			}
+			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.All)
+			{
+				if (internetStatus == NetworkStatus.NotReachable)
+				{
+					result = false;
+				}
+			}
+			return result;
 		}
 
 		#endregion

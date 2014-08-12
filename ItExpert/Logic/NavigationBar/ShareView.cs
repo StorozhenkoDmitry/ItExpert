@@ -20,6 +20,7 @@ using Evernote.EDAM.Type;
 using System.Security.Cryptography;
 using Evernote.EDAM.Error;
 using System.Net;
+using System.Linq;
 
 namespace ItExpert
 {
@@ -60,6 +61,189 @@ namespace ItExpert
 
                 AddPutAsideButtons();
             }
+
+			protected override void Dispose(bool disposing)
+			{
+				base.Dispose(disposing);
+				if (_shareTextView != null)
+				{
+					_shareTextView.RemoveFromSuperview();
+					_shareTextView.Dispose();
+				}
+				_shareTextView = null;
+
+				if (_putAsideTextView != null)
+				{
+					_putAsideTextView.RemoveFromSuperview();
+					_putAsideTextView.Dispose();
+				}
+				_putAsideTextView = null;
+
+				if (_emailButton != null)
+				{
+					_emailButton.RemoveFromSuperview();
+					if (_emailButton.GestureRecognizers != null)
+					{
+						foreach (var gr in _emailButton.GestureRecognizers)
+						{
+							gr.Dispose();
+						}
+					}
+					var subViews = _emailButton.Subviews;
+					if (subViews != null)
+					{
+						foreach (var view in subViews)
+						{
+							var image = view as UIImageView;
+							if (image != null)
+							{
+								if (image.Image != null)
+								{
+									image.Image.Dispose();
+									image.Image = null;
+								}
+							}
+							view.RemoveFromSuperview();
+							view.Dispose();
+						}
+					}
+					_emailButton.Dispose();
+				}
+				_emailButton = null;
+
+				if (_shareButtons != null)
+				{
+					for (int i = 0; i < _shareButtons.Count(); i++)
+					{
+						var button = _shareButtons[i];
+						var subViews = button.Subviews;
+						foreach (var view in subViews)
+						{
+							view.RemoveFromSuperview();
+							var but = view as UIButton;
+							if (but != null)
+							{
+								if (but.ImageView != null && but.ImageView.Image != null)
+								{
+									but.ImageView.Image.Dispose();
+									but.ImageView.Image = null;
+								}
+							}
+							view.Dispose();
+						}
+
+						switch (i)
+						{
+							case 0:
+								button.TouchUpInside -= _shareFacebook;
+								break;
+							case 1:
+								button.TouchUpInside -= _shareVk;
+								break;
+							case 2:
+								button.TouchUpInside -= _shareTwitter;
+								break;
+							case 3:
+								button.TouchUpInside -= _shareGooglePlus;
+								break;
+							case 4:
+								button.TouchUpInside -= _shareLinkedIn;
+								break;
+						}
+						button.RemoveFromSuperview();
+						button.Dispose();
+					}
+					_shareButtons.Clear();
+				}
+				_shareButtons = null;
+
+				if (_shareButtonsContainer != null)
+				{
+					_shareButtonsContainer.RemoveFromSuperview();
+					_shareButtonsContainer.Dispose();
+				}
+				_shareButtonsContainer = null;
+
+				if (_favImageView != null)
+				{
+					_favImageView.RemoveFromSuperview();
+					if (_favImageView.Image != null)
+					{
+						_favImageView.Image.Dispose();
+						_favImageView.Image = null;
+					}
+					_favImageView.Dispose();
+				}
+				_favImageView = null;
+
+				if (_favoriteButton != null)
+				{
+					_favoriteButton.RemoveFromSuperview();
+					if (_favoriteButton.GestureRecognizers != null)
+					{
+						foreach (var gr in _favoriteButton.GestureRecognizers)
+						{
+							gr.Dispose();
+						}
+					}
+					_favoriteButton.Dispose();
+				}
+				_favoriteButton = null;
+
+				if (_putAsideButtons != null)
+				{
+					for (int i = 0; i < _putAsideButtons.Count(); i++)
+					{
+						var button = _putAsideButtons[i];
+						var subViews = button.Subviews;
+						foreach (var view in subViews)
+						{
+							view.RemoveFromSuperview();
+							var but = view as UIButton;
+							if (but != null)
+							{
+								if (but.ImageView != null && but.ImageView.Image != null)
+								{
+									but.ImageView.Image.Dispose();
+									but.ImageView.Image = null;
+								}
+							}
+							view.Dispose();
+						}
+
+						switch (i)
+						{
+							case 0:
+								button.TouchUpInside -= _evernoteClick;
+								break;
+							case 1:
+								button.TouchUpInside -= _readabilityClick;
+								break;
+							case 2:
+								button.TouchUpInside -= _pocketClick;
+								break;
+							case 3:
+								button.TouchUpInside -= _instapaperClick;
+								break;
+						}
+						button.RemoveFromSuperview();
+						button.Dispose();
+					}
+					_putAsideButtons.Clear();
+				}
+				_putAsideButtons = null;
+
+				if (_putAsideButtonsContainer != null)
+				{
+					_putAsideButtonsContainer.RemoveFromSuperview();
+					_putAsideButtonsContainer.Dispose();
+				}
+				_putAsideButtonsContainer = null;
+
+				_parent = null;
+				_navigationController = null;
+				OAuthResult = null;
+			}
 
             public override void Draw(RectangleF rect)
             {
@@ -146,13 +330,40 @@ namespace ItExpert
 				_parent.PresentViewController(mailController, true, null);
 			}
 
+			private EventHandler _shareFacebook;
+			private EventHandler _shareVk;
+			private EventHandler _shareTwitter;
+			private EventHandler _shareGooglePlus;
+			private EventHandler _shareLinkedIn;
+
             private void AddShareButtons()
             {
                 int buttonsCount = 5;
 
                 _shareButtons = new List<UIButton>(buttonsCount);
-				var actions = new Action[] { ShareFacebook, ShareVk, ShareTwitter, ShareGooglePlus, ShareLinkedIn };
+
                 _shareButtonsContainer = new UIView();
+
+				_shareFacebook = (o, s) =>
+				{
+					ShareFacebook();
+				};
+				_shareVk = (o, s) =>
+				{
+					ShareVk();
+				};
+				_shareTwitter = (o, s) =>
+				{
+					ShareTwitter();
+				};
+				_shareGooglePlus = (o, s) =>
+				{
+					ShareGooglePlus();
+				};
+				_shareLinkedIn = (o, s) =>
+				{
+					ShareLinkedIn();
+				};
 
                 SizeF contentSize = new SizeF();
 
@@ -175,8 +386,25 @@ namespace ItExpert
                     contentSize.Width += _shareButtons[i].Frame.Width + buttonsOffset;
 
                     _shareButtonsContainer.Add(_shareButtons[i]);
-					var action = actions[i];
-					_shareButtons[i].TouchUpInside += (sender, e) => action();
+
+					switch (i)
+					{
+						case 0:
+							_shareButtons[i].TouchUpInside += _shareFacebook;
+							break;
+						case 1:
+							_shareButtons[i].TouchUpInside += _shareVk;
+							break;
+						case 2:
+							_shareButtons[i].TouchUpInside += _shareTwitter;
+							break;
+						case 3:
+							_shareButtons[i].TouchUpInside += _shareGooglePlus;
+							break;
+						case 4:
+							_shareButtons[i].TouchUpInside += _shareLinkedIn;
+							break;
+					}
                 }
 
                 contentSize.Width -= buttonsOffset;
@@ -385,6 +613,11 @@ namespace ItExpert
 				SetFavoriteButtonState(newState);
 			}
 
+			private EventHandler _evernoteClick;
+			private EventHandler _readabilityClick;
+			private EventHandler _pocketClick;
+			private EventHandler _instapaperClick;
+
             public void AddPutAsideButtons()
             {
                 int buttonsCount = 4;
@@ -392,8 +625,13 @@ namespace ItExpert
                 _putAsideButtons = new List<UIButton>(buttonsCount);
 
                 _putAsideButtonsContainer = new UIView();
-				var actions = new Action[] { ButEvernoteOnClick, ButReadabilityOnClick, ButPocketOnClick, ButInstapaperOnClick };
+
                 SizeF contentSize = new SizeF();
+
+				_evernoteClick = (o, s) => ButEvernoteOnClick();
+				_readabilityClick = (o, s) => ButReadabilityOnClick();
+				_pocketClick = (o, s) => ButPocketOnClick();
+				_instapaperClick = (o, s) => ButInstapaperOnClick();
 
                 float buttonsOffset = 20;
 
@@ -414,8 +652,23 @@ namespace ItExpert
                     contentSize.Width += _putAsideButtons[i].Frame.Width + buttonsOffset;
 
                     _putAsideButtonsContainer.Add(_putAsideButtons[i]);
-					var action = actions[i];
-					_putAsideButtons[i].TouchUpInside += (sender, e) => action();
+
+					switch (i)
+					{
+						case 0:
+							_putAsideButtons[i].TouchUpInside += _evernoteClick;
+							break;
+						case 1:
+							_putAsideButtons[i].TouchUpInside += _readabilityClick;
+							break;
+						case 2:
+							_putAsideButtons[i].TouchUpInside += _pocketClick;
+							break;
+						case 3:
+							_putAsideButtons[i].TouchUpInside += _instapaperClick;
+							break;
+					}
+
                 }
 
                 contentSize.Width -= buttonsOffset;
@@ -713,7 +966,7 @@ namespace ItExpert
 
 			private void ShareEvernote(string url, string token)
 			{
-				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500);
+				InvokeOnMainThread(()=> BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500));
 				Action action = () =>
 				{
 					var result = AddEveronteNote(url, token);
@@ -729,7 +982,7 @@ namespace ItExpert
 
 			private void ShareReadability(string token, string tokenSecret)
 			{
-				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500);
+				InvokeOnMainThread(()=> BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500));
 				Action action = () =>
 				{
 					var result = AddReadabilityNote(token, tokenSecret);
@@ -745,7 +998,7 @@ namespace ItExpert
 
 			private void SharePocket(string token)
 			{
-				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500);
+				InvokeOnMainThread(()=> BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500));
 				Action action = () =>
 				{
 					var result = AddPocketNote(token);
@@ -761,7 +1014,7 @@ namespace ItExpert
 
 			private void ShareInstapaper(string username, string password)
 			{
-				BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500);
+				InvokeOnMainThread(()=> BTProgressHUD.ShowToast("Добавление записи...", ProgressHUD.MaskType.None, false, 2500));
 				Action action = () =>
 				{
 					var result = AddInstapaperNote(username, password);
@@ -769,8 +1022,11 @@ namespace ItExpert
 					if (!result.IsComplete && result.IsAuthError)
 					{
 						_toInstapaperAuth = true;
-						var authController = new InstapaperLoginViewController(this);
-						_parent.PresentViewController(authController, true, null);
+						InvokeOnMainThread(() =>
+						{
+							var authController = new InstapaperLoginViewController(this);
+							_parent.PresentViewController(authController, true, null);
+						});
 					}
 				};
 				ThreadPool.QueueUserWorkItem(state => action());
@@ -1278,6 +1534,66 @@ namespace ItExpert
 
         public event EventHandler TapOutsideTableView;
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+
+			if (_tapableView != null)
+			{
+				_tapableView.RemoveFromSuperview();
+				if (_tapableView.GestureRecognizers != null)
+				{
+					foreach (var gr in _tapableView.GestureRecognizers)
+					{
+						gr.Dispose();
+					}
+				}
+				_tapableView.Dispose();
+			}
+			_tapableView = null;
+
+			if (_viewWithButtons != null)
+			{
+				_viewWithButtons.RemoveFromSuperview();
+				_viewWithButtons.Dispose();
+			}
+			_viewWithButtons = null;
+
+			if (_backButton != null)
+			{
+				_backButton.TouchUpInside -= BackButtonTouchUpInside;
+				if (_backButton.ImageView != null && _backButton.ImageView.Image != null)
+				{
+					_backButton.ImageView.Image.Dispose();
+					_backButton.ImageView.Image = null;
+				}
+				_backButton.RemoveFromSuperview();
+				_backButton.Dispose();
+			}
+			_backButton = null;
+
+			if (_logoImageView != null)
+			{
+				if (_logoImageView.Image != null)
+				{
+					_logoImageView.Image.Dispose();
+					_logoImageView.Image = null;
+				}
+				_logoImageView.RemoveFromSuperview();
+				_logoImageView.Dispose();
+			}
+			_logoImageView = null;
+
+			if (_headerView != null)
+			{
+				_headerView.RemoveFromSuperview();
+				_headerView.Dispose();
+			}
+			_headerView = null;
+
+			_navigationController = null;
+		}
+
         public override void ViewDidLoad()
         {
             base.ViewDidLoad();
@@ -1344,7 +1660,7 @@ namespace ItExpert
             _backButton = new UIButton(new RectangleF(new PointF(10, _headerView.Frame.Height / 2 - image.Size.Height / 2), image.Size));
 
             _backButton.SetImage(image, UIControlState.Normal);
-            _backButton.TouchUpInside += (sender, e) => OnTapOutsideTableView();
+			_backButton.TouchUpInside += BackButtonTouchUpInside;
 
             _headerView.Add(_backButton);
 
@@ -1357,6 +1673,11 @@ namespace ItExpert
 
             View.Add(_headerView);
         }
+
+		void BackButtonTouchUpInside(object sender, EventArgs e)
+		{
+			OnTapOutsideTableView();
+		}
 
         private void AddTapView()
         {

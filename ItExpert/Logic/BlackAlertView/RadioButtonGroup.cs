@@ -88,14 +88,12 @@ namespace ItExpert
 			{
 				foreach (var button in _buttons)
 				{
+					button.RemoveFromSuperview();
 					button.Dispose();
 				}
+				_buttons.Clear();
 			}
 			_buttons = null;
-			if (_checkedButton != null)
-			{
-				_checkedButton.Dispose();
-			}
 			_checkedButton = null;
 		}
 

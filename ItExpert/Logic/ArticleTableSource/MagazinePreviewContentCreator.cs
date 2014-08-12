@@ -10,19 +10,75 @@ namespace ItExpert
     {
         public override float GetContentHeight(UIView cellContentView, Article article)
         {
-            UIImage image = ItExpertHelper.GetImageFromBase64String(ApplicationWorker.Magazine.PreviewPicture.Data);
-
-            return image.Size.Height + _padding.Top + _padding.Bottom;
+			UIImage image = null;
+			if (ApplicationWorker.Magazine.PreviewPicture != null && !String.IsNullOrWhiteSpace(ApplicationWorker.Magazine.PreviewPicture.Data))
+			{
+				image = ItExpertHelper.GetImageFromBase64String(ApplicationWorker.Magazine.PreviewPicture.Data);
+			}
+			else
+			{
+				image = UIImage.FromFile("MagazineSplash.png");
+			}
+			var height = image.Size.Height + _padding.Top + _padding.Bottom;
+			image.Dispose();
+			return height;
         }
+
+		public override void Dispose()
+		{
+			base.Dispose();
+			if (_button != null)
+			{
+				_button.RemoveFromSuperview();
+				_button.TouchUpInside -= OnButtonPush;
+				_button.Dispose();
+			}
+			if (_deleteButton != null)
+			{
+				_deleteButton.RemoveFromSuperview();
+				_deleteButton.TouchUpInside -= OnDeleteButtonPush;
+				_deleteButton.Dispose();
+			}
+			if (_progress != null)
+			{
+				_progress.RemoveFromSuperview();
+				_progress.Dispose();
+			}
+			if (_imageView != null)
+			{
+				_imageView.RemoveFromSuperview();
+				if (_imageView.Image != null)
+				{
+					_imageView.Image.Dispose();
+					_imageView.Image = null;
+				}
+				_imageView.Dispose();
+			}
+			if (_headerTextView != null)
+			{
+				_headerTextView.RemoveFromSuperview();
+				_headerTextView.Dispose();
+			}
+
+			_progress = null;
+			_imageView = null;
+			_headerTextView = null;
+			_button = null;
+			_deleteButton = null;
+		}
 
         protected override void Create(UITableViewCell cell, Article article)
         {
             cell.ContentView.BackgroundColor = UIColor.Black;
 
-            AddImageView(cell);
-            AddHeader(cell);
-            AddButton(cell);
-			AddProgress (cell);
+			var frame = cell.ContentView.Frame;
+			var magazineView = new MagazinePreviewView(frame);
+			AddImageView(magazineView);
+			AddHeader(magazineView);
+			AddButton(magazineView);
+			AddProgress (magazineView);
+			cell.ContentView.Add(magazineView);
+
 			if (MagazineViewController.Current.IsLoadingPdf)
 			{
 				_progress.StartAnimating ();
@@ -39,10 +95,14 @@ namespace ItExpert
         {
             cell.ContentView.BackgroundColor = UIColor.Black;
 
-            AddImageView(cell);
-            AddHeader(cell);
-            AddButton(cell);
-			AddProgress (cell);
+			var frame = cell.ContentView.Frame;
+			var magazineView = new MagazinePreviewView(frame);
+			AddImageView(magazineView);
+			AddHeader(magazineView);
+			AddButton(magazineView);
+			AddProgress (magazineView);
+			cell.ContentView.Add(magazineView);
+
 			if (MagazineViewController.Current.IsLoadingPdf)
 			{
 				_progress.StartAnimating ();
@@ -55,7 +115,7 @@ namespace ItExpert
 			}
         }
 
-        private void AddImageView(UITableViewCell cell)
+        private void AddImageView(MagazinePreviewView cell)
         {
 			UIImage image = null;
 
@@ -72,14 +132,18 @@ namespace ItExpert
             {
                 _imageView = new UIImageView();
             }
-
+			if (_imageView.Image != null)
+			{
+				_imageView.Image.Dispose();
+				_imageView.Image = null;
+			}
             _imageView.Frame = new RectangleF(_padding.Left, _padding.Top, image.Size.Width, image.Size.Height);
             _imageView.Image = image;
 
-            cell.ContentView.Add(_imageView);
+            cell.AddImageView(_imageView);
         }
 
-        private void AddHeader(UITableViewCell cell)
+		private void AddHeader(MagazinePreviewView cell)
         {
             _leftHeaderOffset = 30;
 
@@ -92,14 +156,14 @@ namespace ItExpert
 			}
 
             _headerTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(ApplicationWorker.Magazine.Name, UIFont.BoldSystemFontOfSize(16), 
-                UIColor.FromRGB(160, 160, 160)), cell.ContentView.Frame.Width, new PointF(headerX, _padding.Top * 2));
+                UIColor.FromRGB(160, 160, 160)), cell.Frame.Width, new PointF(headerX, _padding.Top * 2));
 
             _headerTextView.BackgroundColor = UIColor.Clear;
 
-            cell.ContentView.Add(_headerTextView);
+            cell.AddHeaderView(_headerTextView);
         }
 
-        private void AddButton(UITableViewCell cell)
+		private void AddButton(MagazinePreviewView cell)
         {
             if (_button == null)
             {
@@ -117,12 +181,11 @@ namespace ItExpert
                 _button.Font = UIFont.SystemFontOfSize(16);
                 _button.BackgroundColor = UIColor.FromRGB(30, 30, 30);
                 _button.Layer.CornerRadius = 3;
-                _button.TouchUpInside += OnButtonPush;
             }
 
             _button.SetTitle(ApplicationWorker.Magazine.Exists ? "Открыть" : "Скачать", UIControlState.Normal);
 
-            cell.ContentView.Add(_button);
+            cell.AddButton(_button, OnButtonPush);
 
 			if (ApplicationWorker.Magazine.Exists)
 			{
@@ -135,13 +198,12 @@ namespace ItExpert
 					_deleteButton.Font = UIFont.SystemFontOfSize(16);
 					_deleteButton.BackgroundColor = UIColor.FromRGB(30, 30, 30);
 					_deleteButton.Layer.CornerRadius = 3;
-					_deleteButton.TouchUpInside += OnDeleteButtonPush;
 				}
-				cell.ContentView.Add(_deleteButton);
+				cell.AddDeleteButton(_deleteButton, OnDeleteButtonPush);
 			}
         }
 
-		private void AddProgress(UITableViewCell cell)
+		private void AddProgress(MagazinePreviewView cell)
 		{
 			if (_progress == null)
 			{
@@ -151,7 +213,7 @@ namespace ItExpert
 				_progress.Color = UIColor.LightGray;
 				_progress.BackgroundColor = UIColor.Black;
 			}
-			cell.ContentView.Add(_progress);
+			cell.AddProgress(_progress);
 		}
 
 		private void OnDeleteButtonPush(object sender, EventArgs e)
@@ -181,5 +243,79 @@ namespace ItExpert
 		private UIButton _deleteButton;
 		private UIActivityIndicatorView _progress;
     }
+
+	public class MagazinePreviewView : UIView, ICleanupObject
+	{
+		private UIImageView _imageView;
+		private UITextView _headerTextView;
+		private UIButton _button;
+		private UIButton _deleteButton;
+		private UIActivityIndicatorView _progress;
+		private EventHandler _buttonPush;
+		private EventHandler _deleteButtonPush;
+
+		public MagazinePreviewView(RectangleF frame): base(frame)
+		{
+		}
+
+		public void AddButton(UIButton button, EventHandler handler)
+		{
+			_button = button;
+			_buttonPush = handler;
+			_button.TouchUpInside += _buttonPush;
+			Add(_button);
+		}
+
+		public void AddDeleteButton(UIButton button, EventHandler handler)
+		{
+			_deleteButton = button;
+			_deleteButtonPush = handler;
+			_deleteButton.TouchUpInside += _deleteButtonPush;
+			Add(_deleteButton);
+		}
+
+		public void AddImageView(UIImageView view)
+		{
+			_imageView = view;
+			Add(_imageView);
+		}
+
+		public void AddHeaderView(UITextView view)
+		{
+			_headerTextView = view;
+			Add(_headerTextView);
+		}
+
+		public void AddProgress(UIActivityIndicatorView view)
+		{
+			_progress = view;
+			Add(_progress);
+		}
+
+		public void CleanUp()
+		{
+			foreach (var view in Subviews)
+			{
+				view.RemoveFromSuperview();
+			}
+
+			if (_button != null)
+			{
+				_button.TouchUpInside -= _buttonPush;	
+			}
+			if (_deleteButton != null)
+			{
+				_deleteButton.TouchUpInside -= _deleteButtonPush;
+			}
+
+			_progress = null;
+			_imageView = null;
+			_headerTextView = null;
+			_button = null;
+			_deleteButton = null;
+			_buttonPush = null;
+			_deleteButtonPush = null;
+		}
+	}
 }
 

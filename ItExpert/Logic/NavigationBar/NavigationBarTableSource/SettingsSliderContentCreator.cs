@@ -16,17 +16,20 @@ namespace ItExpert
 			base.Dispose();
 			if (_textView != null)
 			{
+				_textView.RemoveFromSuperview();
 				_textView.Dispose();
 			}
 			_textView = null;
 			if (_slider != null)
 			{
+				_slider.RemoveFromSuperview();
 				_slider.ValueChanged -= SliderValueChanged;
 				_slider.Dispose();
 			}
 			_slider = null;
 			if (_valueLabel != null)
 			{
+				_valueLabel.RemoveFromSuperview();
 				_valueLabel.Dispose();
 			}
 			_valueLabel = null;

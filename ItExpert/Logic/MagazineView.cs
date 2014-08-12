@@ -51,6 +51,65 @@ namespace ItExpert
             }
         }
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (_deleteButton != null)
+			{
+				_deleteButton.TouchUpInside -= OnMagazinePdfDelete;
+				_deleteButton.RemoveFromSuperview ();
+				_deleteButton.Dispose();
+			}
+			_deleteButton = null;
+
+			if (_openButton != null)
+			{
+				_openButton.TouchUpInside -= OnMagazinePdfOpen;
+				_openButton.RemoveFromSuperview ();
+				_openButton.Dispose();
+			}
+			_openButton = null;
+
+			if (_downloadButton != null)
+			{
+				_downloadButton.TouchUpInside -= OnMagazinePdfDownload;
+				_downloadButton.RemoveFromSuperview ();
+				_downloadButton.Dispose();
+			}
+			_downloadButton = null;
+
+			if (_imageView != null)
+			{
+				if (_imageView.Image != null)
+				{
+					_imageView.Image.Dispose();
+					_imageView.Image = null;
+				}
+				if (_imageView.GestureRecognizers != null)
+				{
+					foreach (var gr in _imageView.GestureRecognizers)
+					{
+						gr.Dispose();
+					}
+				}
+				_imageView.RemoveFromSuperview();
+				_imageView.Dispose();
+			}
+			_imageView = null;
+
+			if (_headerTextView != null)
+			{
+				_headerTextView.RemoveFromSuperview();
+				_headerTextView.Dispose();
+			}
+			_headerTextView = null;
+
+			MagazineImagePushed = null;
+			MagazineOpen = null;
+			MagazineDelete = null;
+			MagazineDownload = null;
+		}
+
         private void AddHeader(string header, float maxTextWidth)
         {
             if (String.IsNullOrEmpty(header))
@@ -61,7 +120,7 @@ namespace ItExpert
             _headerTextView = ItExpertHelper.GetTextView(
 				ItExpertHelper.GetAttributedString(header, UIFont.BoldSystemFontOfSize(16), 
                     ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor())), maxTextWidth, new PointF()); 
-
+			_headerTextView.BackgroundColor = UIColor.Clear;
             Add(_headerTextView);
         }
 
@@ -94,35 +153,17 @@ namespace ItExpert
             if (isExists)
             {
                 _openButton = CreateButton("Открыть", new RectangleF(0, _imageView.Frame.Bottom + 3, buttonWidth, buttonHeight));
-				_openButton.TouchUpInside += (sender, e) => 
-				{
-					if (MagazineOpen != null)
-					{
-						MagazineOpen(this, e);
-					}
-				};
+				_openButton.TouchUpInside += OnMagazinePdfOpen;
                 Add(_openButton);
 
                 _deleteButton = CreateButton("Удалить", new RectangleF(0, _openButton.Frame.Bottom + _spaceBetweenButtons, buttonWidth, buttonHeight));
-				_deleteButton.TouchUpInside += (sender, e) => 
-				{
-					if (MagazineDelete != null)
-					{
-						MagazineDelete(this, e);
-					}
-				};
+				_deleteButton.TouchUpInside += OnMagazinePdfDelete;
                 Add(_deleteButton);
             }
             else
             {
                 _downloadButton = CreateButton("Скачать", new RectangleF(0, _imageView.Frame.Bottom + 3, buttonWidth, buttonHeight));
-				_downloadButton.TouchUpInside += (sender, e) => 
-				{
-					if (MagazineDownload != null)
-					{
-						MagazineDownload(this, e);
-					}
-				};
+				_downloadButton.TouchUpInside += OnMagazinePdfDownload;
                 Add(_downloadButton);
             }
         }
@@ -147,49 +188,61 @@ namespace ItExpert
 			float buttonHeight = 20;
 			if (_deleteButton != null)
 			{
+				_deleteButton.TouchUpInside -= OnMagazinePdfDelete;
 				_deleteButton.RemoveFromSuperview ();
+				_deleteButton.Dispose();
 			}
 			if (_openButton != null)
 			{
+				_openButton.TouchUpInside -= OnMagazinePdfOpen;
 				_openButton.RemoveFromSuperview ();
+				_openButton.Dispose();
 			}
 			if (_downloadButton != null)
 			{
+				_downloadButton.TouchUpInside -= OnMagazinePdfDownload;
 				_downloadButton.RemoveFromSuperview ();
+				_downloadButton.Dispose();
 			}
 			if (exists)
 			{
 				_openButton = CreateButton("Открыть", new RectangleF(0, _imageView.Frame.Bottom + 3, buttonWidth, buttonHeight));
-				_openButton.TouchUpInside += (sender, e) => 
-				{
-					if (MagazineOpen != null)
-					{
-						MagazineOpen(this, e);
-					}
-				};
+				_openButton.TouchUpInside += OnMagazinePdfOpen;
 				Add(_openButton);
 
 				_deleteButton = CreateButton("Удалить", new RectangleF(0, _openButton.Frame.Bottom + _spaceBetweenButtons, buttonWidth, buttonHeight));
-				_deleteButton.TouchUpInside += (sender, e) => 
-				{
-					if (MagazineDelete != null)
-					{
-						MagazineDelete(this, e);
-					}
-				};
+				_deleteButton.TouchUpInside += OnMagazinePdfDelete;
 				Add(_deleteButton);
 			}
 			else
 			{
 				_downloadButton = CreateButton("Скачать", new RectangleF(0, _imageView.Frame.Bottom + 3, buttonWidth, buttonHeight));
-				_downloadButton.TouchUpInside += (sender, e) => 
-				{
-					if (MagazineDownload != null)
-					{
-						MagazineDownload(this, e);
-					}
-				};
+				_downloadButton.TouchUpInside += OnMagazinePdfDownload;
 				Add(_downloadButton);
+			}
+		}
+
+		void OnMagazinePdfDelete(object sender, EventArgs e)
+		{
+			if (MagazineDelete != null)
+			{
+				MagazineDelete(this, e);
+			}
+		}
+
+		void OnMagazinePdfOpen(object sender, EventArgs e)
+		{
+			if (MagazineOpen != null)
+			{
+				MagazineOpen(this, e);
+			}
+		}
+
+		void OnMagazinePdfDownload(object sender, EventArgs e)
+		{
+			if (MagazineDownload != null)
+			{
+				MagazineDownload(this, e);
 			}
 		}
 

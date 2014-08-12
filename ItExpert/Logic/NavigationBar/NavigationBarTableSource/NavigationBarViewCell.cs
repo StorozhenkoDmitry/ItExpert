@@ -18,15 +18,18 @@ namespace ItExpert
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			if (_creatorsPool != null && _creatorsPool.Any())
+			InvokeOnMainThread(() =>
 			{
-				foreach (var contentCreator in _creatorsPool.Values)
+				if (_creatorsPool != null && _creatorsPool.Any())
 				{
-					contentCreator.Dispose();
+					foreach (var contentCreator in _creatorsPool.Values)
+					{
+						contentCreator.Dispose();
+					}
+					_creatorsPool.Clear();
+					_creatorsPool = null;
 				}
-				_creatorsPool.Clear();
-				_creatorsPool = null;
-			}
+			});
 		}
 
         public void UpdateContent(NavigationBarItem item)

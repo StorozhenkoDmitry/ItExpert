@@ -28,6 +28,14 @@ namespace ItExpert
 		private UIActivityIndicatorView _loadingPdfIndicator;
 		private bool _dataLoaded = false;
 		private bool _isLoading = false;
+		private MenuView _menu;
+		private UIButton _menuButton;
+		private UIBarButtonItem _menuBarButton;
+		private SettingsView _settingsView;
+		private UIButton _settingsButton;
+		private UIBarButtonItem _settingsBarButton;
+		private List<UIButton> _yearButtons;
+
 		#endregion
 
 		#region UIViewController members
@@ -110,11 +118,109 @@ namespace ItExpert
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
-			ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesPriviewGetted;
-			ApplicationWorker.SettingsChanged -= OnSettingsChanged;
-			ApplicationWorker.AllPdfFilesDeleted -= OnAllPdfFilesDeleted;
-			_isLoading = false;
+			InvokeOnMainThread(() =>
+			{
+				DestroyPdfLoader();
+				ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesYearsGetted;
+				ApplicationWorker.RemoteWorker.MagazinesPriviewGetted -= OnMagazinesPriviewGetted;
+				ApplicationWorker.SettingsChanged -= OnSettingsChanged;
+				ApplicationWorker.AllPdfFilesDeleted -= OnAllPdfFilesDeleted;
+				_isLoading = false;
+
+				if (_yearButtons != null)
+				{
+					foreach (var button in _yearButtons)
+					{
+						button.TouchUpInside -= ButtonYearOnClick;
+					}
+					_yearButtons.Clear();
+				}
+				_yearButtons = null;
+
+				if (_yearsView != null)
+				{
+					_yearsView.RemoveFromSuperview();
+					_yearsView.Dispose();
+				}
+				_yearsView = null;
+
+				if (_archiveView != null)
+				{
+					_archiveView.RemoveFromSuperview();
+					_archiveView.MagazinePushed -= OnMagazinePushed;
+					_archiveView.MagazineDelete -= OnMagazineDelete;
+					_archiveView.MagazineOpen -= OnMagazineOpen;
+					_archiveView.MagazineDownload -= OnMagazineDownload;
+					_archiveView.Dispose();
+				}
+				_archiveView = null;
+
+				if (_loadingIndicator != null)
+				{
+					_loadingIndicator.RemoveFromSuperview();
+					_loadingIndicator.Dispose();
+				}
+				_loadingIndicator = null;
+
+				if (_loadingPdfIndicator != null)
+				{
+					_loadingPdfIndicator.RemoveFromSuperview();
+					_loadingPdfIndicator.Dispose();
+				}
+				_loadingPdfIndicator = null;
+
+				if (_menuButton != null)
+				{
+					_menuButton.RemoveFromSuperview();
+					if (_menuButton.ImageView != null && _menuButton.ImageView.Image != null)
+					{
+						_menuButton.ImageView.Image.Dispose();
+						_menuButton.ImageView.Image = null;
+					}
+					_menuButton.TouchUpInside -= MenuButtonTouchUp;
+					_menuButton.Dispose();
+				}
+				_menuButton = null;
+
+				if (_menuBarButton != null)
+				{
+					_menuBarButton.Dispose();
+				}
+				_menuBarButton = null;
+
+				if (_menu != null)
+				{
+					_menu.TapOutsideTableView -= ViewTapOutsideTableView;
+					_menu.Dispose();
+				}
+				_menu = null;
+
+				if (_settingsButton != null)
+				{
+					_settingsButton.RemoveFromSuperview();
+					if (_settingsButton.ImageView != null && _settingsButton.ImageView.Image != null)
+					{
+						_settingsButton.ImageView.Image.Dispose();
+						_settingsButton.ImageView.Image = null;
+					}
+					_settingsButton.TouchUpInside -= SettingsButtonTouchUp;
+					_settingsButton.Dispose();
+				}
+				_settingsButton = null;
+
+				if (_settingsBarButton != null)
+				{
+					_settingsBarButton.Dispose();
+				}
+				_settingsBarButton = null;
+
+				if (_settingsView != null)
+				{
+					_settingsView.TapOutsideTableView -= ViewTapOutsideTableView;
+					_settingsView.Dispose();
+				}
+				_settingsView = null;
+			});
 		}
 
 		#endregion
@@ -182,7 +288,7 @@ namespace ItExpert
 				{
 					List<Magazine> previewList = null;
 					years = years.OrderByDescending(x => x.Value).ToList();
-					var yearButtons = new List<UIButton>();
+					_yearButtons = new List<UIButton>();
 					for (var i = 0; i < years.Count(); i++)
 					{
 						var year = years[i];
@@ -190,9 +296,9 @@ namespace ItExpert
 						button.TouchUpInside += ButtonYearOnClick;
 						button.SetTitle(year.Value.ToString(), UIControlState.Normal);
 						button.Tag = year.Value;
-						yearButtons.Add(button);
+						_yearButtons.Add(button);
 					}
-					_yearsView.AddButtons(yearButtons);
+					_yearsView.AddButtons(_yearButtons);
 					_currentYear = years.First().Value;
 					previewList = ApplicationWorker.Db.GetMagazinesByYear(_currentYear, true);
 					if (previewList != null && previewList.Any() && !previewList.Any(x => x.PreviewPicture == null))
@@ -232,14 +338,41 @@ namespace ItExpert
 
         private void InitNavigationBar()
         {
-			var menu = new MenuView(ButNewsOnClick, ButTrendsOnClick, ButMagazineOnClick, ButArchiveOnClick, ButFavoriteOnClick, AboutUsShow, Search);
-			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { NavigationBarButton.GetMenu(menu), NavigationBarButton.Logo };
+			_menu = new MenuView(ButNewsOnClick, ButTrendsOnClick, ButMagazineOnClick, ButArchiveOnClick, ButFavoriteOnClick, AboutUsShow, Search);
+			_menu.TapOutsideTableView += ViewTapOutsideTableView;
+			_menuButton = NavigationBarButton.GetButton("NavigationBar/Menu.png", 2);
+			_menuButton.TouchUpInside += MenuButtonTouchUp;
+			_menuBarButton = new UIBarButtonItem(_menuButton);
+
+			NavigationItem.LeftBarButtonItems = new UIBarButtonItem[] { _menuBarButton, NavigationBarButton.Logo };
 
             UIBarButtonItem space = new UIBarButtonItem(UIBarButtonSystemItem.FixedSpace);
 
             space.Width = -10;
-			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, NavigationBarButton.GetSettingsButton(false) };
+
+			_settingsButton = NavigationBarButton.GetButton("NavigationBar/Settings.png", 4.1f);
+			_settingsBarButton = new UIBarButtonItem(_settingsButton);
+			_settingsView = new SettingsView(false);
+			_settingsView.TapOutsideTableView += ViewTapOutsideTableView;
+			_settingsButton.TouchUpInside += SettingsButtonTouchUp;
+
+			NavigationItem.RightBarButtonItems = new UIBarButtonItem[] { space, _settingsBarButton };
         }
+
+		void ViewTapOutsideTableView(object sender, EventArgs e)
+		{
+			NavigationBarButton.HideWindow();
+		}
+
+		void MenuButtonTouchUp(object sender, EventArgs e)
+		{
+			NavigationBarButton.ShowWindow(_menu);
+		}
+
+		void SettingsButtonTouchUp(object sender, EventArgs e)
+		{
+			NavigationBarButton.ShowWindow(_settingsView);
+		}
 
 		private void Search(string search)
 		{
@@ -259,6 +392,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.SearchFromAnother (search);
+				Dispose();
 			}
 			else
 			{
@@ -304,12 +438,13 @@ namespace ItExpert
 			_isLoading = false;
 			if (showController != null)
 			{
-				NavigationController.PopToViewController (showController, false);
+				NavigationController.PopToViewController (showController, true);
+				Dispose();
 			}
 			else
 			{
 				showController = new AboutUsViewController ();
-				NavigationController.PushViewController (showController, false);
+				NavigationController.PushViewController (showController, true);
 			}
 		}
 
@@ -331,6 +466,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.ShowFromAnotherScreen (Page.Trends);
+				Dispose();
 			}
 			else
 			{
@@ -357,6 +493,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.ShowFromAnotherScreen (Page.News);
+				Dispose();
 			}
 			else
 			{
@@ -388,6 +525,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.SetMagazineId (-1);
+				Dispose();
 			}
 			else
 			{
@@ -414,6 +552,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.UpdateSource();
+				Dispose();
 			}
 			else
 			{
@@ -440,7 +579,7 @@ namespace ItExpert
 					if (years != null && years.Any())
 					{
 						years = years.OrderByDescending(x => x.Value).ToList();
-                        List<UIButton> yearButtons = new List<UIButton>();
+                        _yearButtons = new List<UIButton>();
 						for (var i = 0; i < years.Count(); i++)
 						{
 							var year = years[i];
@@ -451,10 +590,10 @@ namespace ItExpert
                             button.SetTitle(year.Value.ToString(), UIControlState.Normal);
                             button.Tag = year.Value;
 
-                            yearButtons.Add(button);
+                            _yearButtons.Add(button);
 						}
 
-                        _yearsView.AddButtons(yearButtons);
+                        _yearsView.AddButtons(_yearButtons);
 
 						ThreadPool.QueueUserWorkItem(state => UpdateMagazineYears(years));
 						_currentYear = years.First().Value;
@@ -564,6 +703,7 @@ namespace ItExpert
 			{
 				NavigationController.PopToViewController (showController, false);
 				showController.SetMagazineId (ApplicationWorker.Magazine.Id);
+				Dispose();
 			}
 			else
 			{

@@ -29,21 +29,25 @@ namespace ItExpert
 		public override void Dispose()
 		{
 			base.Dispose();
+
 			if (_textView != null)
 			{
+				_textView.RemoveFromSuperview();
 				_textView.Dispose();
 			}
 			_textView = null;
 
 			if (_rightTextView != null)
 			{
+				_rightTextView.RemoveFromSuperview();
 				_rightTextView.Dispose();
 			}
 			_rightTextView = null;
 
 			if (_slider != null)
 			{
-				_slider.ValueChanged -= SliderValueChanged;
+				_slider.RemoveFromSuperview();
+				_slider.InvokeOnMainThread(() => _slider.ValueChanged -= SliderValueChanged);
 				_slider.Dispose();
 			}
 			_slider = null;

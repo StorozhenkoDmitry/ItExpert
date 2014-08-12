@@ -70,6 +70,76 @@ namespace ItExpert
             }
         }
 
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (_settingsTableView != null)
+			{
+				_settingsTableView.RemoveFromSuperview();
+				if (_settingsTableView.Source != null)
+				{
+					_settingsTableView.Source.Dispose();
+				}
+				_settingsTableView.Source = null;
+				_settingsTableView.Dispose();
+			}
+			_settingsTableView = null;
+
+			if (_tapableView != null)
+			{
+				_tapableView.RemoveFromSuperview();
+				if (_tapableView.GestureRecognizers != null)
+				{
+					foreach (var gr in _tapableView.GestureRecognizers)
+					{
+						gr.Dispose();
+					}
+				}
+				_tapableView.Dispose();
+			}
+			_tapableView = null;
+
+			if (_headerView != null)
+			{
+				_headerView.RemoveFromSuperview();
+				if (_backButton != null)
+				{
+					_backButton.RemoveFromSuperview();
+					_backButton.TouchUpInside -= OnBackButtonPushed;
+					if (_backButton.ImageView != null && _backButton.ImageView.Image != null)
+					{
+						_backButton.ImageView.Image.Dispose();
+						_backButton.ImageView.Image = null;
+					}
+					_backButton.Dispose();
+				}
+				_backButton = null;
+				_headerView.Dispose();
+			}
+			_headerView = null;
+
+			if (_logoImageView != null)
+			{
+				_logoImageView.RemoveFromSuperview();
+				if (_logoImageView.Image != null)
+				{
+					_logoImageView.Image.Dispose();
+					_logoImageView.Image = null;
+				}
+				_logoImageView.Dispose();
+			}
+			_logoImageView = null;
+
+			if (_cacheView != null)
+			{
+				_cacheView.RemoveFromSuperview();
+				_cacheView.Dispose();
+			}
+			_cacheView = null;
+
+			_navigationController = null;
+		}
+
         private void AddHeaderView()
         {
             _headerView = new UIView(_navigationController.NavigationBar.Frame);
