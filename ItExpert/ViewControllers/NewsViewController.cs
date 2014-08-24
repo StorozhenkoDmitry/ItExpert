@@ -159,17 +159,6 @@ namespace ItExpert
 
 			UpdateViewsLayout();
 
-			if (_currentPage == Page.News)
-			{
-				_bottomBar.TrendsButton.SetActiveState(false);
-				_bottomBar.NewsButton.SetActiveState(true);
-			}
-			else if (_currentPage == Page.Trends)
-			{
-				_bottomBar.TrendsButton.SetActiveState(true);
-				_bottomBar.NewsButton.SetActiveState(false);
-			}
-
 			_bottomBar.Hidden = false;
 			if (_articles != null && _articles.Any())
 			{
@@ -416,6 +405,12 @@ namespace ItExpert
 			{
 				if (_allArticles == null || !_allArticles.Any())
 					return;
+				var newsList = ApplicationWorker.GetNewsList();
+				if (newsList != null && newsList.Any())
+				{
+					_allArticles.Clear();
+					_allArticles.AddRange(newsList);
+				}
 				var position = -1;
 				Article selectArticle = null;
 				var selectItemId = -1;
@@ -536,19 +531,6 @@ namespace ItExpert
 					}
 					var indexPath = NSIndexPath.FromItemSection(position, 0);
 					_articlesTableView.ScrollToRow(indexPath, UITableViewScrollPosition.Middle, false);
-				}
-			}
-			if (_bottomBar != null)
-			{
-				if (_currentPage == Page.News)
-				{
-					_bottomBar.TrendsButton.SetActiveState(false);
-					_bottomBar.NewsButton.SetActiveState(true);
-				}
-				else if (_currentPage == Page.Trends)
-				{
-					_bottomBar.TrendsButton.SetActiveState(true);
-					_bottomBar.NewsButton.SetActiveState(false);
 				}
 			}
 		}
@@ -1202,6 +1184,7 @@ namespace ItExpert
 
 		void AboutUsShow (object sender, EventArgs e)
 		{
+			ApplicationWorker.ClearNews();
 			AboutUsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1483,6 +1466,7 @@ namespace ItExpert
 
 		private void ButNewsOnClick(object sender, EventArgs e)
 		{
+			ApplicationWorker.ClearNews();
 			Filter = Filter.None;
 			_headerAdded = false;
 			_header = null;
@@ -1491,6 +1475,7 @@ namespace ItExpert
 
 		private void ButTrendsOnClick(object sender, EventArgs e)
 		{
+			ApplicationWorker.ClearNews();
 			Filter = Filter.None;
 			_headerAdded = false;
 			_header = null;
@@ -1499,6 +1484,7 @@ namespace ItExpert
 
 		private void ButArchiveOnClick(object sender, EventArgs e)
 		{
+			ApplicationWorker.ClearNews();
 			ArchiveViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1522,6 +1508,7 @@ namespace ItExpert
 
 		private void ButMagazineOnClick(object sender, EventArgs e)
 		{
+			ApplicationWorker.ClearNews();
 			MagazineViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1546,6 +1533,7 @@ namespace ItExpert
 
 		private void ButFavoriteOnClick(object sender, EventArgs e)
 		{
+			ApplicationWorker.ClearNews();
 			FavoritesViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1570,7 +1558,16 @@ namespace ItExpert
 
 		private void OnPushArticleDetails(object sender, PushDetailsEventArgs e)
 		{
-			NavigationController.PushViewController (e.NewsDetailsView, true);
+			var controller = e.NewsDetailsView;
+			controller.SetFromFavorite(false);
+			var filterParams = new FilterParameters() {
+				Search = _search,
+				BlockId = _blockId,
+				SectionId = _sectionId,
+				AuthorId = _authorId
+			};
+			controller.SetFilterParameters(filterParams);
+			NavigationController.PushViewController (controller, true);
 		}
 
         private void UpdateViewsLayout()
@@ -1600,6 +1597,17 @@ namespace ItExpert
             }
 
             InitBottomToolbar();
+
+			if (_currentPage == Page.News)
+			{
+				_bottomBar.TrendsButton.SetActiveState(false);
+				_bottomBar.NewsButton.SetActiveState(true);
+			}
+			else if (_currentPage == Page.Trends)
+			{
+				_bottomBar.TrendsButton.SetActiveState(true);
+				_bottomBar.NewsButton.SetActiveState(false);
+			}
 
 			if (_loadingIndicator != null)
 			{
@@ -1820,6 +1828,7 @@ namespace ItExpert
 			{
 				Filter = Filter.Page;
 			}
+			_currentPage = pageToShow;
 		}
 
 		public void Search(string search)
@@ -1828,6 +1837,7 @@ namespace ItExpert
 			{
 				_bottomBar.NewsButton.SetActiveState (true);
 				_bottomBar.TrendsButton.SetActiveState (false);
+				_currentPage = Page.News;
 				if (!ApplicationWorker.Settings.OfflineMode)
 				{
 					var connectAccept = IsConnectionAccept();
@@ -1878,6 +1888,7 @@ namespace ItExpert
 			{
 				_bottomBar.NewsButton.SetActiveState (true);
 				_bottomBar.TrendsButton.SetActiveState (false);
+				_currentPage = Page.News;
 				if (!ApplicationWorker.Settings.OfflineMode)
 				{
 					var connectAccept = IsConnectionAccept();
@@ -2184,15 +2195,6 @@ namespace ItExpert
 			if (_articles != null && _articles.Any())
 			{
 				_articlesTableView.Hidden = false;
-				Action reloadData = () =>
-				{
-					Thread.Sleep(250);
-					InvokeOnMainThread(() =>
-					{
-						_articlesTableView.ReloadData();
-					});
-				};
-				ThreadPool.QueueUserWorkItem(state => reloadData());
 			}
 		}
 

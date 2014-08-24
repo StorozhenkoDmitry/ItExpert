@@ -763,17 +763,18 @@ namespace ItExpert
 					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 					var fileName = downloadItem.Magazine.Id.ToString("G") + ".pdf";
 					var path = Path.Combine(folder, fileName);
-					var fs = File.Create(path);
-					fs.Write(e.Pdf, 0, e.Pdf.Length);
-					fs.Flush();
-					fs.Close();
+					using (var fs = File.Create(path))
+					{
+						fs.Write(e.Pdf, 0, e.Pdf.Length);
+						fs.Flush();
+					}
 					downloadItem.Magazine.Exists = true;
 					ApplicationWorker.Db.UpdateMagazine(downloadItem.Magazine);
 					downloadItem.UpdateMagazineExists(true);
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false, 2500);
+					BTProgressHUD.ShowToast("Ошибка при запросе", ProgressHUD.MaskType.None, false, 2500);
 				}
 				SetLoadingProgressVisible(false);
 				_downloadMagazineView = null;

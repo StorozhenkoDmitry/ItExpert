@@ -112,6 +112,10 @@ namespace ItExpert
 					}
 				}
 				var lst = _articles.Where(x => x.IsFavorite).ToList();
+				if (!lst.Any())
+				{
+					ShowHoldMessage("Нет избранных статей");
+				}
 				_articles.Clear();
 				_articles.AddRange(lst);
 				if (selectArticle != null && position > 0)
@@ -151,6 +155,7 @@ namespace ItExpert
 					var indexPath = NSIndexPath.FromItemSection(position, 0);
 					_articlesTableView.ScrollToRow(indexPath, UITableViewScrollPosition.Middle, false);
 				}
+
 			}
 		}
 
@@ -456,6 +461,7 @@ namespace ItExpert
 
 		private void Search(string search)
 		{
+			ApplicationWorker.ClearNews();
 			NewsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -510,6 +516,7 @@ namespace ItExpert
 
 		void AboutUsShow (object sender, EventArgs e)
 		{
+			ApplicationWorker.ClearNews();
 			AboutUsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -588,6 +595,7 @@ namespace ItExpert
 
 		private void ButTrendsOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			NewsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -613,6 +621,7 @@ namespace ItExpert
 
 		private void ButNewsOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			NewsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -638,6 +647,7 @@ namespace ItExpert
 
 		private void ButArchiveOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			ArchiveViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -662,6 +672,7 @@ namespace ItExpert
 
 		private void ButMagazineOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			MagazineViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -687,12 +698,15 @@ namespace ItExpert
 
 		private void ButFavoriteOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			LoadDataFromDb();
 		}
 
 		private void OnPushArticleDetails(object sender, PushDetailsEventArgs e)
 		{
-			NavigationController.PushViewController (e.NewsDetailsView, true);
+			var controller = e.NewsDetailsView;
+			controller.SetFromFavorite(true);
+			NavigationController.PushViewController (controller, true);
 		}
 
 		#endregion
@@ -824,15 +838,6 @@ namespace ItExpert
 			}
 			UpdateTableView(_articles);
 			_articlesTableView.Hidden = false;
-			Action reloadData = () =>
-			{
-				Thread.Sleep(250);
-				InvokeOnMainThread(() =>
-				{
-					_articlesTableView.ReloadData();
-				});
-			};
-			ThreadPool.QueueUserWorkItem(state => reloadData());
 		}
 
 		#endregion

@@ -11,7 +11,7 @@ using System.Threading;
 
 namespace ItExpert
 {
-	public class ArticleDetailContentViewController: UIViewController
+	public class ArticleDetailContentView: UIView
 	{
 		#region Fields
 
@@ -39,37 +39,23 @@ namespace ItExpert
 
 		#endregion
 
-		public ArticleDetailContentViewController(int articleId, ArticleDetailsViewController parent, float navigationBarHeight, RectangleF initalFrame)
+		public ArticleDetailContentView(int articleId, ArticleDetailsViewController parent, float navigationBarHeight, RectangleF initalFrame):base(initalFrame)
 		{
+			UserInteractionEnabled = true;
 			_articleId = articleId;
 			_parent = parent;
 			_navigationBarHeight = navigationBarHeight;
 			_initalFrame = initalFrame;
-		}
-
-		static bool UserInterfaceIdiomIsPhone {
-			get { return UIDevice.CurrentDevice.UserInterfaceIdiom == UIUserInterfaceIdiom.Phone; }
-		}
-
-		public override void ViewDidLoad ()
-		{
-			base.ViewDidLoad ();
-			AutomaticallyAdjustsScrollViewInsets = false;
-			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
-		}
-
-		public override void ViewWillAppear(bool animated)
-		{
-			base.ViewWillAppear(animated);
-			ItExpertHelper.RemoveSubviews(View);
+			BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
+			ItExpertHelper.RemoveSubviews(this);
 			ShowSplash(true);
 			Initialize();
 		}
 
-		public override void DidRotate(UIInterfaceOrientation fromInterfaceOrientation)
+		public void DidRotate(RectangleF newFrame)
 		{
-			base.DidRotate(fromInterfaceOrientation);
-			_initalFrame = View.Frame;
+			_initalFrame = newFrame;
+			Frame = _initalFrame;
 			_maxWidth = _initalFrame.Width - _padding.Left - _padding.Right;
 			if (_articleTextWebView != null)
 			{
@@ -103,8 +89,11 @@ namespace ItExpert
 					}
 				}
 			}
-			ItExpertHelper.RemoveSubviews(View);
-			_splashScreen.Dispose();
+			ItExpertHelper.RemoveSubviews(this);
+			if (_splashScreen != null)
+			{
+				_splashScreen.Dispose();
+			}
 			_splashScreen = null;
 			UpdateScreen();
 		}
@@ -114,9 +103,8 @@ namespace ItExpert
 			base.Dispose(disposing);
 			InvokeOnMainThread(() =>
 			{
-				ApplicationWorker.RemoteWorker.ArticleDetailGetted -= OnArticleDetailGetted;
-				ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted -= OnMagazineArticleDetailGetted;
-
+				_parent = null;
+				_article = null;
 				if (_articleTextWebView != null)
 				{
 					_articleTextWebView.RemoveFromSuperview();
@@ -245,7 +233,7 @@ namespace ItExpert
 			}
 			else
 			{
-				_initalFrame = View.Frame;
+				_initalFrame = Frame;
 			}
 			_maxWidth = _initalFrame.Width - _padding.Left - _padding.Right;
 			GetArticleData();
@@ -253,8 +241,8 @@ namespace ItExpert
 
 		public void OnSettingsChanged()
 		{
-			ItExpertHelper.RemoveSubviews(View);
-			View.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
+			ItExpertHelper.RemoveSubviews(this);
+			BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
 			if (_splashScreen != null)
 			{
 				_splashScreen.BackgroundColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetBackgroundColor());
@@ -302,141 +290,7 @@ namespace ItExpert
 			}
 			else
 			{
-				GetArticleFromServer(_article);
-			}
-		}
-
-		#endregion
-
-		#region Worked with server
-
-		public void GetArticleFromServer(Article article)
-		{
-			if (!ApplicationWorker.Settings.OfflineMode)
-			{
-				var connectAccept = IsConnectionAccept();
-				if (!connectAccept)
-				{
-					BTProgressHUD.ShowToast ("Нет доступных подключений, для указанных в настройках", ProgressHUD.MaskType.None, false, 2500);
-					return;
-				}
-				ApplicationWorker.RemoteWorker.ArticleDetailGetted -= OnArticleDetailGetted;
-				ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted -= OnMagazineArticleDetailGetted;
-				ApplicationWorker.RemoteWorker.Abort();
-				_article = article;
-				if (_article.ArticleType == ArticleType.Portal)
-				{
-					ApplicationWorker.RemoteWorker.ArticleDetailGetted += OnArticleDetailGetted;
-					ThreadPool.QueueUserWorkItem(
-						state =>
-						ApplicationWorker.RemoteWorker.BeginGetArticleDetail(ApplicationWorker.Settings, -1,
-							-1,
-							_article.Id));
-				}
-				if (_article.ArticleType == ArticleType.Magazine)
-				{
-					ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted += OnMagazineArticleDetailGetted;
-					ThreadPool.QueueUserWorkItem(
-						state =>
-						ApplicationWorker.RemoteWorker.BeginGetMagazineArticleDetail(
-							ApplicationWorker.Settings, -1, -1, _article.Id));
-				}
-			}
-			else
-			{
-				if (_parent != null)
-				{
-					_parent.ArticleDetailTextNotAvailable(article);
-					return;
-				}
-			}
-		}
-
-		private void OnMagazineArticleDetailGetted(object sender, MagazineArticleDetailEventArgs e)
-		{
-			ApplicationWorker.RemoteWorker.MagazineArticleDetailGetted -= OnMagazineArticleDetailGetted;
-			if (e.Abort)
-			{
-				return;
-			}
-			var error = e.Error;
-			if (!error)
-			{
-				var article = e.Article;
-				if (article != null)
-				{
-					article.IsReaded = true;
-					if (_article != null)
-					{
-						_article.DetailText = article.DetailText;
-						_article.IsReaded = article.IsReaded;
-						_article.Authors = article.Authors;
-						_article.AuthorsId = article.AuthorsId;
-						_article.Video = article.Video;
-						if (ApplicationWorker.Settings.LoadImages && article.DetailPicture != null)
-						{
-							_article.DetailPicture = article.DetailPicture;
-						}
-						if (article.AwardsPicture != null)
-						{
-							_article.AwardsPicture = article.AwardsPicture;
-						}
-						ThreadPool.QueueUserWorkItem(state => SaveArticle(_article));
-					}
-					else
-					{
-						_article = article;
-					}
-					InvokeOnMainThread(() => UpdateScreen());
-				}
-			}
-			else
-			{
-				InvokeOnMainThread(() => BTProgressHUD.ShowToast("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500));
-			}
-		}
-
-		private void OnArticleDetailGetted(object sender, ArticleDetailEventArgs e)
-		{
-			ApplicationWorker.RemoteWorker.ArticleDetailGetted -= OnArticleDetailGetted;
-			if (e.Abort)
-			{
-				return;
-			}
-			var error = e.Error;
-			if (!error)
-			{
-				var article = e.Article;
-				if (article != null)
-				{
-					article.IsReaded = true;
-					if (_article != null)
-					{
-						_article.DetailText = article.DetailText;
-						_article.IsReaded = article.IsReaded;
-						_article.Authors = article.Authors;
-						_article.AuthorsId = article.AuthorsId;
-						_article.Video = article.Video;
-						if (ApplicationWorker.Settings.LoadImages && article.DetailPicture != null)
-						{
-							_article.DetailPicture = article.DetailPicture;
-						}
-						if (article.AwardsPicture != null)
-						{
-							_article.AwardsPicture = article.AwardsPicture;
-						}
-						ThreadPool.QueueUserWorkItem(state => SaveArticle(_article));
-					}
-					else
-					{
-						_article = article;
-					}
-					InvokeOnMainThread(() => UpdateScreen());
-				}
-			}
-			else
-			{
-				InvokeOnMainThread(() => BTProgressHUD.ShowToast("Ошибка при загрузке", ProgressHUD.MaskType.None, false, 2500));
+				_parent.GetArticleFromServer(_article);
 			}
 		}
 
@@ -444,9 +298,10 @@ namespace ItExpert
 
 		#region Article present level
 
-		public int GetArticleId()
+		public void SetArticle(Article article)
 		{
-			return _article.Id;
+			_article = article;
+			UpdateScreen();
 		}
 
 		private void ShowSplash(bool isVisible)
@@ -467,9 +322,9 @@ namespace ItExpert
 
 			if (isVisible)
 			{
-				if (!View.Subviews.Any(s => s == _splashScreen))
+				if (!Subviews.Any(s => s == _splashScreen))
 				{
-					View.Add(_splashScreen);
+					Add(_splashScreen);
 				}
 			}
 			else
@@ -481,10 +336,6 @@ namespace ItExpert
 		private void UpdateScreen()
 		{
 			ApplicationWorker.SharedArticle = _article;
-			if (_parent != null)
-			{
-				_parent.SetArticle(_article);
-			}
 			var article = _article;
 			if (string.IsNullOrWhiteSpace(article.DetailText))
 			{
@@ -534,38 +385,28 @@ namespace ItExpert
 				css = "<style>" + ApplicationWorker.Css + "</style>";
 			}
 			//В style я передаю строку стиля HTML с цветом и размером текста и цветом фона
-			var foreColor = ColorToCssRgb(ApplicationWorker.Settings.GetForeColor());
-			var backgroundColor = ColorToCssRgb(ApplicationWorker.Settings.GetBackgroundColor());
-			var fontSize = ((int)(ApplicationWorker.Settings.DetailTextSize * 1.35f)).ToString("G");
-
-			var names = UIFont.FamilyNames;
-			names = names.OrderBy(x => x).ToArray();
-			var optionsSb = new StringBuilder();
-			foreach (var name in names)
+			var foreColorVal = ApplicationWorker.Settings.GetForeColor();
+			float alpha = 1;
+			if (foreColorVal == Color.Black)
 			{
-				var selected = (name == "Verdana") ? "selected" : string.Empty;
-				optionsSb.Append("<option value='"+name+"' " +selected + ">" + name + "</option>");
+				foreColorVal = Color.Black;
+				alpha = 0.7f;
 			}
-			var fontSelectorSb = new StringBuilder();
-			fontSelectorSb.Append("<select size='1' onchange='changeFont(this.options[this.selectedIndex].value)'>");
-			fontSelectorSb.Append(optionsSb.ToString());
-			fontSelectorSb.Append("</select>");
-			var changeFontScript = @"<script>
-				function changeFont(font){
-					var body = document.getElementsByTagName('body')[0];
-					body.style.fontFamily = font;
-				}
-				</script>";
+			var foreColor = ColorToCssRgb(foreColorVal, alpha);
+			var backgroundColor = ColorToCssRgb(ApplicationWorker.Settings.GetBackgroundColor(), 1);
+			var fontSize = ((int)(ApplicationWorker.Settings.DetailTextSize)).ToString("G");
 
 			var style = "background-color: " + backgroundColor + "; color: " + foreColor + "; font-size: " + fontSize +
-				"px; font-family: Verdana;";
+				"px; font-family: Kailasa;";
 			//sectionString - раздел , articleAuthors-авторы, если пустые строки то не отображать
-			var html = "<html><head>" + css + changeFontScript + "</head><body style='" + style + "'>" + fontSelectorSb + text + video + "</body></html>";
+			var html = "<html><head>" + css + "</head><body style='" + style + "'>" + text + video + "</body></html>";
 
 			//После полного отображения выставить флаг и убрать сплаш
 			//Прокрутить представление до самого верха
+
 			AddContent(sectionString, articleAuthors, html);
 			ShowSplash (false);
+			_parent.SetCanTransitionTrue();
 		}
 
 		private void AddContent(string section, string author, string text)
@@ -575,15 +416,14 @@ namespace ItExpert
 			_scrollView.ScrollEnabled = true;
 			_scrollView.Bounces = false;
 
-			View.Add(_scrollView);
-			View.UserInteractionEnabled = true;
+			Add(_scrollView);
+			UserInteractionEnabled = true;
 
 			float top = AddArticleSection(section, _navigationBarHeight + ItExpertHelper.StatusBarHeight + _padding.Top);
 			top = AddArticlePicture(top);
 			top = AddArticleHeader(top);
 			top = AddArticleAuthor(author, top);
 			AddArticleText(text, top);
-
 			if (_articleTextWebView == null)
 			{
 				_scrollView.ContentSize = new SizeF(_maxWidth, top);
@@ -745,15 +585,18 @@ namespace ItExpert
 			}
 		}
 
-		private string ColorToCssRgb(Color color)
+		private string ColorToCssRgb(Color color, float alpha)
 		{
+			var alphaString = alpha.ToString("N").Replace(",", ".");
 			var sb = new StringBuilder();
-			sb.Append("rgb(");
+			sb.Append("rgba(");
 			sb.Append(color.R.ToString("G"));
 			sb.Append(", ");
 			sb.Append(color.G.ToString("G"));
 			sb.Append(", ");
 			sb.Append(color.B.ToString("G"));
+			sb.Append(", ");
+			sb.Append(alphaString);
 			sb.Append(")");
 			return sb.ToString();
 		}
@@ -761,92 +604,6 @@ namespace ItExpert
 		private void OnWebViewLoaded(object sender, EventArgs e)
 		{
 			_scrollView.ContentSize = new SizeF(_maxWidth, _articleTextWebView.Frame.Bottom);
-		}
-
-		private void SaveArticle(Article article)
-		{
-			var pictures = ApplicationWorker.Db.GetPicturesForParent(article.Id);
-			if (pictures != null && pictures.Any())
-			{
-				var detailPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Detail);
-				if (detailPicture != null)
-				{
-					ApplicationWorker.Db.DeletePicture(detailPicture.Id);
-				}
-				var awardsPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Awards);
-				if (awardsPicture != null)
-				{
-					ApplicationWorker.Db.DeletePicture(awardsPicture.Id);
-				}
-				var previewPicture = pictures.FirstOrDefault(x => x.Type == PictypeType.Preview);
-				if (previewPicture != null)
-				{
-					ApplicationWorker.Db.DeletePicture(previewPicture.Id);
-				}
-			}
-			if (article.DetailPicture != null)
-			{
-				ApplicationWorker.Db.InsertPicture(article.DetailPicture);
-			}
-			if (article.AwardsPicture != null)
-			{
-				ApplicationWorker.Db.InsertPicture(article.AwardsPicture);
-			}
-			if (article.PreviewPicture != null)
-			{
-				ApplicationWorker.Db.InsertPicture(article.PreviewPicture);
-			}
-			var authors = article.Authors;
-			if (authors != null && authors.Any())
-			{
-				foreach (var author in authors)
-				{
-					var dbAuthor = ApplicationWorker.Db.GetAuthor(author.Id);
-					if (dbAuthor == null)
-					{
-						ApplicationWorker.Db.InsertAuthor(author);
-					}
-				}
-			}
-			var rubrics = article.Rubrics;
-			if (rubrics != null && rubrics.Any())
-			{
-				foreach (var rubric in rubrics)
-				{
-					var dbRubric = ApplicationWorker.Db.GetRubric(rubric.Id);
-					if (dbRubric == null)
-					{
-						ApplicationWorker.Db.InsertRubric(rubric);
-					}
-				}
-			}
-			ApplicationWorker.Db.DeleteItemSectionsForArticle(article.Id);
-			if (article.Sections != null && article.Sections.Any())
-			{
-				ApplicationWorker.Db.InsertItemSections(article.Sections);
-			}
-			ApplicationWorker.Db.InsertArticle(article);
-		}
-
-		private bool IsConnectionAccept()
-		{
-			var result = true;
-			var internetStatus = Reachability.InternetConnectionStatus();
-			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.WiFi)
-			{
-				if (internetStatus != NetworkStatus.ReachableViaWiFiNetwork)
-				{
-					result = false;
-				}
-			}
-			if (ApplicationWorker.Settings.NetworkMode == NetworkMode.All)
-			{
-				if (internetStatus == NetworkStatus.NotReachable)
-				{
-					result = false;
-				}
-			}
-			return result;
 		}
 
 		#endregion

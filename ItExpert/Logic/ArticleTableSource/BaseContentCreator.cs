@@ -80,14 +80,14 @@ namespace ItExpert
 			{
 				cleanup.CleanUp();
 			}
-			if (cell.GestureRecognizers != null)
-			{
-				foreach (var gr in cell.GestureRecognizers)
-				{
-					gr.Dispose();
-				}
-			}
-			cell.GestureRecognizers = new UIGestureRecognizer[0];
+//			if (cell.GestureRecognizers != null)
+//			{
+//				foreach (var gr in cell.GestureRecognizers)
+//				{
+//					gr.Dispose();
+//				}
+//			}
+//			cell.GestureRecognizers = new UIGestureRecognizer[0];
 
             cell.UserInteractionEnabled = true;
 

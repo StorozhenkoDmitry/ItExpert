@@ -92,6 +92,22 @@ namespace ItExpert
 
         #region News
 
+		public static List<Article> GetNewsList()
+		{
+			var lst = new List<Article>();
+			var lockTaken = false;
+			try
+			{
+				Monitor.Enter(_lockObj, ref lockTaken);
+				lst = _workedArticles.ToList();
+			}
+			finally
+			{
+				if (lockTaken) Monitor.Exit(_lockObj);
+			}
+			return lst;
+		}
+
         public static void ClearNews()
         {
             var lockTaken = false;

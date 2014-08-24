@@ -94,7 +94,7 @@ namespace mTouchPDFReader.Library.Views.Core
 				_DocumentHasLoaded = true;
 			} catch (Exception) {
 				_DocumentHasLoaded = false;
-				using (var alert = new UIAlertView("Error", "Open PDF document error", null, "Ok")) {
+				using (var alert = new UIAlertView("Ошибка", "Ошибка при открытии файла", null, "Ok")) {
 					alert.Show();
 				}
 			}			

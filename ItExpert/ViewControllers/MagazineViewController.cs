@@ -198,6 +198,12 @@ namespace ItExpert
 			{
 				if (_allArticles == null || !_allArticles.Any ())
 					return;
+				var newsList = ApplicationWorker.GetNewsList();
+				if (newsList != null && newsList.Any())
+				{
+					_allArticles.Clear();
+					_allArticles.AddRange(newsList);
+				}
 				var position = -1;
 				Article selectArticle = null;
 				var selectItemId = -1;
@@ -1007,6 +1013,7 @@ namespace ItExpert
 
 		private void Search(string search)
 		{
+			ApplicationWorker.ClearNews();
 			NewsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1122,6 +1129,7 @@ namespace ItExpert
 
 		void AboutUsShow (object sender, EventArgs e)
 		{
+			ApplicationWorker.ClearNews();
 			AboutUsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1269,15 +1277,6 @@ namespace ItExpert
 							{
 								UpdateTableView(_articles);	
 								_articlesTableView.Hidden = false;
-								Action reloadData = () =>
-								{
-									Thread.Sleep(250);
-									InvokeOnMainThread(() =>
-									{
-										_articlesTableView.ReloadData();
-									});
-								};
-								ThreadPool.QueueUserWorkItem(state => reloadData());
 							}
 						}
 					}
@@ -1421,15 +1420,6 @@ namespace ItExpert
 							{
 								UpdateTableView(_articles);
 								_articlesTableView.Hidden = false;
-								Action reloadData = () =>
-								{
-									Thread.Sleep(250);
-									InvokeOnMainThread(() =>
-									{
-										_articlesTableView.ReloadData();
-									});
-								};
-								ThreadPool.QueueUserWorkItem(state => reloadData());
 							}
 						}
 					}
@@ -1532,7 +1522,16 @@ namespace ItExpert
 
 		private void OnPushArticleDetails(object sender, PushDetailsEventArgs e)
 		{
-			NavigationController.PushViewController (e.NewsDetailsView, true);
+			var controller = e.NewsDetailsView;
+			controller.SetFromFavorite(false);
+			if (_searchRubric != null)
+			{
+				var filterParams = new FilterParameters() {
+					SearchRubric = _searchRubric,
+				};
+				controller.SetFilterParameters(filterParams);
+			}
+			NavigationController.PushViewController(controller, true);
 		}
 
 		private void ButInCacheOnClick(object s, EventArgs ev)
@@ -1722,6 +1721,7 @@ namespace ItExpert
 
 		private void ButTrendsOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			NewsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1749,6 +1749,7 @@ namespace ItExpert
 
 		private void ButNewsOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			NewsViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1776,6 +1777,7 @@ namespace ItExpert
 
 		private void ButArchiveOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			ArchiveViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1801,6 +1803,7 @@ namespace ItExpert
 
 		private void ButMagazineOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			if (ApplicationWorker.Settings.OfflineMode) return;
 			if (_isRubricSearch && !_isLoadingData && _magazine != null)
 			{
@@ -1856,6 +1859,7 @@ namespace ItExpert
 
 		private void ButFavoriteOnClick(object sender, EventArgs eventArgs)
 		{
+			ApplicationWorker.ClearNews();
 			FavoritesViewController showController = null;
 			var controllers = NavigationController.ViewControllers;
 			foreach (var controller in controllers)
@@ -1890,7 +1894,7 @@ namespace ItExpert
 					IsLoadingPdf = false;
 					if (_articlesTableView != null)
 					{
-						_articlesTableView.ReloadData ();
+						_articlesTableView.ReloadData();
 					}
 				});
 				return;
@@ -1903,10 +1907,11 @@ namespace ItExpert
 					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 					var fileName = _magazine.Id.ToString("G") + ".pdf";
 					var path = Path.Combine(folder, fileName);
-					var fs = File.Create(path);
-					fs.Write(e.Pdf, 0, e.Pdf.Length);
-					fs.Flush();
-					fs.Close();
+					using (var fs = File.Create(path))
+					{
+						fs.Write(e.Pdf, 0, e.Pdf.Length);
+						fs.Flush();
+					}
 					_magazine.Exists = true;
 					var dbModel = ApplicationWorker.Db.GetMagazine(_magazine.Id, false);
 					if (dbModel != null)
@@ -1935,12 +1940,12 @@ namespace ItExpert
 				}
 				else
 				{
-					BTProgressHUD.ShowToast ("Ошибка при запросе", ProgressHUD.MaskType.None, false, 2500);
+					BTProgressHUD.ShowToast("Ошибка при запросе", ProgressHUD.MaskType.None, false, 2500);
 				}
 				IsLoadingPdf = false;
 				if (_articlesTableView != null)
 				{
-					_articlesTableView.ReloadData ();
+					_articlesTableView.ReloadData();
 				}
 			});
 		}

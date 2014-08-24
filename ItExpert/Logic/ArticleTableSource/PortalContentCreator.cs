@@ -203,7 +203,6 @@ namespace ItExpert
             _isReadedButtonImageView.Image = buttonImage;
     
             _isReadedButton.Add(_isReadedButtonImageView);
-
 			var foreColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
 			_headerTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, headerFont, foreColor), 
@@ -226,6 +225,7 @@ namespace ItExpert
 					_imageViewContainer = null;
 				}
 			}
+
 			var previewFont = UIFont.SystemFontOfSize (ApplicationWorker.Settings.TextSize);
 			_previewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, foreColor), 
                 cellContentView.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, _headerTextView.Frame.Bottom + _padding.Top), _imageViewContainer);

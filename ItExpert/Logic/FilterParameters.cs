@@ -1,5 +1,6 @@
 ﻿using System;
 using ItExpert.Enum;
+using ItExpert.Model;
 
 namespace ItExpert
 {
@@ -16,6 +17,10 @@ namespace ItExpert
 		public int SectionId { get; set;}
 
 		public int AuthorId { get; set;}
+
+		public string Search { get; set;}
+	
+		public Rubric SearchRubric { get; set; }
 	}
 }
 

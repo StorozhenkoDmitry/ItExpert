@@ -49,14 +49,6 @@ namespace ItExpert
 
                 if (HeaderTextView != null)
                 {
-					if (HeaderTextView.GestureRecognizers != null)
-					{
-						foreach (var gr in HeaderTextView.GestureRecognizers)
-						{
-							gr.Dispose();
-						}
-					}
-					HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
 					HeaderTextView.RemoveFromSuperview();
                     HeaderTextView.Dispose();
                     HeaderTextView = null;
@@ -64,13 +56,6 @@ namespace ItExpert
 
                 if (PreviewTextView != null)
                 {
-					if (PreviewTextView.GestureRecognizers != null)
-					{
-						foreach (var gr in PreviewTextView.GestureRecognizers)
-						{
-							gr.Dispose();
-						}
-					}
 					PreviewTextView.RemoveFromSuperview();
                     PreviewTextView.Dispose();
                     PreviewTextView = null;
@@ -165,8 +150,9 @@ namespace ItExpert
             FillContent(_leftContent, new RectangleF(0, 0, cell.ContentView.Frame.Width / 2, cell.ContentView.Frame.Height), Content.Position.Left, article.LeftContent);
 
             var maxHeight = GetMaxHeight(_leftContent, _rightContent);
+			_leftContent.MainContainer.Frame = new RectangleF(0, 0, cell.ContentView.Frame.Width / 2, maxHeight);
 
-            AddCellElements(cell.ContentView, _leftContent);
+            AddCellElements(cell, _leftContent);
 
             if (article.RightContent != null)
             {
@@ -179,7 +165,7 @@ namespace ItExpert
                 _rightContent.MainContainer.Frame = new RectangleF(cell.ContentView.Frame.Width / 2, 0, cell.ContentView.Frame.Width / 2, maxHeight);
                 _rightContent.IsReadedButton.Tag = (int)Content.Position.Right;
 
-                AddCellElements(cell.ContentView, _rightContent);
+                AddCellElements(cell, _rightContent);
             }
 
             _leftContent.MainContainer.Frame = new RectangleF(0, 0, cell.ContentView.Frame.Width / 2, maxHeight);
@@ -206,7 +192,7 @@ namespace ItExpert
 
                     UpdateContentElements(_leftContent.MainContainer, article.LeftContent, ItExpertHelper.LargestImageSizeInArticlesPreview, _leftContent);
                 }
-                AddCellElements(cell.ContentView, _leftContent);
+                AddCellElements(cell, _leftContent);
             }
 
             if (article.RightContent != null)
@@ -223,7 +209,7 @@ namespace ItExpert
 
                     UpdateContentElements(_rightContent.MainContainer, article.RightContent, ItExpertHelper.LargestImageSizeInArticlesPreview, _rightContent);
                 }
-                AddCellElements(cell.ContentView, _rightContent);
+                AddCellElements(cell, _rightContent);
             }
         }
 
@@ -245,8 +231,7 @@ namespace ItExpert
 			var foreColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
 			content.HeaderTextView = ItExpertHelper.GetTextView (ItExpertHelper.GetAttributedString(article.Name, headerFont, foreColor), 
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
-
-            content.HeaderTextView.UserInteractionEnabled = true;
+				
 			content.HeaderTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
             
 			if (ApplicationWorker.Settings.LoadImages && article.PreviewPicture != null && article.PreviewPicture.Data != null)
@@ -270,8 +255,7 @@ namespace ItExpert
 
 			content.PreviewTextView = ItExpertHelper.GetTextView(ItExpertHelper.GetAttributedString(article.PreviewText, previewFont, foreColor), 
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
-
-            content.PreviewTextView.UserInteractionEnabled = true;
+				
 			content.PreviewTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
         }
 
@@ -290,7 +274,7 @@ namespace ItExpert
             content.IsReadedButton.Frame = new RectangleF(mainContainer.Frame.Width - _padding.Right - 70, 2, 70, 70);
 
 			var foreColor = ItExpertHelper.GetUIColorFromColor(ApplicationWorker.Settings.GetForeColor());
-			var headerFont = UIFont.BoldSystemFontOfSize (ApplicationWorker.Settings.HeaderSize);
+			var headerFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
             UpdateTextView (content.HeaderTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width,
 				headerFont, foreColor, article.Name, new PointF (_padding.Left, _padding.Top));
 
@@ -430,7 +414,6 @@ namespace ItExpert
         private void FillContent(Content content, RectangleF frame, Content.Position contentPosition, Article article)
         {
             content.MainContainer = new UIView(frame);
-            content.MainContainer.UserInteractionEnabled = true;
 
             CreateContentElements(content.MainContainer, article, ItExpertHelper.LargestImageSizeInArticlesPreview, content);
 
@@ -448,43 +431,13 @@ namespace ItExpert
                 content.HeaderTextView.Frame.Bottom + _padding.Top, largestImageWidth, article.PreviewPicture.Height));
 
             content.ImageViewContainer.Add (content.ImageView);
-
-            content.ImageView.UserInteractionEnabled = true;
-            content.ImageViewContainer.UserInteractionEnabled = true;
         }
 
-		private void AddCellElements(UIView cellContentView, Content content)
+		private void AddCellElements(UITableViewCell cell, Content content)
 		{
 			ItExpertHelper.RemoveSubviews(content.MainContainer);
 
-			if (content.PreviewTextView.GestureRecognizers != null)
-			{
-				foreach (var gr in content.PreviewTextView.GestureRecognizers)
-				{
-					gr.Dispose();
-				}
-			}
-			content.PreviewTextView.GestureRecognizers = new UIGestureRecognizer[0];
-			if (content.HeaderTextView.GestureRecognizers != null)
-			{
-				foreach (var gr in content.HeaderTextView.GestureRecognizers)
-				{
-					gr.Dispose();
-				}
-			}
-			content.HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
-
-			content.PreviewTextView.UserInteractionEnabled = true;
-			content.HeaderTextView.UserInteractionEnabled = true;
-
-			var previewTap = new UITapGestureRecognizer(() =>
-			{
-				if (CellPushed != null)
-				{
-					CellPushed(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
-				}
-			});
-			var headerTap = new UITapGestureRecognizer(() =>
+			var cellTap = new UITapGestureRecognizer(() =>
 			{
 				var handler = Interlocked.CompareExchange(ref CellPushed, null, null);
 				if (handler != null)
@@ -493,10 +446,9 @@ namespace ItExpert
 				}
 			});
 			var frame = content.MainContainer.Frame;
-			var doublePortalView = new DoublePortalView(frame, content, OnReadedButtonTouchUpInside, 
-				headerTap, previewTap);
-			cellContentView.Add(doublePortalView);
-			cellContentView.BringSubviewToFront(doublePortalView);
+			var doublePortalView = new DoublePortalView(frame, content, OnReadedButtonTouchUpInside, cellTap);
+			cell.ContentView.Add(doublePortalView);
+			cell.ContentView.BringSubviewToFront(doublePortalView);
 		}
 
         public override float GetContentHeight(UIView cellContentView, Article article)
@@ -522,26 +474,15 @@ namespace ItExpert
 	{
 		private DoublePortalContentCreator.Content _content;
 		private EventHandler _isReaderClick;
-		private UITapGestureRecognizer _headerTap;
-		private UITapGestureRecognizer _previewTap;
+		private UITapGestureRecognizer _tap;
 
 		public DoublePortalView(RectangleF frame, DoublePortalContentCreator.Content content,
-			EventHandler isReadedClick, UITapGestureRecognizer headerTap, 
-			UITapGestureRecognizer previewTap): base(frame)
+			EventHandler isReadedClick, UITapGestureRecognizer tap): base(frame)
 		{
+			_tap = tap;
 			_content = content;
 			_isReaderClick = isReadedClick;
 			_content.IsReadedButton.TouchUpInside += _isReaderClick;
-			_headerTap = headerTap;
-			_previewTap = previewTap;
-			if (_previewTap != null)
-			{
-				_content.PreviewTextView.AddGestureRecognizer(_previewTap);
-			}
-			if (_headerTap != null)
-			{
-				_content.HeaderTextView.AddGestureRecognizer(_headerTap);
-			}
 			Add (_content.IsReadedButton);
 			Add (_content.HeaderTextView);
 			Add (_content.PreviewTextView);
@@ -549,12 +490,10 @@ namespace ItExpert
 			{
 				Add(content.ImageViewContainer);
 			}
-			BringSubviewToFront(_content.HeaderTextView);
-			BringSubviewToFront(_content.PreviewTextView);
-			if (content.ImageViewContainer != null)
-			{
-				BringSubviewToFront(_content.ImageViewContainer);
-			}
+			_content.HeaderTextView.UserInteractionEnabled = true;
+			_content.PreviewTextView.UserInteractionEnabled = true;
+			_content.HeaderTextView.AddGestureRecognizer(_tap);
+			_content.PreviewTextView.AddGestureRecognizer(_tap);
 			BringSubviewToFront(_content.IsReadedButton);
 		}
 
@@ -567,22 +506,27 @@ namespace ItExpert
 			if (_content != null)
 			{
 				var content = _content;
-				content.PreviewTextView.GestureRecognizers = new UIGestureRecognizer[0];
-				content.HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
-				if (_previewTap != null)
-				{
-					_previewTap.Dispose();
-				}
-				if (_headerTap != null)
-				{
-					_headerTap.Dispose();
-				}
 				content.IsReadedButton.TouchUpInside -= _isReaderClick;
 			}
+			if (_content.PreviewTextView != null && _content.PreviewTextView.GestureRecognizers != null)
+			{
+				foreach (var gr in _content.PreviewTextView.GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+				_content.PreviewTextView.GestureRecognizers = new UIGestureRecognizer[0];
+			}
+			if (_content.HeaderTextView != null && _content.HeaderTextView.GestureRecognizers != null)
+			{
+				foreach (var gr in _content.HeaderTextView.GestureRecognizers)
+				{
+					gr.Dispose();
+				}
+				_content.HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
+			}
+			_tap = null;
 			_content = null;
 			_isReaderClick = null;
-			_headerTap = null;
-			_previewTap = null;
 		}
 	}
 }

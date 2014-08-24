@@ -37,12 +37,12 @@ namespace ItExpert.Model
             };
             _fontValues = new Dictionary<int, FontSizeWrapper>()
             {
-                {1, new FontSizeWrapper() {TextSize = 12, HeaderSize = 15}},
-                {2, new FontSizeWrapper() {TextSize = 14, HeaderSize = 18}},
-                {3, new FontSizeWrapper() {TextSize = 16, HeaderSize = 20}},
-                {4, new FontSizeWrapper() {TextSize = 18, HeaderSize = 22}},
-                {5, new FontSizeWrapper() {TextSize = 20, HeaderSize = 26}},
-                {6, new FontSizeWrapper() {TextSize = 22, HeaderSize = 30}}
+                {1, new FontSizeWrapper() {TextSize = 12, HeaderSize = 16}},
+                {2, new FontSizeWrapper() {TextSize = 16, HeaderSize = 20}},
+                {3, new FontSizeWrapper() {TextSize = 20, HeaderSize = 24}},
+                {4, new FontSizeWrapper() {TextSize = 28, HeaderSize = 34}},
+                {5, new FontSizeWrapper() {TextSize = 36, HeaderSize = 42}},
+                {6, new FontSizeWrapper() {TextSize = 42, HeaderSize = 50}}
             };
             _startSections = new Dictionary<Page, string>()
             {
@@ -214,7 +214,7 @@ namespace ItExpert.Model
                 };
                 settings.SetTheme(Theme.Light);
                 settings.SetFontSize(2);
-                settings.SetDetailFontSize(2);
+                settings.SetDetailFontSize(4);
                 settings.SetDbLimitSize(3);
             }
             return settings;
