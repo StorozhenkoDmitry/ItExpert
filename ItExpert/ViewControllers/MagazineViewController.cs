@@ -1904,14 +1904,15 @@ namespace ItExpert
 			{
 				if (!error)
 				{
-					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+					ApplicationWorker.EnsureCreateAppDataFolder();
 					var fileName = _magazine.Id.ToString("G") + ".pdf";
-					var path = Path.Combine(folder, fileName);
+					var path = ApplicationWorker.GetAppDataFilePath(fileName);
 					using (var fs = File.Create(path))
 					{
 						fs.Write(e.Pdf, 0, e.Pdf.Length);
 						fs.Flush();
 					}
+					ApplicationWorker.SetDoNotBackUpAttribute(path);
 					_magazine.Exists = true;
 					var dbModel = ApplicationWorker.Db.GetMagazine(_magazine.Id, false);
 					if (dbModel != null)
@@ -2007,9 +2008,9 @@ namespace ItExpert
 			{
 				if (ev.ButtonIndex == 1)
 				{
-					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+					ApplicationWorker.EnsureCreateAppDataFolder();
 					var fileName = _magazine.Id.ToString("G") + ".pdf";
-					var path = Path.Combine(folder, fileName);
+					var path = ApplicationWorker.GetAppDataFilePath(fileName);
 					File.Delete(path);
 					_magazine.Exists = false;
 					ApplicationWorker.Db.UpdateMagazine(_magazine);
@@ -2027,9 +2028,9 @@ namespace ItExpert
 
 		public void OpenMagazinePdf()
 		{
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			ApplicationWorker.EnsureCreateAppDataFolder();
 			var fileName = _magazine.Id.ToString("G") + ".pdf";
-			var path = Path.Combine(folder, fileName);
+			var path = ApplicationWorker.GetAppDataFilePath(fileName);
 			if (!File.Exists(path))
 			{
 				BTProgressHUD.ShowToast ("Файл не найден", ProgressHUD.MaskType.None, false, 2500);
@@ -2093,9 +2094,9 @@ namespace ItExpert
 		private void UpdateMagazinesPdfExists(Magazine magazine)
 		{
 			if (magazine == null) return;
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			ApplicationWorker.EnsureCreateAppDataFolder();
 			var fileName = magazine.Id.ToString("G") + ".pdf";
-			var path = System.IO.Path.Combine(folder, fileName);
+			var path = ApplicationWorker.GetAppDataFilePath(fileName);
 			var file = new FileInfo(path);
 			magazine.Exists = file.Exists;
 		}

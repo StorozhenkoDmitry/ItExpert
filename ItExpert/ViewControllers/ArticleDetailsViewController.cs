@@ -327,13 +327,13 @@ namespace ItExpert
 						var options = UIViewAnimationOptions.CurveEaseIn;
 						_currentView.Frame = new RectangleF(View.Frame.Right, 0, View.Frame.Width, View.Frame.Height);
 						Add(_currentView);
-						UIView.Animate(0.7, 0, options, () =>
+						UIView.Animate(0.5, 0, options, () =>
 						{
 							_currentView.Frame = new RectangleF(View.Frame.X, 0, View.Frame.Width, View.Frame.Height);
 						}, 
 							() => _currentView.Frame = new RectangleF(View.Frame.X, 0, View.Frame.Width, View.Frame.Height));
 
-						UIView.Animate(0.7, 0, options, () =>
+						UIView.Animate(0.5, 0, options, () =>
 						{
 							oldView.Frame = new RectangleF(0 - View.Frame.Width, 0, View.Frame.Width, View.Frame.Height);
 						}, () =>
@@ -387,13 +387,13 @@ namespace ItExpert
 						var options = UIViewAnimationOptions.CurveEaseIn;
 						_currentView.Frame = new RectangleF(View.Frame.Right, 0, View.Frame.Width, View.Frame.Height);
 						Add(_currentView);
-						UIView.Animate(0.7, 0, options, () =>
+						UIView.Animate(0.5, 0, options, () =>
 						{
 							_currentView.Frame = new RectangleF(View.Frame.X, 0, View.Frame.Width, View.Frame.Height);
 						}, 
 							() => _currentView.Frame = new RectangleF(View.Frame.X, 0, View.Frame.Width, View.Frame.Height));
 
-						UIView.Animate(0.7, 0, options, () =>
+						UIView.Animate(0.5, 0, options, () =>
 						{
 							oldView.Frame = new RectangleF(0 - View.Frame.Width, 0, View.Frame.Width, View.Frame.Height);
 						}, () =>
@@ -629,13 +629,13 @@ namespace ItExpert
 			{
 				_currentView.Frame = new RectangleF(View.Frame.Right, 0, View.Frame.Width, View.Frame.Height);
 				Add(_currentView);
-				UIView.Animate(0.7, 0, options, () =>
+				UIView.Animate(0.5, 0, options, () =>
 				{
 					_currentView.Frame = new RectangleF(View.Frame.X, 0, View.Frame.Width, View.Frame.Height);
 				}, 
 				() => _currentView.Frame = new RectangleF(View.Frame.X, 0, View.Frame.Width, View.Frame.Height));
 
-				UIView.Animate(0.7, 0, options, () =>
+				UIView.Animate(0.5, 0, options, () =>
 				{
 					oldView.Frame = new RectangleF(0 - View.Frame.Width, 0, View.Frame.Width, View.Frame.Height);
 				}, () =>
@@ -648,13 +648,13 @@ namespace ItExpert
 			{
 				_currentView.Frame = new RectangleF(0 - View.Frame.Width, 0, View.Frame.Width, View.Frame.Height);
 				Add(_currentView);
-				UIView.Animate(0.7, 0, options, () =>
+				UIView.Animate(0.5, 0, options, () =>
 				{
 					_currentView.Frame = new RectangleF(View.Frame.X, 0, View.Frame.Width, View.Frame.Height);
 				}, 
 					() => _currentView.Frame = new RectangleF(View.Frame.X, 0, View.Frame.Width, View.Frame.Height));
 
-				UIView.Animate(0.7, 0, options, () =>
+				UIView.Animate(0.5, 0, options, () =>
 				{
 					oldView.Frame = new RectangleF(View.Frame.Right, 0, View.Frame.Width, View.Frame.Height);
 				}, () =>

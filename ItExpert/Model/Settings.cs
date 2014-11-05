@@ -184,12 +184,11 @@ namespace ItExpert.Model
         public static Settings GetSettings()
         {
             Settings settings = null;
-			var documents = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
-			var library = Path.Combine (documents, "..", "Library");
-            var file = System.IO.Path.Combine(library, FileName);
-            if (File.Exists(file))
+			ApplicationWorker.EnsureCreateAppDataFolder();
+			var filePath = ApplicationWorker.GetAppDataFilePath(FileName);
+            if (File.Exists(filePath))
             {
-                using (var fs = File.OpenRead(file))
+                using (var fs = File.OpenRead(filePath))
                 {
                     var formatter = new BinaryFormatter();
                     settings = (Settings)formatter.Deserialize(fs);
@@ -214,7 +213,7 @@ namespace ItExpert.Model
                 };
                 settings.SetTheme(Theme.Light);
                 settings.SetFontSize(2);
-                settings.SetDetailFontSize(4);
+                settings.SetDetailFontSize(3);
                 settings.SetDbLimitSize(3);
             }
             return settings;
@@ -222,15 +221,15 @@ namespace ItExpert.Model
 
         public void SaveSettings()
         {
-			var documents = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
-			var library = Path.Combine (documents, "..", "Library");
-            var file = System.IO.Path.Combine(library, FileName);
+			ApplicationWorker.EnsureCreateAppDataFolder();
+            var file = ApplicationWorker.GetAppDataFilePath(FileName);
             using (var fs = File.Create(file))
             {
                 var formatter = new BinaryFormatter();
                 formatter.Serialize(fs, this);
                 fs.Flush();
             }
+			ApplicationWorker.SetDoNotBackUpAttribute(file);
         }
 
         public string GetStringTheme(Theme theme)

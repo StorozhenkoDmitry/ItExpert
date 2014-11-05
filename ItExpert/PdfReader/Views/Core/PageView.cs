@@ -38,8 +38,8 @@ namespace mTouchPDFReader.Library.Views.Core
 		#endregion
 			
 		#region Fields		
-		private readonly PageContentView _PageContentView;
-		private readonly UIView _PageContentContainerView;	
+		private PageContentView _PageContentView;
+		private UIView _PageContentContainerView;	
 		private float _ZoomScaleStep;
 		#endregion
 
@@ -135,11 +135,21 @@ namespace mTouchPDFReader.Library.Views.Core
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			_PageContentView.RemoveFromSuperview();
-			_PageContentView.Dispose();
-
-			_PageContentContainerView.RemoveFromSuperview();
-			_PageContentContainerView.Dispose();
+			InvokeOnMainThread(() =>
+			{
+				if (_PageContentView != null)
+				{
+					_PageContentView.RemoveFromSuperview();
+					_PageContentView.Dispose();
+				}
+				_PageContentView = null;
+				if (_PageContentContainerView != null)
+				{
+					_PageContentContainerView.RemoveFromSuperview();
+					_PageContentContainerView.Dispose();
+				}
+				_PageContentContainerView = null;
+			});
 		}
 
 		#endregion

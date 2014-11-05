@@ -56,7 +56,8 @@ namespace mTouchPDFReader.Library.Views.Core
 		private AutoScaleModes _AutoScaleMode;
 		private UIButton _zoomInBut;
 		private UIButton _zoomOutBut;
-
+		private UIButton _backButton;
+		private UIImageView _logoImageView;
 		#endregion
 			
 		#region Initialization
@@ -123,49 +124,117 @@ namespace mTouchPDFReader.Library.Views.Core
 		public override void ViewDidLayoutSubviews()
 		{
 			base.ViewDidLayoutSubviews();
-			foreach (var pageVC in _BookPageViewController.ChildViewControllers.Cast<PageViewController>()) {
-				pageVC.PageView.NeedUpdateZoomAndOffset = true;
+			if (_BookPageViewController != null && _BookPageViewController.ChildViewControllers != null)
+			{
+				foreach (var pageVC in _BookPageViewController.ChildViewControllers.Cast<PageViewController>())
+				{
+					pageVC.PageView.NeedUpdateZoomAndOffset = true;
+				}
 			}
 		}
 
 		protected override void Dispose(bool disposing)
 		{
-			PDFDocument.CloseDocument();
 			base.Dispose(disposing);
-			_slider.RemoveFromSuperview();
-			_slider.Dispose();
-			_PageNumberLabel.RemoveFromSuperview();
-			_PageNumberLabel.Dispose();
-			_zoomInBut.RemoveFromSuperview();
-			_zoomInBut.Dispose();
-			_zoomOutBut.RemoveFromSuperview();
-			_zoomOutBut.Dispose();
-			_toolbar.RemoveFromSuperview();
-			_toolbar.Dispose();
-			_bottomBar.RemoveFromSuperview();
-			_bottomBar.Dispose();
-			_toolbar = null;
-			_bottomBar = null;
-			_slider = null;
-			_PageNumberLabel = null;
-			_zoomInBut = null;
-			_zoomOutBut = null;
-			if (_BookPageViewController != null)
+			InvokeOnMainThread(() =>
 			{
-				_BookPageViewController.GetNextViewController = null;
-				_BookPageViewController.GetPreviousViewController = null;
-				_BookPageViewController.GetSpineLocation = null;
-				_BookPageViewController.DidFinishAnimating -= PageViewControllerDidFinishAnimating;
-				if (_BookPageViewController.ViewControllers != null && _BookPageViewController.ViewControllers.Any())
+				PDFDocument.CloseDocument();
+				if (_backButton != null)
 				{
-					foreach (var controller in _BookPageViewController.ViewControllers)
+					_backButton.RemoveFromSuperview();
+					if (_backButton.ImageView != null && _backButton.ImageView.Image != null)
 					{
-						controller.Dispose();
+						_backButton.ImageView.Image.Dispose();
+						_backButton.ImageView.Image = null;
 					}
+					_backButton.TouchUpInside -= OnBackButtonPushed;
+					_backButton.Dispose();
 				}
-				_BookPageViewController.Dispose();
-				_BookPageViewController = null;
-			}
+				_backButton = null;
+
+				if (_logoImageView != null)
+				{
+					_logoImageView.RemoveFromSuperview();
+					if (_logoImageView.Image != null)
+					{
+						_logoImageView.Image.Dispose();
+						_logoImageView.Image = null;
+					}
+					_logoImageView.Dispose();
+				}
+				_logoImageView = null;
+
+				if (_slider != null)
+				{
+					_slider.RemoveFromSuperview();
+					_slider.Dispose();
+				}
+				_slider = null;
+
+				if (_PageNumberLabel != null)
+				{
+					_PageNumberLabel.RemoveFromSuperview();
+					_PageNumberLabel.Dispose();
+				}
+				_PageNumberLabel = null;
+
+				if (_zoomInBut != null)
+				{
+					_zoomInBut.RemoveFromSuperview();
+					_zoomInBut.TouchUpInside -= OnZoomInClick;
+					if (_zoomInBut.ImageView != null && _zoomInBut.ImageView.Image != null)
+					{
+						_zoomInBut.ImageView.Image.Dispose();
+						_zoomInBut.ImageView.Image = null;
+					}
+					_zoomInBut.Dispose();
+				}
+				_zoomInBut = null;
+
+				if (_zoomOutBut != null)
+				{
+					_zoomOutBut.RemoveFromSuperview();
+					_zoomOutBut.TouchUpInside -= OnZoomOutClick;
+					if (_zoomOutBut.ImageView != null && _zoomOutBut.ImageView.Image != null)
+					{
+						_zoomOutBut.ImageView.Image.Dispose();
+						_zoomOutBut.ImageView.Image = null;
+					}
+					_zoomOutBut.Dispose();
+				}
+				_zoomOutBut = null;
+
+				if (_toolbar != null)
+				{
+					_toolbar.RemoveFromSuperview();
+					_toolbar.Dispose();
+				}
+				_toolbar = null;
+
+				if (_bottomBar != null)
+				{
+					_bottomBar.RemoveFromSuperview();
+					_bottomBar.Dispose();
+				}
+				_bottomBar = null;
+
+				if (_BookPageViewController != null)
+				{
+					_BookPageViewController.GetNextViewController = null;
+					_BookPageViewController.GetPreviousViewController = null;
+					_BookPageViewController.GetSpineLocation = null;
+					_BookPageViewController.DidFinishAnimating -= PageViewControllerDidFinishAnimating;
+					if (_BookPageViewController.ViewControllers != null && _BookPageViewController.ViewControllers.Any())
+					{
+						foreach (var controller in _BookPageViewController.ViewControllers)
+						{
+							controller.Dispose();
+						}
+					}
+					_BookPageViewController.Dispose();
+					_BookPageViewController = null;
+				}
+			});
 		}	
 
 		#endregion
@@ -264,31 +333,41 @@ namespace mTouchPDFReader.Library.Views.Core
 			toolBar.BackgroundColor = UIColor.Black;
 
 			var image = new UIImage(NSData.FromFile("NavigationBar/Back.png"), 2);
-			var backButton = new UIButton(new RectangleF(new PointF(10, toolBar.Frame.Height / 2 - image.Size.Height / 2), image.Size));
-			backButton.SetImage(image, UIControlState.Normal);
-			backButton.TouchUpInside += OnBackButtonPushed;
-			toolBar.Add(backButton);
+			_backButton = new UIButton(new RectangleF(new PointF(10, toolBar.Frame.Height / 2 - image.Size.Height / 2), image.Size));
+			_backButton.SetImage(image, UIControlState.Normal);
+			_backButton.TouchUpInside += OnBackButtonPushed;
+			toolBar.Add(_backButton);
 
-			var logoImageView = new UIImageView(new UIImage(NSData.FromFile("NavigationBar/Logo.png"), 2));
-			logoImageView.Frame = new RectangleF(new PointF(backButton.Frame.Right + 20, toolBar.Frame.Height / 2 - logoImageView.Frame.Height / 2), 
-							logoImageView.Frame.Size);
-			toolBar.Add(logoImageView);
+			_logoImageView = new UIImageView(new UIImage(NSData.FromFile("NavigationBar/Logo.png"), 2));
+			_logoImageView.Frame = new RectangleF(new PointF(_backButton.Frame.Right + 20, toolBar.Frame.Height / 2 - _logoImageView.Frame.Height / 2), 
+							_logoImageView.Frame.Size);
+			toolBar.Add(_logoImageView);
 
 			var x = View.Bounds.Width - 10 - (30 * 2 + 10);
 			var btn = new UIButton(new RectangleF(x, 5, 30, 30));
 			btn.SetImage(new UIImage (NSData.FromFile ("ZoomOut48.png"), 1f), UIControlState.Normal);
-			btn.TouchUpInside += (sender, e) => ZoomOut();
+			btn.TouchUpInside += OnZoomOutClick;
 			toolBar.Add(btn);
 			_zoomOutBut = btn;
 
 			x = x + 10 + 30;
 			btn = new UIButton(new RectangleF(x, 5, 30, 30));
 			btn.SetImage(new UIImage (NSData.FromFile ("ZoomIn48.png"), 1f), UIControlState.Normal);
-			btn.TouchUpInside += (sender, e) =>  ZoomIn();
+			btn.TouchUpInside += OnZoomInClick;
 			toolBar.Add(btn);
 			_zoomInBut = btn;
 
 			return toolBar;
+		}
+
+		void OnZoomInClick(object sender, EventArgs e)
+		{
+			ZoomIn();
+		}
+
+		void OnZoomOutClick(object sender, EventArgs e)
+		{
+			ZoomOut();
 		}
 
 		void OnBackButtonPushed(object sender, EventArgs e)

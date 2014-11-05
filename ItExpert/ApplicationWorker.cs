@@ -7,6 +7,8 @@ using System.Threading;
 using ItExpert.DataAccessLayer;
 using ItExpert.Model;
 using ItExpert.ServiceLayer;
+using System.IO;
+using MonoTouch.Foundation;
 
 namespace ItExpert
 {
@@ -89,6 +91,47 @@ namespace ItExpert
             SharedArticle = null;
 			AllPdfFilesDeleted = null;
         }
+
+		#region Files and Folders
+
+		public static string GetAppDataFilePath(string fileName)
+		{
+			var folder = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var library = Path.Combine (folder, "..", "Library");
+			var dataFolder = Path.Combine(library, "AppData");
+			var filePath = Path.Combine(dataFolder, fileName);
+			return filePath;
+		}
+
+		public static void EnsureCreateAppDataFolder()
+		{
+			var folder = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var library = Path.Combine (folder, "..", "Library");
+			var dataFolder = Path.Combine(library, "AppData");
+			if (!Directory.Exists(dataFolder))
+			{
+				Directory.CreateDirectory(dataFolder);
+			}
+		}
+
+		public static void SetDoNotBackUpAttribute(string fileName)
+		{
+			var folder = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
+			var library = Path.Combine (folder, "..", "Library");
+			var dataFolder = Path.Combine(library, "AppData");
+			if (Directory.Exists(dataFolder))
+			{
+				var filePath = Path.Combine(dataFolder, fileName);
+				if (!File.Exists(filePath))
+				{
+					using (var fs = File.Create(filePath))
+					{}
+				}
+				NSFileManager.SetSkipBackupAttribute (filePath, true);
+			}
+		}
+
+		#endregion
 
         #region News
 

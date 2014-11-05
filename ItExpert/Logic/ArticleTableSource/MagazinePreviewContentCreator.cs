@@ -78,6 +78,16 @@ namespace ItExpert
 			AddButton(magazineView);
 			AddProgress (magazineView);
 			cell.ContentView.Add(magazineView);
+			cell.ContentView.BringSubviewToFront(magazineView);
+			var imageFrame = _imageView.Frame;
+			var contentFrame = new RectangleF(frame.X, frame.Y, frame.Width, imageFrame.Height);
+			magazineView.Frame = contentFrame;
+			if (ApplicationWorker.Magazine.Exists)
+			{
+				_progress.StopAnimating ();
+				_button.Enabled = true;
+				return;
+			}
 
 			if (MagazineViewController.Current.IsLoadingPdf)
 			{
@@ -102,13 +112,23 @@ namespace ItExpert
 			AddButton(magazineView);
 			AddProgress (magazineView);
 			cell.ContentView.Add(magazineView);
+			cell.ContentView.BringSubviewToFront(magazineView);
+			var imageFrame = _imageView.Frame;
+			var contentFrame = new RectangleF(frame.X, frame.Y, frame.Width, imageFrame.Height);
+			magazineView.Frame = contentFrame;
+			if (ApplicationWorker.Magazine.Exists)
+			{
+				_progress.StopAnimating ();
+				_button.Enabled = true;
+				return;
+			}
 
 			if (MagazineViewController.Current.IsLoadingPdf)
 			{
 				_progress.StartAnimating ();
 				_button.Enabled = false;
 			}
-			else
+			else 
 			{
 				_progress.StopAnimating ();
 				_button.Enabled = true;

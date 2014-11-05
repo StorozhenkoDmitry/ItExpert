@@ -105,6 +105,7 @@ namespace mTouchPDFReader.Library.Views.Core
 			if (_Document != null) {
 				_DocumentHasLoaded = false;
 				_Document.Dispose();
+				_Document = null;
 			}
 		}
 		

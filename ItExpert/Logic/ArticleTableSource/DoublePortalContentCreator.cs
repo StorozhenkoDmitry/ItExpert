@@ -50,6 +50,14 @@ namespace ItExpert
                 if (HeaderTextView != null)
                 {
 					HeaderTextView.RemoveFromSuperview();
+					if (HeaderTextView.GestureRecognizers != null)
+					{
+						foreach (var gr in HeaderTextView.GestureRecognizers)
+						{
+							gr.Dispose();
+						}
+						HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
+					}
                     HeaderTextView.Dispose();
                     HeaderTextView = null;
                 }
@@ -57,6 +65,14 @@ namespace ItExpert
                 if (PreviewTextView != null)
                 {
 					PreviewTextView.RemoveFromSuperview();
+					if (PreviewTextView.GestureRecognizers != null)
+					{
+						foreach (var gr in PreviewTextView.GestureRecognizers)
+						{
+							gr.Dispose();
+						}
+						PreviewTextView.GestureRecognizers = new UIGestureRecognizer[0];
+					}
                     PreviewTextView.Dispose();
                     PreviewTextView = null;
                 }
@@ -192,6 +208,8 @@ namespace ItExpert
 
                     UpdateContentElements(_leftContent.MainContainer, article.LeftContent, ItExpertHelper.LargestImageSizeInArticlesPreview, _leftContent);
                 }
+				var maxHeight = GetMaxHeight(_leftContent, null);
+				_leftContent.MainContainer.Frame = new RectangleF(0, 0, cell.ContentView.Frame.Width / 2, maxHeight);
                 AddCellElements(cell, _leftContent);
             }
 
@@ -209,8 +227,13 @@ namespace ItExpert
 
                     UpdateContentElements(_rightContent.MainContainer, article.RightContent, ItExpertHelper.LargestImageSizeInArticlesPreview, _rightContent);
                 }
+				var maxHeight = GetMaxHeight(_leftContent, _rightContent);
+				_rightContent.MainContainer.Frame = new RectangleF(cell.ContentView.Frame.Width / 2, 0, cell.ContentView.Frame.Width / 2, maxHeight);
                 AddCellElements(cell, _rightContent);
             }
+			var maxHeight2 = GetMaxHeight(_leftContent, _rightContent);
+			_leftContent.MainContainer.Frame = new RectangleF(0, 0, cell.ContentView.Frame.Width / 2, maxHeight2);
+
         }
 
         private void CreateContentElements(UIView mainContainer, Article article, float largestImageWidth, Content content)
@@ -233,7 +256,8 @@ namespace ItExpert
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width, new PointF (_padding.Left, _padding.Top));
 				
 			content.HeaderTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
-            
+			content.HeaderTextView.Selectable = false;
+
 			if (ApplicationWorker.Settings.LoadImages && article.PreviewPicture != null && article.PreviewPicture.Data != null)
 			{
 				CreateImageView(content, article, largestImageWidth, mainContainer);
@@ -257,7 +281,8 @@ namespace ItExpert
                 mainContainer.Bounds.Width - _padding.Right - _padding.Left, new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
 				
 			content.PreviewTextView.BackgroundColor = ItExpertHelper.GetUIColorFromColor (ApplicationWorker.Settings.GetBackgroundColor ());
-        }
+			content.PreviewTextView.Selectable = false;
+		}
 
         private void UpdateContentElements(UIView mainContainer, Article article, float largestImageWidth, Content content)
         {
@@ -277,7 +302,7 @@ namespace ItExpert
 			var headerFont = UIFont.BoldSystemFontOfSize(ApplicationWorker.Settings.HeaderSize);
             UpdateTextView (content.HeaderTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left - content.IsReadedButton.Frame.Width,
 				headerFont, foreColor, article.Name, new PointF (_padding.Left, _padding.Top));
-
+			content.HeaderTextView.Selectable = false;
 			if (ApplicationWorker.Settings.LoadImages && article.PreviewPicture != null && article.PreviewPicture.Data != null)
 			{
 				if (content.ImageView != null)
@@ -318,7 +343,8 @@ namespace ItExpert
             UpdateTextView (content.PreviewTextView, mainContainer.Bounds.Width - _padding.Right - _padding.Left, 
 				previewFont, foreColor, article.PreviewText, 
                 new PointF (_padding.Left, content.HeaderTextView.Frame.Bottom + _padding.Top), content.ImageViewContainer);
-        }
+			content.PreviewTextView.Selectable = false;
+		}
 
         private void UpdateTextView(UITextView textViewToUpdate, float updatedTextViewWidth, UIFont font, UIColor foregroundColor, string updatedText, PointF updatedTextViewLocation, UIView imageView = null)
         {
@@ -437,7 +463,7 @@ namespace ItExpert
 		{
 			ItExpertHelper.RemoveSubviews(content.MainContainer);
 
-			var cellTap = new UITapGestureRecognizer(() =>
+			var headerTap = new UITapGestureRecognizer(() =>
 			{
 				var handler = Interlocked.CompareExchange(ref CellPushed, null, null);
 				if (handler != null)
@@ -445,8 +471,15 @@ namespace ItExpert
 					handler(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
 				}
 			});
+			var previewTap = new UITapGestureRecognizer(() =>
+			{
+				if (CellPushed != null)
+				{
+					CellPushed(content.MainContainer, new DoubleCellPushedEventArgs(content.Article));
+				}
+			});
 			var frame = content.MainContainer.Frame;
-			var doublePortalView = new DoublePortalView(frame, content, OnReadedButtonTouchUpInside, cellTap);
+			var doublePortalView = new DoublePortalView(frame, content, OnReadedButtonTouchUpInside, headerTap, previewTap);
 			cell.ContentView.Add(doublePortalView);
 			cell.ContentView.BringSubviewToFront(doublePortalView);
 		}
@@ -474,12 +507,14 @@ namespace ItExpert
 	{
 		private DoublePortalContentCreator.Content _content;
 		private EventHandler _isReaderClick;
-		private UITapGestureRecognizer _tap;
+		private UITapGestureRecognizer _headerTap;
+		private UITapGestureRecognizer _previewTap;
 
 		public DoublePortalView(RectangleF frame, DoublePortalContentCreator.Content content,
-			EventHandler isReadedClick, UITapGestureRecognizer tap): base(frame)
+			EventHandler isReadedClick, UITapGestureRecognizer headerTap, UITapGestureRecognizer previewTap): base(frame)
 		{
-			_tap = tap;
+			_headerTap = headerTap;
+			_previewTap = previewTap;
 			_content = content;
 			_isReaderClick = isReadedClick;
 			_content.IsReadedButton.TouchUpInside += _isReaderClick;
@@ -492,8 +527,8 @@ namespace ItExpert
 			}
 			_content.HeaderTextView.UserInteractionEnabled = true;
 			_content.PreviewTextView.UserInteractionEnabled = true;
-			_content.HeaderTextView.AddGestureRecognizer(_tap);
-			_content.PreviewTextView.AddGestureRecognizer(_tap);
+			_content.HeaderTextView.AddGestureRecognizer(_headerTap);
+			_content.PreviewTextView.AddGestureRecognizer(_previewTap);
 			BringSubviewToFront(_content.IsReadedButton);
 		}
 
@@ -524,7 +559,8 @@ namespace ItExpert
 				}
 				_content.HeaderTextView.GestureRecognizers = new UIGestureRecognizer[0];
 			}
-			_tap = null;
+			_headerTap = null;
+			_previewTap = null;
 			_content = null;
 			_isReaderClick = null;
 		}

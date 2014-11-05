@@ -751,9 +751,8 @@ namespace ItExpert
 
 			if (string.IsNullOrWhiteSpace(ApplicationWorker.Css))
 			{
-				var documents = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
-				var library = Path.Combine (documents, "..", "Library");
-				var path = Path.Combine(library, "css.dt");
+				ApplicationWorker.EnsureCreateAppDataFolder();
+				var path = ApplicationWorker.GetAppDataFilePath("css.dt");
 				var fileInfo = new FileInfo(path);
 				if (fileInfo.Exists)
 				{

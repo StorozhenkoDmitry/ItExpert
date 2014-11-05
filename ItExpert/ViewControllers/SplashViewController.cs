@@ -188,14 +188,14 @@ namespace ItExpert
 			if (!string.IsNullOrWhiteSpace(e.Css))
 			{
 				ApplicationWorker.Css = e.Css;
-				var documents = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
-				var library = Path.Combine (documents, "..", "Library");
-				var path = Path.Combine(library, "css.dt");
+				ApplicationWorker.EnsureCreateAppDataFolder();
+				var path = ApplicationWorker.GetAppDataFilePath("css.dt");
 				using (var sw = new StreamWriter(path, false, Encoding.UTF8))
 				{
 					sw.Write(e.Css);
 					sw.Flush();
 				}
+				ApplicationWorker.SetDoNotBackUpAttribute(path);
 			}
 			SelectStartSection(ApplicationWorker.Settings.Page);
 		}

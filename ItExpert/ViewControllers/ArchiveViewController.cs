@@ -105,6 +105,20 @@ namespace ItExpert
 				};
 				ThreadPool.QueueUserWorkItem(state => action());
 			}
+			else
+			{
+				if (_archiveView != null)
+				{
+					var previewList = ApplicationWorker.Db.GetMagazinesByYear(_currentYear, true);
+					if (previewList != null && previewList.Any() && !previewList.Any(x => x.PreviewPicture == null))
+					{
+						UpdateMagazinesPdfExists(previewList, _currentYear);
+						previewList = previewList.OrderByDescending(x => x.ActiveFrom).ToList();
+						_magazines = previewList;
+						_archiveView.AddMagazineViews(_magazines);
+					}
+				}
+			}
 		}
 
 		public override void ViewWillDisappear (bool animated)
@@ -760,14 +774,15 @@ namespace ItExpert
 				if (!error)
 				{
 					var downloadItem = _downloadMagazineView;
-					var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+					ApplicationWorker.EnsureCreateAppDataFolder();
 					var fileName = downloadItem.Magazine.Id.ToString("G") + ".pdf";
-					var path = Path.Combine(folder, fileName);
+					var path = ApplicationWorker.GetAppDataFilePath(fileName);
 					using (var fs = File.Create(path))
 					{
 						fs.Write(e.Pdf, 0, e.Pdf.Length);
 						fs.Flush();
 					}
+					ApplicationWorker.SetDoNotBackUpAttribute(path);
 					downloadItem.Magazine.Exists = true;
 					ApplicationWorker.Db.UpdateMagazine(downloadItem.Magazine);
 					downloadItem.UpdateMagazineExists(true);
@@ -788,9 +803,9 @@ namespace ItExpert
 
 		private void DeleteMagazine(MagazineView magazineView)
 		{
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			ApplicationWorker.EnsureCreateAppDataFolder();
 			var fileName = magazineView.Magazine.Id.ToString("G") + ".pdf";
-			var path = Path.Combine(folder, fileName);
+			var path = ApplicationWorker.GetAppDataFilePath(fileName);
 			File.Delete(path);
 			magazineView.Magazine.Exists = false;
 			ApplicationWorker.Db.UpdateMagazine(magazineView.Magazine);
@@ -800,9 +815,9 @@ namespace ItExpert
 
 		private void OpenPdf(Magazine magazine)
 		{
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			ApplicationWorker.EnsureCreateAppDataFolder();
 			var fileName = magazine.Id.ToString("G") + ".pdf";
-			var path = Path.Combine(folder, fileName);
+			var path = ApplicationWorker.GetAppDataFilePath(fileName);
 			if (!File.Exists(path))
 			{
 				BTProgressHUD.ShowToast ("Файл не найден", ProgressHUD.MaskType.None, false, 2500);
@@ -816,11 +831,11 @@ namespace ItExpert
 		private void UpdateMagazinesPdfExists(List<Magazine> magazines, int year)
 		{
 			if (magazines == null || !magazines.Any()) return;
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			ApplicationWorker.EnsureCreateAppDataFolder();
 			foreach (var magazine in magazines)
 			{
 				var fileName = magazine.Id.ToString("G") + ".pdf";
-				var path = Path.Combine(folder, fileName);
+				var path = ApplicationWorker.GetAppDataFilePath(fileName);
 				var file = new FileInfo(path);
 				magazine.Exists = file.Exists;
 			}

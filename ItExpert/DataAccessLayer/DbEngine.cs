@@ -28,9 +28,10 @@ namespace ItExpert.DataAccessLayer
 
         public DbEngine()
         {
-			var folder = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
-			var library = Path.Combine (folder, "..", "Library");
-			_db = new SQLiteConnection(Path.Combine(library, DbName));
+			ApplicationWorker.EnsureCreateAppDataFolder();
+			ApplicationWorker.SetDoNotBackUpAttribute(DbName);
+			var filePath = ApplicationWorker.GetAppDataFilePath(DbName);
+			_db = new SQLiteConnection(filePath);
 			_db.CreateTable<Block>();
             _db.CreateTable<Section>();
             _db.CreateTable<ItemSection>();
@@ -61,6 +62,7 @@ namespace ItExpert.DataAccessLayer
 			_db.Dispose();
             _db = null;
             _lockObj = null;
+			ApplicationWorker.SetDoNotBackUpAttribute(DbName);
         }
 
         #region Block
@@ -1039,18 +1041,16 @@ namespace ItExpert.DataAccessLayer
 
         public long GetDbSize()
         {
-			var folder = Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments);
-			var library = Path.Combine (folder, "..", "Library");
-            var file = new FileInfo(Path.Combine(library, DbName));
+			var filePath = ApplicationWorker.GetAppDataFilePath(DbName);
+            var file = new FileInfo(filePath);
 			var size = file.Length;
             return size;
         }	
 
 		private void CloneDb()
 		{
-			var folder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-			var library = Path.Combine(folder, "..", "Library");
-			var cloneDb = new SQLiteConnection(Path.Combine(library, "temp.db"));
+			var tempFilePath = ApplicationWorker.GetAppDataFilePath("temp.db");
+			var cloneDb = new SQLiteConnection(tempFilePath);
 			cloneDb.CreateTable<Block>();
 			cloneDb.CreateTable<Section>();
 			cloneDb.CreateTable<ItemSection>();
@@ -1116,10 +1116,12 @@ namespace ItExpert.DataAccessLayer
 			_db.Dispose();
 			cloneDb.Close();
 			cloneDb.Dispose();
-			File.Delete(Path.Combine(library, DbName));
-			var file = new FileInfo(Path.Combine(library, "temp.db"));
-			file.MoveTo(Path.Combine(library, DbName));
-			_db = new SQLiteConnection(Path.Combine(library, DbName));
+			var filePath = ApplicationWorker.GetAppDataFilePath(DbName);
+			File.Delete(filePath);
+			var file = new FileInfo(tempFilePath);
+			file.MoveTo(filePath);
+			ApplicationWorker.SetDoNotBackUpAttribute(filePath);
+			_db = new SQLiteConnection(filePath);
 			_db.CreateTable<Block>();
 			_db.CreateTable<Section>();
 			_db.CreateTable<ItemSection>();
